@@ -1,0 +1,8 @@
+{
+  "globalDependencies": {
+    "es6-shim": "registry:dt/es6-shim#0.31.2+20160602141504",
+    "jquery": "registry:dt/jquery#1.10.0+20160929162922",
+    "mocha": "registry:dt/mocha#2.2.5+20161028141524"
+  },
+  "dependencies": {}
+}
