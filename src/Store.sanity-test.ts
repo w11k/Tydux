@@ -12,7 +12,6 @@ describe("Actions sanity tests", function () {
             action1() {
                 setTimeout(() => {
                     assert.throws(() => this.state);
-                    this.state;
                     done();
                 }, 0);
             }
