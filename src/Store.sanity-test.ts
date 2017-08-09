@@ -1,25 +1,25 @@
 import {Actions, enableDevelopmentMode, Store} from "./Store";
 
 
-describe("Actions", function () {
+describe("Actions sanity tests", function () {
 
     beforeEach(function () {
         enableDevelopmentMode();
     });
 
-    it("can change the state", function () {
+    it("can not change the state asynchronously", function (done) {
         class TestActions extends Actions<{ n1: number }> {
             action1() {
-                console.log("this.state.n1", this.state.n1);
-                this.state.n1 = 1;
+                setTimeout(() => {
+                    assert.throws(() => this.state);
+                    this.state;
+                    done();
+                }, 0);
             }
         }
 
         const store = new Store(new TestActions(), {n1: 0});
-        // const calls = collect(store.select());
         store.dispatch.action1();
-        // calls.assert({n1: 0}, {n1: 1});
-        assert.deepEqual(store.state, {n1: 1});
     });
 
 });
