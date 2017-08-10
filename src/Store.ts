@@ -58,7 +58,8 @@ function checkModifierReturnType(obj: any) {
 
 export class Event<S> {
     constructor(public readonly action: any,
-                public readonly state: S) {
+                public readonly state: S,
+                public readonly boundModifier?: () => void) {
     }
 }
 
@@ -108,12 +109,12 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
     readonly events$ = this.eventsSubject.asObservable();
 
     constructor(modifiers: M, state: S, pushedStateChanges: Observable<S>) {
-        this.assignNewState({type: "initial state"}, state);
+        this.processModifier({type: "INIT"}, state);
         this.dispatch = this.wrapModifiers(modifiers);
 
         pushedStateChanges
             .subscribe(state => {
-                this.assignNewState({type: "pushed state"}, state);
+                this.processModifier({type: "pushed state"}, state);
             });
     }
 
@@ -143,6 +144,7 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
         for (let fnName of fnNames) {
             const fn = modifiers[fnName];
             modifiers[fnName] = function () {
+                const args = arguments;
                 const rootModifier = !this_.modifierRunning;
 
                 // create state copy
@@ -155,7 +157,7 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
                 this_.modifierRunning = true;
                 let result: any;
                 try {
-                    result = fn.apply(modifiers, arguments);
+                    result = fn.apply(modifiers, args);
                     result = isDevelopmentModeEnabled() ? checkModifierReturnType(result) : result;
                 } finally {
                     this_.modifierRunning = false;
@@ -168,7 +170,10 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
                     const newState = isDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
                     _.assignIn(newState, stateProxy);
 
-                    this_.assignNewState(createActionFromArguments(fnName, fn, arguments), newState);
+                    const boundModifier = () => {
+                        fn.apply(modifiers, args);
+                    };
+                    this_.processModifier(createActionFromArguments(fnName, fn, args), newState, boundModifier);
 
                     if (isDevelopmentModeEnabled()) {
                         assignStateErrorGetter(modifiers);
@@ -182,9 +187,9 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
         return modifiers;
     }
 
-    private assignNewState(action: any, state: S) {
+    private processModifier(action: any, state: S, boundModifier?: () => void) {
         this._state = isDevelopmentModeEnabled() ? icepick.freeze(state) : state;
-        this.eventsSubject.next(new Event(action, this._state));
+        this.eventsSubject.next(new Event(action, this._state, boundModifier));
     }
 }
 
