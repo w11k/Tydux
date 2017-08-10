@@ -12,6 +12,14 @@
     "strictNullChecks": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "types": [
+      "mocha",
+      "chai",
+      "es6-shim"
+    ],
     "rootDir": "src",
     "target": "es5",
     "outDir": "dist"

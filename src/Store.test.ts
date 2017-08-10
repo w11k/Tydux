@@ -1,25 +1,62 @@
-import {Actions, enableDevelopmentMode, Store} from "./Store";
+import {enableDevelopmentMode} from "./devTools";
+import {createStore, Modifiers, Store} from "./Store";
+import {collect} from "./test-utils";
 
 
-describe("Actions", function () {
+describe("Store", function () {
 
     beforeEach(function () {
         enableDevelopmentMode();
     });
 
-    it("can change the state", function () {
-        class TestActions extends Actions<{ n1: number }> {
-            action1() {
-                console.log("this.state.n1", this.state.n1);
-                this.state.n1 = 1;
+    it("select()", function () {
+        class TestModifier extends Modifiers<{ n1: number }> {
+            inc() {
+                this.state.n1++;
             }
         }
 
-        const store = new Store(new TestActions(), {n1: 0});
-        // const calls = collect(store.select());
-        store.dispatch.action1();
-        // calls.assert({n1: 0}, {n1: 1});
-        assert.deepEqual(store.state, {n1: 1});
+        const store = createStore("", new TestModifier(), {n1: 0});
+        let collected = collect(store.select());
+        store.dispatch.inc();
+        store.dispatch.inc();
+        collected.assert({n1: 0}, {n1: 1}, {n1: 2});
+    });
+
+    it("select(with selector)", function () {
+        class TestModifier extends Modifiers<{ n1: number }> {
+            inc() {
+                this.state.n1++;
+            }
+        }
+
+        const store = createStore("", new TestModifier(), {n1: 0});
+        let collected = collect(store.select(s => s.n1));
+        store.dispatch.inc();
+        store.dispatch.inc();
+        collected.assert(0, 1, 2);
+    });
+
+    it("selectNonNil(with selector)", function () {
+        class TestModifier extends Modifiers<{ n1?: number }> {
+            inc() {
+                this.state.n1 = this.state.n1 ? this.state.n1 + 1 : 1;
+            }
+
+            clear() {
+                this.state.n1 = undefined;
+            }
+        }
+
+        const store = createStore("", new TestModifier(), {n1: undefined} as { n1?: number });
+        let collected = collect(store.selectNonNil(s => s.n1));
+        store.dispatch.inc(); // 1
+        store.dispatch.clear();
+        store.dispatch.inc(); // 1
+        store.dispatch.inc(); // 2
+        store.dispatch.clear();
+        store.dispatch.inc(); // 1
+        collected.assert(1, 1, 2, 1);
     });
 
 });

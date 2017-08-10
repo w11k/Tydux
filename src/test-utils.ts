@@ -14,3 +14,12 @@ export function collect<T>(observable: Observable<T>) {
         }
     };
 }
+
+export function createAsyncPromise<T>(returns: T): Promise<T> {
+    return new Promise<T>(resolve => {
+        setTimeout(() => {
+            resolve(returns);
+        }, 0);
+
+    });
+}
