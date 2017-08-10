@@ -85,7 +85,7 @@ export interface Store<M extends Modifiers<S>, S> {
 
     readonly events$: Observable<Event<S>>;
 
-    readonly state: Readonly<S>
+    readonly state: Readonly<S>;
 
     select(): Observable<Readonly<S>>;
 
@@ -171,7 +171,7 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
                     _.assignIn(newState, stateProxy);
 
                     const boundModifier = () => {
-                        fn.apply(modifiers, args);
+                        modifiers[fnName].apply(modifiers, args);
                     };
                     this_.processModifier(createActionFromArguments(fnName, fn, args), newState, boundModifier);
 
