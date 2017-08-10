@@ -79,7 +79,7 @@ function createActionFromArguments(fnName: string, fn: any, args: IArguments): a
     return action;
 }
 
-export interface Store<M extends Modifiers<S>, S> {
+export abstract class Store<M extends Modifiers<S>, S> {
 
     readonly dispatch: M;
 
@@ -87,11 +87,11 @@ export interface Store<M extends Modifiers<S>, S> {
 
     readonly state: Readonly<S>;
 
-    select(): Observable<Readonly<S>>;
+    abstract select(): Observable<Readonly<S>>;
 
-    select<R>(selector?: (state: Readonly<S>) => R): Observable<R>;
+    abstract select<R>(selector?: (state: Readonly<S>) => R): Observable<R>;
 
-    selectNonNil<R>(selector: (state: Readonly<S>) => R): Observable<R>;
+    abstract selectNonNil<R>(selector: (state: Readonly<S>) => R): Observable<R>;
 
 }
 
@@ -113,9 +113,9 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
         this.dispatch = this.wrapModifiers(modifiers);
 
         pushedStateChanges
-            .subscribe(state => {
-                this.setState(state);
-            });
+                .subscribe(state => {
+                    this.setState(state);
+                });
     }
 
     get state(): Readonly<S> {
@@ -124,12 +124,12 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
 
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
         return this.eventsSubject
-            .map(event => {
-                return selector ? selector(event.state) : event.state as any;
-            })
-            .distinctUntilChanged((old, value) => {
-                return old === value;
-            });
+                .map(event => {
+                    return selector ? selector(event.state) : event.state as any;
+                })
+                .distinctUntilChanged((old, value) => {
+                    return old === value;
+                });
     }
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R = _.identity as any): Observable<R> {
@@ -201,9 +201,9 @@ export function createStore<M extends Modifiers<S>, S>(name: string,
                                                        modifiers: M, initialState: S): Store<M, S> {
 
     const store = new StoreImpl<M, S>(
-        modifiers,
-        initialState,
-        globalStateChanges$.map(globalState => globalState[name])
+            modifiers,
+            initialState,
+            globalStateChanges$.map(globalState => globalState[name])
     );
     subscribeStore(name, store);
     return store;
