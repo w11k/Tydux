@@ -18,9 +18,9 @@ interface DevToolsState {
 let developmentMode = false;
 
 const devToolsEnabled = typeof window !== "undefined"
-    && (window as any).devToolsExtension !== undefined;
+        && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
 
-const devTools = devToolsEnabled ? (window as any).devToolsExtension.connect() : undefined;
+const devTools = devToolsEnabled ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.connect() : undefined;
 
 const stores: { [name: string]: Store<any, any> } = {};
 
@@ -33,6 +33,7 @@ const globalStateChangesSubject = new Subject<any>();
 export const globalStateChanges$: Observable<any> = globalStateChangesSubject.asObservable();
 
 if (devToolsEnabled) {
+    devTools.init(globalState);
     devTools.subscribe((message: any) => {
         console.log(message);
         if (message.type === "DISPATCH" && message.state) {
@@ -42,6 +43,8 @@ if (devToolsEnabled) {
                 case "TOGGLE_ACTION":
                     const id = message.payload.id;
                     console.log(state);
+
+                    devTools.send(null, state);
                     break;
             }
 
@@ -65,17 +68,17 @@ export function subscribeStore(name: string, store: Store<any, any>) {
     stores[name] = store;
 
     store.events$
-        .subscribe(event => {
-            const modifier = event.boundModifier ? event.boundModifier : _.noop;
-            modifiers.push(modifier);
-            const action = {
-                ...event.action,
-                "type": "[" + name + "] " + event.action.type
-            };
+            .subscribe(event => {
+                const modifier = event.boundModifier ? event.boundModifier : _.noop;
+                modifiers.push(modifier);
+                const action = {
+                    ...event.action,
+                    "type": "[" + name + "] " + event.action.type
+                };
 
-            globalState[name] = event.state;
-            devTools.send(action, globalState);
-        });
+                globalState[name] = event.state;
+                devTools.send(action, globalState);
+            });
 
 }
 

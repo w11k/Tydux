@@ -1,6 +1,6 @@
-import "./index.html";
-import {createStore, Modifiers, Store} from "../../../Store";
 import * as _ from "lodash";
+import {createStore, Modifiers} from "../../../Store";
+import "./index.html";
 
 
 class Todo {
@@ -51,6 +51,6 @@ const renderApp = (state: TodoState) => {
 };
 
 store.select()
-    .subscribe(state => {
-        renderApp(state);
-    });
+        .subscribe(state => {
+            renderApp(state);
+        });

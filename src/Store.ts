@@ -109,12 +109,12 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
     readonly events$ = this.eventsSubject.asObservable();
 
     constructor(modifiers: M, state: S, pushedStateChanges: Observable<S>) {
-        this.processModifier({type: "INIT"}, state);
+        this.processModifier({type: "@@INIT"}, state);
         this.dispatch = this.wrapModifiers(modifiers);
 
         pushedStateChanges
             .subscribe(state => {
-                this.processModifier({type: "pushed state"}, state);
+                this.setState(state);
             });
     }
 
@@ -188,8 +188,12 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
     }
 
     private processModifier(action: any, state: S, boundModifier?: () => void) {
-        this._state = isDevelopmentModeEnabled() ? icepick.freeze(state) : state;
+        this.setState(state);
         this.eventsSubject.next(new Event(action, this._state, boundModifier));
+    }
+
+    private setState(state: S) {
+        this._state = isDevelopmentModeEnabled() ? icepick.freeze(state) : state;
     }
 }
 
