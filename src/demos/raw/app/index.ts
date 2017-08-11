@@ -21,7 +21,7 @@ export class TodoState {
 
 export class TodoMutators extends Mutators<TodoState> {
 
-    async addTodo(todoName: string) {
+    addTodo(todoName: string) {
         this.state.todos = [
             ...this.state.todos,
             new Todo(todoName)
