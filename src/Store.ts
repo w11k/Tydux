@@ -79,23 +79,7 @@ function createActionFromArguments(fnName: string, fn: any, args: IArguments): a
     return action;
 }
 
-export abstract class Store<M extends Mutators<S>, S> {
-
-    readonly dispatch: M;
-
-    readonly events$: Observable<Event<S>>;
-
-    readonly state: Readonly<S>;
-
-    abstract select(): Observable<Readonly<S>>;
-
-    abstract select<R>(selector?: (state: Readonly<S>) => R): Observable<R>;
-
-    abstract selectNonNil<R>(selector: (state: Readonly<S>) => R): Observable<R>;
-
-}
-
-class StoreImpl<M extends Mutators<S>, S> implements Store<M, S> {
+export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     readonly dispatch: M;
 
@@ -108,14 +92,17 @@ class StoreImpl<M extends Mutators<S>, S> implements Store<M, S> {
     // noinspection JSUnusedGlobalSymbols
     readonly events$ = this.eventsSubject.asObservable();
 
-    constructor(mutators: M, state: S, pushedStateChanges: Observable<S>) {
+    constructor(storeName: string, mutators: M, state: S) {
         this.processMutator({type: "@@INIT"}, state);
         this.dispatch = this.wrapMutators(mutators);
 
-        pushedStateChanges
+        const pushedStateForThisStore = globalStateChanges$.map(globalState => globalState[storeName]);
+        pushedStateForThisStore
                 .subscribe(state => {
                     this.setState(state);
                 });
+
+        subscribeStore(storeName, this);
     }
 
     get state(): Readonly<S> {
@@ -197,17 +184,17 @@ class StoreImpl<M extends Mutators<S>, S> implements Store<M, S> {
     }
 }
 
+class StoreImpl<M extends Mutators<S>, S> extends Store<M, S> {
+    constructor(storeName: string, mutators: M, state: S) {
+        super(storeName, mutators, state);
+    }
+}
+
 export function createStore<M extends Mutators<S>, S>(name: string,
-                                                       mutators: M, initialState: S): Store<M, S> {
+                                                      mutators: M,
+                                                      initialState: S): Store<M, S> {
 
-    const store = new StoreImpl<M, S>(
-            mutators,
-            initialState,
-            globalStateChanges$.map(globalState => globalState[name])
-    );
-    subscribeStore(name, store);
-    return store;
-
+    return new StoreImpl<M, S>(name, mutators, initialState);
 }
 
 export abstract class Mutators<T> {
