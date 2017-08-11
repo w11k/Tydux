@@ -9,6 +9,17 @@ describe("Mutators - sanity tests", function () {
         enableDevelopmentMode();
     });
 
+    it("methods can not change the state deeply", function () {
+        class TestMutator extends Mutators<{ n1: number[] }> {
+            mod1() {
+                this.state.n1.push(3);
+            }
+        }
+
+        const store = createStore("", new TestMutator(), {n1: [1, 2]});
+        assert.throws(() => store.dispatch.mod1());
+    });
+
     it("methods can not change the state asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {

@@ -1,14 +1,16 @@
 import * as _ from "lodash";
-import {createStore, Mutators} from "../../../Store";
+import {enableDevelopmentMode} from "../../../devTools";
+import {createStore, Mutators, Store} from "../../../Store";
 import "./index.html";
 
+enableDevelopmentMode();
 
-class Todo {
+export class Todo {
     constructor(public description: string) {
     }
 }
 
-class TodoState {
+export class TodoState {
 
     todos = [
         new Todo("Eins"),
@@ -17,9 +19,9 @@ class TodoState {
 
 }
 
-class TodoMutators extends Mutators<TodoState> {
+export class TodoMutators extends Mutators<TodoState> {
 
-    addTodo(todoName: string) {
+    async addTodo(todoName: string) {
         this.state.todos = [
             ...this.state.todos,
             new Todo(todoName)
@@ -32,8 +34,10 @@ class TodoMutators extends Mutators<TodoState> {
 
 }
 
-const store = createStore("todo", new TodoMutators(), new TodoState());
+export abstract class TodoStore extends Store<TodoMutators, TodoState> {
+}
 
+const store: TodoStore = createStore("todo", new TodoMutators(), new TodoState());
 
 const renderApp = () => {
     document.body.innerHTML = `
@@ -49,6 +53,8 @@ const renderApp = () => {
     document.getElementById("addTodo")!.onclick = () => store.dispatch.addTodo("" + Date.now());
     document.getElementById("reverse")!.onclick = () => store.dispatch.reverse();
 };
+
+store.dispatch.addTodo("Philipp");
 
 store.select()
         .subscribe(() => {
