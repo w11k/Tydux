@@ -6,7 +6,7 @@ import "rxjs/add/operator/map";
 import {Observable} from "rxjs/Observable";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {globalStateChanges$, isDevelopmentModeEnabled, subscribeStore} from "./devTools";
-import {illegalAccessToThisState, modifierWrongReturnType} from "./error-messages";
+import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
 
 function assignStateErrorGetter(obj: { state: any }) {
     Object.defineProperty(obj, "state", {
@@ -40,11 +40,11 @@ function createProxy<T>(target: T): T {
     return proxy;
 }
 
-function checkModifierReturnType(obj: any) {
+function checkMutatorReturnType(obj: any) {
     if (obj !== undefined && typeof obj.then === "function") {
         return obj.then((val: any) => {
             if (val !== undefined) {
-                throw new Error(modifierWrongReturnType);
+                throw new Error(mutatorWrongReturnType);
             }
             return undefined;
         });
@@ -53,13 +53,13 @@ function checkModifierReturnType(obj: any) {
         return undefined;
     }
 
-    throw new Error(modifierWrongReturnType);
+    throw new Error(mutatorWrongReturnType);
 }
 
 export class Event<S> {
     constructor(public readonly action: any,
                 public readonly state: S,
-                public readonly boundModifier?: () => void) {
+                public readonly boundMutator?: () => void) {
     }
 }
 
@@ -79,7 +79,7 @@ function createActionFromArguments(fnName: string, fn: any, args: IArguments): a
     return action;
 }
 
-export abstract class Store<M extends Modifiers<S>, S> {
+export abstract class Store<M extends Mutators<S>, S> {
 
     readonly dispatch: M;
 
@@ -95,22 +95,22 @@ export abstract class Store<M extends Modifiers<S>, S> {
 
 }
 
-class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
+class StoreImpl<M extends Mutators<S>, S> implements Store<M, S> {
 
     readonly dispatch: M;
 
     private _state: S;
 
-    private modifierRunning = false;
+    private mutatorRunning = false;
 
     private eventsSubject = new ReplaySubject<Event<S>>(1);
 
     // noinspection JSUnusedGlobalSymbols
     readonly events$ = this.eventsSubject.asObservable();
 
-    constructor(modifiers: M, state: S, pushedStateChanges: Observable<S>) {
-        this.processModifier({type: "@@INIT"}, state);
-        this.dispatch = this.wrapModifiers(modifiers);
+    constructor(mutators: M, state: S, pushedStateChanges: Observable<S>) {
+        this.processMutator({type: "@@INIT"}, state);
+        this.dispatch = this.wrapMutators(mutators);
 
         pushedStateChanges
                 .subscribe(state => {
@@ -136,47 +136,47 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
         return this.select(selector).filter(val => !_.isNil(val));
     }
 
-    private wrapModifiers(modifiers: any) {
+    private wrapMutators(mutators: any) {
         const this_ = this;
-        let baseFnNames = _.functionsIn(Modifiers.prototype);
-        let fnNames = _.difference(_.functionsIn(modifiers), baseFnNames);
+        let baseFnNames = _.functionsIn(Mutators.prototype);
+        let fnNames = _.difference(_.functionsIn(mutators), baseFnNames);
 
         for (let fnName of fnNames) {
-            const fn = modifiers[fnName];
-            modifiers[fnName] = function () {
+            const fn = mutators[fnName];
+            mutators[fnName] = function () {
                 const args = arguments;
-                const rootModifier = !this_.modifierRunning;
+                const rootMutator = !this_.mutatorRunning;
 
                 // create state copy
-                if (rootModifier) {
+                if (rootMutator) {
                     const stateProxy = createProxy(this_.state);
-                    assignStateValue(modifiers, stateProxy);
+                    assignStateValue(mutators, stateProxy);
                 }
 
-                // call modifier
-                this_.modifierRunning = true;
+                // call mutator
+                this_.mutatorRunning = true;
                 let result: any;
                 try {
-                    result = fn.apply(modifiers, args);
-                    result = isDevelopmentModeEnabled() ? checkModifierReturnType(result) : result;
+                    result = fn.apply(mutators, args);
+                    result = isDevelopmentModeEnabled() ? checkMutatorReturnType(result) : result;
                 } finally {
-                    this_.modifierRunning = false;
+                    this_.mutatorRunning = false;
                 }
 
                 // commit new state
-                if (rootModifier) {
-                    const stateProxy = modifiers.state;
+                if (rootMutator) {
+                    const stateProxy = mutators.state;
                     const stateOriginal = this_.state;
                     const newState = isDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
                     _.assignIn(newState, stateProxy);
 
-                    const boundModifier = () => {
-                        modifiers[fnName].apply(modifiers, args);
+                    const boundMutator = () => {
+                        mutators[fnName].apply(mutators, args);
                     };
-                    this_.processModifier(createActionFromArguments(fnName, fn, args), newState, boundModifier);
+                    this_.processMutator(createActionFromArguments(fnName, fn, args), newState, boundMutator);
 
                     if (isDevelopmentModeEnabled()) {
-                        assignStateErrorGetter(modifiers);
+                        assignStateErrorGetter(mutators);
                     }
                 }
 
@@ -184,12 +184,12 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
             };
         }
 
-        return modifiers;
+        return mutators;
     }
 
-    private processModifier(action: any, state: S, boundModifier?: () => void) {
+    private processMutator(action: any, state: S, boundMutator?: () => void) {
         this.setState(state);
-        this.eventsSubject.next(new Event(action, this._state, boundModifier));
+        this.eventsSubject.next(new Event(action, this._state, boundMutator));
     }
 
     private setState(state: S) {
@@ -197,11 +197,11 @@ class StoreImpl<M extends Modifiers<S>, S> implements Store<M, S> {
     }
 }
 
-export function createStore<M extends Modifiers<S>, S>(name: string,
-                                                       modifiers: M, initialState: S): Store<M, S> {
+export function createStore<M extends Mutators<S>, S>(name: string,
+                                                       mutators: M, initialState: S): Store<M, S> {
 
     const store = new StoreImpl<M, S>(
-            modifiers,
+            mutators,
             initialState,
             globalStateChanges$.map(globalState => globalState[name])
     );
@@ -210,7 +210,7 @@ export function createStore<M extends Modifiers<S>, S>(name: string,
 
 }
 
-export abstract class Modifiers<T> {
+export abstract class Mutators<T> {
 
     protected state: T;
 

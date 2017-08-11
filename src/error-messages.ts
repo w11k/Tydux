@@ -1,5 +1,5 @@
 
-export const modifierWrongReturnType = "modifier methods must return void|Promise<void>";
+export const mutatorWrongReturnType = "mutator methods must return void|Promise<void>";
 
 export const illegalAccessToThisState = `
 
@@ -11,7 +11,7 @@ Illegal access to 'this.state'. Make sure that 'this.state' is not accessed in o
         > }, 1000);
         
 - in async functions, after an await statement, e.g.
-        > async modifier() {
+        > async mutator() {
         >     // OK POSITION
         >     const val = await returnsPromise();
         >     // ILLEGAL POSITION

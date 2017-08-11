@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import {createStore, Modifiers} from "../../../Store";
+import {createStore, Mutators} from "../../../Store";
 import "./index.html";
 
 
@@ -17,7 +17,7 @@ class TodoState {
 
 }
 
-class TodoModifiers extends Modifiers<TodoState> {
+class TodoMutators extends Mutators<TodoState> {
 
     addTodo(todoName: string) {
         this.state.todos = [
@@ -32,16 +32,16 @@ class TodoModifiers extends Modifiers<TodoState> {
 
 }
 
-const store = createStore("todo", new TodoModifiers(), new TodoState());
+const store = createStore("todo", new TodoMutators(), new TodoState());
 
 
-const renderApp = (state: TodoState) => {
+const renderApp = () => {
     document.body.innerHTML = `
         <div>
             <button id="addTodo">add todo</button>
             <button id="reverse">reverse</button>
             <ol>
-                ${state.todos.map(t => `<li>${t.description}</li>`).join("")}
+                ${store.state.todos.map(t => `<li>${t.description}</li>`).join("")}
             </ol>
         </div>
         `;
@@ -51,6 +51,6 @@ const renderApp = (state: TodoState) => {
 };
 
 store.select()
-        .subscribe(state => {
-            renderApp(state);
+        .subscribe(() => {
+            renderApp();
         });

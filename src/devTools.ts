@@ -24,7 +24,7 @@ const devTools = devToolsEnabled ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.
 
 const stores: { [name: string]: Store<any, any> } = {};
 
-const modifiers: (() => void)[] = [];
+const mutators: (() => void)[] = [];
 
 const globalState: any = {};
 
@@ -35,7 +35,7 @@ export const globalStateChanges$: Observable<any> = globalStateChangesSubject.as
 if (devToolsEnabled) {
     devTools.init(globalState);
     devTools.subscribe((message: any) => {
-        console.log(message);
+        // console.log(message);
         if (message.type === "DISPATCH" && message.state) {
             const state: DevToolsState = JSON.parse(message.state);
             // console.log(state);
@@ -69,8 +69,8 @@ export function subscribeStore(name: string, store: Store<any, any>) {
 
     store.events$
             .subscribe(event => {
-                const modifier = event.boundModifier ? event.boundModifier : _.noop;
-                modifiers.push(modifier);
+                const mutator = event.boundMutator ? event.boundMutator : _.noop;
+                mutators.push(mutator);
                 const action = {
                     ...event.action,
                     "type": "[" + name + "] " + event.action.type

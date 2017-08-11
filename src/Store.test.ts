@@ -1,5 +1,5 @@
 import {enableDevelopmentMode} from "./devTools";
-import {createStore, Modifiers, Store} from "./Store";
+import {createStore, Mutators, Store} from "./Store";
 import {collect} from "./test-utils";
 
 
@@ -10,13 +10,13 @@ describe("Store", function () {
     });
 
     it("select()", function () {
-        class TestModifier extends Modifiers<{ n1: number }> {
+        class TestMutator extends Mutators<{ n1: number }> {
             inc() {
                 this.state.n1++;
             }
         }
 
-        const store = createStore("", new TestModifier(), {n1: 0});
+        const store = createStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select());
         store.dispatch.inc();
         store.dispatch.inc();
@@ -24,13 +24,13 @@ describe("Store", function () {
     });
 
     it("select(with selector)", function () {
-        class TestModifier extends Modifiers<{ n1: number }> {
+        class TestMutator extends Mutators<{ n1: number }> {
             inc() {
                 this.state.n1++;
             }
         }
 
-        const store = createStore("", new TestModifier(), {n1: 0});
+        const store = createStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select(s => s.n1));
         store.dispatch.inc();
         store.dispatch.inc();
@@ -38,7 +38,7 @@ describe("Store", function () {
     });
 
     it("selectNonNil(with selector)", function () {
-        class TestModifier extends Modifiers<{ n1?: number }> {
+        class TestMutator extends Mutators<{ n1?: number }> {
             inc() {
                 this.state.n1 = this.state.n1 ? this.state.n1 + 1 : 1;
             }
@@ -48,7 +48,7 @@ describe("Store", function () {
             }
         }
 
-        const store = createStore("", new TestModifier(), {n1: undefined} as { n1?: number });
+        const store = createStore("", new TestMutator(), {n1: undefined} as { n1?: number });
         let collected = collect(store.selectNonNil(s => s.n1));
         store.dispatch.inc(); // 1
         store.dispatch.clear();
