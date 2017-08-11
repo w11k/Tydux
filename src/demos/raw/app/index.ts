@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import {enableDevelopmentMode} from "../../../devTools";
-import {Mutators, Store, StoreImpl} from "../../../Store";
+import {Mutators, Store} from "../../../Store";
 import "./index.html";
 
 enableDevelopmentMode();
@@ -34,7 +34,7 @@ export class TodoMutators extends Mutators<TodoState> {
 
 }
 
-export class TodoStore extends StoreImpl<TodoMutators, TodoState> {
+export class TodoStore extends Store<TodoMutators, TodoState> {
     constructor() {
         super("todo", new TodoMutators(), new TodoState());
     }
