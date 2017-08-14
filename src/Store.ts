@@ -1,10 +1,10 @@
-import * as icepick from "icepick";
 import * as _ from "lodash";
 import "rxjs/add/operator/distinctUntilChanged";
 import "rxjs/add/operator/filter";
 import "rxjs/add/operator/map";
 import {Observable} from "rxjs/Observable";
 import {ReplaySubject} from "rxjs/ReplaySubject";
+import {deepFreeze} from "./deep-freeze";
 import {globalStateChanges$, isDevelopmentModeEnabled, subscribeStore} from "./devTools";
 import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
 
@@ -180,7 +180,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     }
 
     private setState(state: S) {
-        this._state = isDevelopmentModeEnabled() ? icepick.freeze(state) : state;
+        this._state = isDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 }
 
