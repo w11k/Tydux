@@ -85,7 +85,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private _state: S;
 
-    private mutatorRunning = false;
+    private runningMutatorStack: string[] = [];
 
     private eventsSubject = new ReplaySubject<Event<S>>(1);
 
@@ -132,7 +132,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             const fn = mutators[fnName];
             mutators[fnName] = function () {
                 const args = arguments;
-                const rootMutator = !this_.mutatorRunning;
+                const rootMutator = this_.runningMutatorStack.length === 0;
 
                 // create state copy
                 if (rootMutator) {
@@ -141,13 +141,13 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 }
 
                 // call mutator
-                this_.mutatorRunning = true;
+                this_.runningMutatorStack.push(fnName);
                 let result: any;
                 try {
                     result = fn.apply(mutators, args);
                     result = isDevelopmentModeEnabled() ? checkMutatorReturnType(result) : result;
                 } finally {
-                    this_.mutatorRunning = false;
+                    this_.runningMutatorStack.pop();
                 }
 
                 // commit new state

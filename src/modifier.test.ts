@@ -36,20 +36,49 @@ describe("Mutators", function () {
     });
 
     it("nested methods are merged", function () {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutators<{ n1: string }> {
             mod1() {
-                this.state.n1++;
+                this.state.n1 += "1";
                 this.mod2();
+                this.mod3();
             }
 
             mod2() {
-                this.state.n1 = this.state.n1 * 2;
+                this.state.n1 += "2";
+            }
+
+            mod3() {
+                this.state.n1 += "3";
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 10});
+        const store = createStore("", new TestMutator(), {n1: ""});
         store.dispatch.mod1();
-        assert.deepEqual(store.state, {n1: 22});
+        assert.deepEqual(store.state, {n1: "123"});
+    });
+
+    it("nested async methods are merged", function (done) {
+        class TestMutator extends Mutators<{ n1: string }> {
+            async mod1() {
+                this.state.n1 += "1";
+                this.mod2();
+                await this.mod3();
+            }
+
+            mod2() {
+                this.state.n1 += "2";
+            }
+
+            async mod3() {
+                this.state.n1 += "3";
+                const val = await createAsyncPromise(this.state.n1);
+                assert.equal(val, "123");
+                done();
+            }
+        }
+
+        const store = createStore("", new TestMutator(), {n1: ""});
+        store.dispatch.mod1();
     });
 
     it("methods can use promises with nested mutators as callback", function (done) {
