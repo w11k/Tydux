@@ -78,7 +78,7 @@ Mutators can invoke other mutator methods. Their executions are merged and get t
 
 Almost all applications have asynchronous code to handle e.g. server responses. While mutators can *initiate* async operations, they are not allowed to access the state (via `this.state`) in an async callback. 
 
-**!!! Once the mutator method completes, any attempt to access the state will result in an exception !!!**
+**Important:** Once the mutator method completes, any attempt to access the state will result in an exception!
 
  The solution is to delegate the processing of the async result in *another mutator method*. The following mutator class contains two methods. `loadFromServer()` initiates an async operation und uses `assignTodos()` to handle the response:
 
@@ -102,7 +102,7 @@ export class TodoMutators extends Mutators<TodoState> {
 
 ## Store
 
-The store class combines the state and the mutator:
+The store class combines the state and the mutators:
 
 ```
 export class TodoStore extends Store<TodoMutators, TodoState> {
