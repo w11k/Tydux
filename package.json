@@ -7,7 +7,7 @@
     "dist"
   ],
   "dependencies": {
-    "@types/es6-shim": "1.x",
+    "@types/es6-shim": "0.x.x",
     "@types/icepick": "1.x",
     "es6-shim": "0.x",
     "lodash": "4.x",
