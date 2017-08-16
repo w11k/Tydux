@@ -12,9 +12,9 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 
 Tydux consists of three building blocks:
 
-- *State*: class that represents the state
-- *Mutators*: modify the state
-- *Store*: combines one *state* class and one *mutator* class 
+- State class (one per store): represents the state
+- Mutators class (one per store): modify the state
+- Store class (unlimited): combines one *state* class and one *mutator* class 
 
 The following example shows a simple "TODO app".
 
@@ -70,7 +70,9 @@ But this code results in an exception (`TypeError: object is not extensible`):
 this.state.todos.push(...);
 ```
 
-### Async mutators
+Mutators can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
+
+### Asynchronous mutators
 
 Almost all applications have asynchronous code to handle e.g. server responses. While mutators can *initiate* async operations, they are not allowed to access the state (via `this.state`) in an async callback. 
 
@@ -97,8 +99,68 @@ export class TodoMutators extends Mutators<TodoState> {
 
 ## Store
 
-### Dispatch actions
+The store class combines the state and the mutator:
 
-### Select state
+```
+export class TodoStore extends Store<TodoMutators, TodoState> {
+    constructor() {
+        super("todo", new TodoMutators(), new TodoState());
+    }
+}
+```
 
-## Redux Dev Tools
+The `super()` call registers the store globally and the first parameter (here `"todo"`) must be unique. The second parameter is the mutators instance. If you use e.g. [Angular](https://angular.io) or any other framework with dependency injection, it usually makes sense to provide/configure the store and mutator classes with the injector. The third parameter provides the initial state.
+
+You can directly instantiate the store (or use dependency injection):
+
+```
+const store = new TodoStore();
+```
+
+### Modify state
+
+To modify the state, you simply invoke the mutator methods. This must be done via the store instance:
+
+```
+store.dispatch.addTodo("new todo");
+```
+
+### Access/query state
+
+The current state can directly be accessed via the store instance:
+
+```
+const first: Todo = store.state.todos[0];
+```
+
+In order to get called on future state changes, you need to subscribe the store:
+
+```
+store.select()
+    .subscribe(store => {
+        // handle change
+    });
+```
+
+The `select()` methods returns a RxJS `Observable` and takes an optional selector to filter and reduce the state:
+
+```
+store.select(s => s.todos)
+    .subscribe(store => {
+        // handle change
+    });
+```
+
+**Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. 
+
+
+## Redux DevTools extension
+
+(work in progress)
+
+Tydux support the [Redux DevTools](https://github.com/zalmoxisus/redux-devtools-extension) extension.
+
+Currently all dispatched mutators and the states can be inspected. Write-access is currently not supported.
+ 
+
+
