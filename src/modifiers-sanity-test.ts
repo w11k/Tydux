@@ -75,4 +75,20 @@ describe("Mutators - sanity tests", function () {
             });
     });
 
+    it("state changes are only persistent if the mutator did not throw an exception", function () {
+        class TestMutator extends Mutators<any> {
+            mut1() {
+                this.state.a = 1;
+                if (this.state.a > 0) {
+                    throw new Error("");
+                }
+                this.state.a = 2;
+            }
+        }
+
+        const store = createStore("", new TestMutator(), {a: 0});
+        assert.throws(() => store.dispatch.mut1());
+        assert.equal(store.state.a, 0);
+    });
+
 });

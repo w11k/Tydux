@@ -14,7 +14,7 @@ Tydux consists of three building blocks:
 
 - State class (one per store): represents the state
 - Mutators class (one per store): modify the state
-- Store class (unlimited): combines one *state* class and one *mutator* class 
+- Store class (unlimited): combines one state class and one mutator class 
 
 The following example shows a simple "TODO app".
 
@@ -69,6 +69,8 @@ But this code results in an exception (`TypeError: object is not extensible`):
 ```
 this.state.todos.push(...);
 ```
+
+If a mutator throws an exception, all changes to the state will be discarded.
 
 Mutators can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
 
