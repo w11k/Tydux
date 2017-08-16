@@ -1,6 +1,6 @@
 {
   "name": "tydux",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -31,7 +31,6 @@
     "webpack": "^3.5.2",
     "webpack-dev-server": "^2.7.1"
   },
-
   "scripts": {
     "clean": "del-cli dist",
     "dist": "npm run clean ; tsc -p tsconfig.dist.json",
