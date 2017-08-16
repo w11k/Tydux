@@ -5,14 +5,17 @@ import "./index.html";
 enableDevelopmentMode();
 
 export class Todo {
-    constructor(public description: string, public done: boolean = false) {
+    constructor(public description: string,
+                public complete: boolean = false) {
     }
 }
 
 export class TodoState {
 
+    filter = "";
+
     todos: Todo[] = [
-        new Todo("todo 1"),
+        new Todo("todo 1", true),
         new Todo("todo 2")
     ];
 
@@ -21,10 +24,25 @@ export class TodoState {
 export class TodoMutators extends Mutators<TodoState> {
 
     addTodo(todoName: string) {
+        this.state.todos.push(new Todo(""));
         this.state.todos = [
-            ...this.state.todos!,
+            ...this.state.todos,
             new Todo(todoName)
         ];
+    }
+
+    removeCompleted() {
+        this.state.todos = this.state.todos.filter(t => !t.complete);
+    }
+
+    async loadFromServer() {
+        const result = await fetch("/todos");
+        const todos = await result.json();
+        this.assignTodos(todos);
+    }
+
+    assignTodos(todos: Todo[]) {
+        this.state.todos = todos;
     }
 
 }
@@ -45,8 +63,14 @@ const renderApp = () => {
                 Add Todo
             </button>
         
+            <button onclick='(${() => store.dispatch.removeCompleted()})();'>
+                remove completed
+            </button>
+        
             <ol>
-                ${store.state.todos!.map(t => `<li>${t.description}</li>`).join("")}
+                ${store.state.todos!.map(t => {
+                    return `<li class='${t.complete ? "completed" : ""}'>${t.description}</li>`}).join("")
+                }
             </ol>
         </div>
         `;
