@@ -16,4 +16,14 @@ Illegal access to 'this.state'. Make sure that 'this.state' is not accessed in o
         >     const val = await returnsPromise();
         >     // ILLEGAL POSITION
         > }
+        
+Solution: Move the code that accesses 'this.state' in its own mutator:
+        > async mutator() {
+        >     const val = await returnsPromise();
+        >     this.assignVal(val);
+        > }
+        > 
+        > assignVal(val: any) {
+        >     this.state.val = val;
+        > }
 `;

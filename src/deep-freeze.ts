@@ -3,9 +3,7 @@ function weCareAbout(val: any): boolean {
 }
 
 function isObjectLike(val: any): boolean {
-    return typeof val === "object" &&
-            val.constructor === Object &&
-            Object.getPrototypeOf(val) === Object.prototype;
+    return typeof val === "object";
 }
 
 

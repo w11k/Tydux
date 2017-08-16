@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import {enableDevelopmentMode} from "../../../devTools";
 import {Mutators, Store} from "../../../Store";
 import "./index.html";
@@ -6,15 +5,15 @@ import "./index.html";
 enableDevelopmentMode();
 
 export class Todo {
-    constructor(public description: string) {
+    constructor(public description: string, public done: boolean = false) {
     }
 }
 
 export class TodoState {
 
-    todos = [
-        new Todo("Eins"),
-        new Todo("Zwei")
+    todos: Todo[] = [
+        new Todo("todo 1"),
+        new Todo("todo 2")
     ];
 
 }
@@ -23,13 +22,9 @@ export class TodoMutators extends Mutators<TodoState> {
 
     addTodo(todoName: string) {
         this.state.todos = [
-            ...this.state.todos,
+            ...this.state.todos!,
             new Todo(todoName)
         ];
-    }
-
-    reverse() {
-        this.state.todos = _.reverse(_.slice(this.state.todos));
     }
 
 }
@@ -41,25 +36,23 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
 }
 
 const store: TodoStore = new TodoStore();
+(window as any).store = store;
 
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
-            <button id="addTodo">add todo</button>
-            <button id="reverse">reverse</button>
+            <button onclick='(${() => store.dispatch.addTodo("")})();'>
+                Add Todo
+            </button>
+        
             <ol>
-                ${store.state.todos.map(t => `<li>${t.description}</li>`).join("")}
+                ${store.state.todos!.map(t => `<li>${t.description}</li>`).join("")}
             </ol>
         </div>
         `;
-
-    document.getElementById("addTodo")!.onclick = () => store.dispatch.addTodo("" + Date.now());
-    document.getElementById("reverse")!.onclick = () => store.dispatch.reverse();
 };
 
-store.dispatch.addTodo("Philipp");
-
 store.select()
-        .subscribe(() => {
-            renderApp();
-        });
+    .subscribe(() => {
+        renderApp();
+    });

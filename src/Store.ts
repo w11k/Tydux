@@ -109,6 +109,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return this._state;
     }
 
+    select<R>(): Observable<S>;
+
+    select<R>(selector: (state: Readonly<S>) => R): Observable<R>;
+
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
         return this.eventsSubject
                 .map(event => {
@@ -119,8 +123,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 });
     }
 
-    selectNonNil<R>(selector: (state: Readonly<S>) => R = _.identity as any): Observable<R> {
-        return this.select(selector).filter(val => !_.isNil(val));
+    selectNonNil<R>(selector: (state: Readonly<S>) => R|null|undefined = _.identity as any): Observable<R> {
+        return this.select(selector)
+            .filter(val => !_.isNil(val))
+            .map(val => val!);
     }
 
     private wrapMutators(mutators: any) {
