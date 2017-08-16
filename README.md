@@ -86,6 +86,7 @@ Almost all applications have asynchronous code to handle e.g. server responses. 
 export class TodoMutators extends Mutators<TodoState> {
 
     async loadFromServer() {
+        this.state.timestampLoadRequested = Date.now();
         const result = await fetch("/todos");
         const todos = await result.json();
         this.assignTodos(todos);
