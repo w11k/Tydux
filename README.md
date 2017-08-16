@@ -149,7 +149,7 @@ The `select()` methods returns a RxJS `Observable` and takes an optional selecto
 
 ```
 store.select(s => s.todos)
-    .subscribe(store => {
+    .subscribe(todos => {
         // handle change
     });
 ```
