@@ -85,7 +85,7 @@ export class TodoMutators extends Mutators<TodoState> {
     }
 
     assignTodos(todos: Todo[]) {
-        this.state.todos = todos;
+        this.state.todos = todos;                           // valid state access
     }
 
 }
