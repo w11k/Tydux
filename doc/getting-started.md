@@ -10,7 +10,9 @@ The following example shows a simple "TODO app".
 
 ## State 
 
-Normal classes are used to represent and store the state of the application. To implement the state in our app, we need a `Todo` and a `TodoState` class. However, only the latter is relevant for Tydux.
+Normal classes are used to represent the state of the application. To implement the state in our app, we need a `Todo` and a `TodoState` class. However, only the latter is relevant for Tydux. The former simply serves for demonstration purposes.
+
+The `TodoState` class contains all the state, modelled as normal class properties, that we want to manage with Tydux.
 
 ```
 export class Todo {
@@ -76,10 +78,10 @@ Almost all applications have asynchronous code to handle e.g. server responses. 
 export class TodoMutators extends Mutators<TodoState> {
 
     async loadFromServer() {
-        this.state.timestampLoadRequested = Date.now();
-        const result = await fetch("/todos");
+        this.state.timestampLoadRequested = Date.now();     // valid state access
+        const result = await fetch("/todos");               // async starts here...
         const todos = await result.json();
-        this.assignTodos(todos);
+        this.assignTodos(todos);                            // ... delegate to other mutator
     }
 
     assignTodos(todos: Todo[]) {
