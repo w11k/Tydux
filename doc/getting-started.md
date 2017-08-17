@@ -148,12 +148,3 @@ store.select(s => s.todos)
 
 **Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. 
 
-
-## Redux DevTools extension
-
-(work in progress)
-
-Tydux support the [Redux DevTools](https://github.com/zalmoxisus/redux-devtools-extension) extension.
-
-Currently all dispatched mutators and the states can be inspected. Write-access is currently not supported.
- 

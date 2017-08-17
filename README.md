@@ -14,4 +14,6 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 
 ### [Getting Started](https://github.com/Tydux/Tydux/tree/master/doc/getting-started.md)
 
+### [Redux DevTools](https://github.com/Tydux/Tydux/tree/master/doc/redux-devtools.md)
+
 
