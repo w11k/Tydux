@@ -59,4 +59,25 @@ describe("Store", function () {
         collected.assert(1, 1, 2, 1);
     });
 
+    it("select(with selector return an Arrays) only emits values when the content of the array changes", function () {
+        class TestMutator extends Mutators<{ a: number; b: number; c: number }> {
+            incAB() {
+                this.state.a++;
+                this.state.b++;
+            }
+
+            incC() {
+                this.state.c++;
+            }
+        }
+
+        const store = createStore("", new TestMutator(), {a: 0, b: 10, c: 100});
+        let collected = collect(store.select(s => [s.a, s.b]));
+        store.dispatch.incAB();
+        store.dispatch.incC();
+        store.dispatch.incAB();
+        store.dispatch.incC();
+        collected.assert([0, 10], [1, 11], [2, 12]);
+    });
+
 });

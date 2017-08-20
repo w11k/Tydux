@@ -7,6 +7,7 @@ import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {globalStateChanges$, isDevelopmentModeEnabled, subscribeStore} from "./devTools";
 import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
+import {isShallowEquals} from "./utils";
 
 function assignStateErrorGetter(obj: { state: any }) {
     Object.defineProperty(obj, "state", {
@@ -119,14 +120,18 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     return selector ? selector(event.state) : event.state as any;
                 })
                 .distinctUntilChanged((old, value) => {
-                    return old === value;
+                    if (_.isArray(old) && _.isArray(value)) {
+                        return isShallowEquals(old, value);
+                    } else {
+                        return old === value;
+                    }
                 });
     }
 
-    selectNonNil<R>(selector: (state: Readonly<S>) => R|null|undefined = _.identity as any): Observable<R> {
+    selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined = _.identity as any): Observable<R> {
         return this.select(selector)
-            .filter(val => !_.isNil(val))
-            .map(val => val!);
+                .filter(val => !_.isNil(val))
+                .map(val => val!);
     }
 
     private wrapMutators(mutators: any) {
