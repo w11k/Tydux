@@ -1,7 +1,8 @@
 import * as _ from "lodash";
-import "rxjs/add/operator/distinctUntilChanged";
-import "rxjs/add/operator/filter";
-import "rxjs/add/operator/map";
+import "rxjs";
+// import "rxjs/add/operator/distinctUntilChanged";
+// import "rxjs/add/operator/filter";
+// import "rxjs/add/operator/map";
 import {Observable} from "rxjs/Observable";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
