@@ -91,6 +91,8 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private eventsSubject = new ReplaySubject<Event<S>>(1);
 
+    protected ignoreMembers: (keyof this)[] = ["$q"] as any;
+
     // noinspection JSUnusedGlobalSymbols
     readonly events$ = this.eventsSubject.asObservable();
 
@@ -138,7 +140,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     private wrapMutators(mutators: any) {
         const this_ = this;
         let baseFnNames = _.functionsIn(Mutators.prototype);
-        let fnNames = _.difference(_.functionsIn(mutators), baseFnNames);
+        let fnNames = _.difference(_.functionsIn(mutators), baseFnNames, this.ignoreMembers);
 
         for (let fnName of fnNames) {
             const fn = mutators[fnName];
