@@ -2,6 +2,9 @@ import {enableDevelopmentMode} from "../../../devTools";
 import {Mutators, Store} from "../../../Store";
 import "./index.html";
 
+import "rxjs/add/operator/first";
+
+
 enableDevelopmentMode();
 
 export class Todo {
@@ -86,8 +89,8 @@ const renderApp = () => {
         `;
 };
 
-store.state.fredi = null;
 store.select()
+        .first()
         .subscribe((s) => {
             renderApp();
         });
