@@ -14,6 +14,8 @@ export class TodoState {
 
     filter = "";
 
+    fredi: string | null = null;
+
     todos: Todo[] = [
         new Todo("todo 1", true),
         new Todo("todo 2")
@@ -24,7 +26,6 @@ export class TodoState {
 export class TodoMutators extends Mutators<TodoState> {
 
     addTodo(todoName: string) {
-        this.state.todos.push(new Todo(""));
         this.state.todos = [
             ...this.state.todos,
             new Todo(todoName)
@@ -54,12 +55,20 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
 }
 
 const store: TodoStore = new TodoStore();
+
+
+store.selectNonNil(s => s.fredi)
+        .subscribe(fredi => {
+            fredi.substring(0, 1);
+        });
+
+
 (window as any).store = store;
 
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
-            <button onclick='(${() => store.dispatch.addTodo("")})();'>
+            <button onclick='(${() => store.dispatch.addTodo("" + Date.now())})();'>
                 Add Todo
             </button>
         
@@ -69,14 +78,16 @@ const renderApp = () => {
         
             <ol>
                 ${store.state.todos!.map(t => {
-                    return `<li class='${t.complete ? "completed" : ""}'>${t.description}</li>`}).join("")
-                }
+        return `<li class='${t.complete ? "completed" : ""}'>${t.description}</li>`
+    }).join("")
+            }
             </ol>
         </div>
         `;
 };
 
+store.state.fredi = null;
 store.select()
-    .subscribe(() => {
-        renderApp();
-    });
+        .subscribe((s) => {
+            renderApp();
+        });

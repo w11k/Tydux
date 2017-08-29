@@ -113,7 +113,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return this._state;
     }
 
-    select<R>(): Observable<S>;
+    select<R>(): Observable<Readonly<S>>;
 
     select<R>(selector: (state: Readonly<S>) => R): Observable<R>;
 
