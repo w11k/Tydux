@@ -1,6 +1,6 @@
-import {enableDevelopmentMode} from "./devTools";
 import {createStore, Mutators} from "./Store";
 import {createAsyncPromise} from "./test-utils";
+import {enableDevelopmentMode} from "./development";
 
 
 describe("Mutators", function () {

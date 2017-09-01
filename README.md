@@ -10,7 +10,7 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 
 # Documentation
 
-### [Installation](https://github.com/Tydux/Tydux/tree/master/doc/installation.md)
+### [Installation / Development vs. Production Mode](https://github.com/Tydux/Tydux/tree/master/doc/installation.md)
 
 ### [Getting Started](https://github.com/Tydux/Tydux/tree/master/doc/getting-started.md)
 

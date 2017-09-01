@@ -15,8 +15,6 @@ interface DevToolsState {
     stagedActionIds: number[];
 }
 
-let developmentMode = false;
-
 const devToolsEnabled = typeof window !== "undefined"
         && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
 
@@ -50,14 +48,6 @@ if (devToolsEnabled) {
 
         }
     });
-}
-
-export function enableDevelopmentMode(enable: boolean = true) {
-    developmentMode = enable;
-}
-
-export function isDevelopmentModeEnabled() {
-    return developmentMode;
 }
 
 export function subscribeStore(name: string, store: Store<any, any>) {

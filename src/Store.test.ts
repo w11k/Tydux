@@ -1,6 +1,6 @@
-import {enableDevelopmentMode} from "./devTools";
 import {createStore, Mutators, Store} from "./Store";
 import {collect} from "./test-utils";
+import {enableDevelopmentMode} from "./development";
 
 
 describe("Store", function () {

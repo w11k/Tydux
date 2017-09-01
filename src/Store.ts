@@ -1,5 +1,4 @@
 import * as _ from "lodash";
-
 // import "rxjs";
 import "rxjs/add/operator/distinctUntilChanged";
 import "rxjs/add/operator/filter";
@@ -8,9 +7,10 @@ import "rxjs/add/operator/map";
 import {Observable} from "rxjs/Observable";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
-import {globalStateChanges$, isDevelopmentModeEnabled, subscribeStore} from "./devTools";
+import {globalStateChanges$, subscribeStore} from "./devTools";
 import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
 import {isShallowEquals} from "./utils";
+import {isDevelopmentModeEnabled} from "./development";
 
 function assignStateErrorGetter(obj: { state: any }) {
     Object.defineProperty(obj, "state", {
