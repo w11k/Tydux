@@ -24,7 +24,7 @@ describe("Mutators - sanity tests", function () {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 setTimeout(() => {
-                    assert.throws(() => this.state.n1 = 5);
+                    assert.throws(() => this.state);
                     done();
                 }, 0);
             }
