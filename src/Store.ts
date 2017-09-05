@@ -178,9 +178,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     };
                     this_.processMutator(createActionFromArguments(fnName, fn, args), newState, boundMutator);
 
-                    if (isDevelopmentModeEnabled()) {
-                        assignStateErrorGetter(mutators);
-                    }
+                    // if (isDevelopmentModeEnabled()) {
+                    //     assignStateErrorGetter(mutators);
+                    // }
+                    mutators.state = this_.state;
                 }
 
                 return result;

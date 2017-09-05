@@ -1,6 +1,6 @@
 {
   "name": "tydux",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "repository": "https://github.com/w11k/Tydux",
@@ -9,7 +9,6 @@
   ],
   "dependencies": {
     "@types/es6-shim": "0.x.x",
-    "@types/icepick": "1.x",
     "es6-shim": "0.x",
     "lodash": "4.x",
     "rxjs": "5.x"
