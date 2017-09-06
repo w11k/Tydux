@@ -15,7 +15,7 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 Tydux is available as [NPM package](https://npmjs.org/package/tydux):
 
 ```
-npm install tydux
+npm install @w11k/tydux
 ```
 
 # Development vs. Production Mode
