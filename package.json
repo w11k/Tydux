@@ -1,6 +1,6 @@
 {
   "name": "tydux",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "repository": "https://github.com/w11k/Tydux",
