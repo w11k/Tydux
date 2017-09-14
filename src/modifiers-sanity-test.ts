@@ -24,7 +24,7 @@ describe("Mutators - sanity tests", function () {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 setTimeout(() => {
-                    assert.throws(() => this.state);
+                    assert.throws(() => this.state, /Illegal access.*this\.state/);
                     done();
                 }, 0);
             }

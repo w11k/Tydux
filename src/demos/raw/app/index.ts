@@ -81,6 +81,6 @@ const renderApp = () => {
 };
 
 store.select()
-        .subscribe((s) => {
+    .subscribe(() => {
             renderApp();
         });
