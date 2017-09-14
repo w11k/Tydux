@@ -3,6 +3,7 @@
   "version": "1.0.3",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "license": "Apache-2.0",
   "repository": "https://github.com/w11k/Tydux",
   "files": [
     "dist"
