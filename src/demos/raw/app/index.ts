@@ -1,8 +1,7 @@
-import {enableDevelopmentMode} from "../../../devTools";
+import "rxjs/add/operator/first";
+import {enableDevelopmentMode} from "../../../development";
 import {Mutators, Store} from "../../../Store";
 import "./index.html";
-
-import "rxjs/add/operator/first";
 
 
 enableDevelopmentMode();
@@ -16,8 +15,6 @@ export class Todo {
 export class TodoState {
 
     filter = "";
-
-    fredi: string | null = null;
 
     todos: Todo[] = [
         new Todo("todo 1", true),
@@ -60,12 +57,6 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
 const store: TodoStore = new TodoStore();
 
 
-store.selectNonNil(s => s.fredi)
-        .subscribe(fredi => {
-            fredi.substring(0, 1);
-        });
-
-
 (window as any).store = store;
 
 const renderApp = () => {
@@ -90,7 +81,6 @@ const renderApp = () => {
 };
 
 store.select()
-        .first()
         .subscribe((s) => {
             renderApp();
         });
