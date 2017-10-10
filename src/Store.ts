@@ -8,6 +8,8 @@ import {globalStateChanges$, subscribeStore} from "./devTools";
 import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
 import {isShallowEquals} from "./utils";
 import {isDevelopmentModeEnabled} from "./development";
+import {Hooks} from "./hooks";
+import {Subject} from "rxjs/Subject";
 
 function assignStateErrorGetter(obj: { state: any }) {
     Object.defineProperty(obj, "state", {
@@ -92,12 +94,14 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     protected ignoreMembers: (keyof this)[] = ["$q"] as any;
 
-    // noinspection JSUnusedGlobalSymbols
     readonly events$ = this.eventsSubject.asObservable();
+
+    readonly hooks: Hooks<M>;
 
     constructor(storeName: string, mutators: M, state: S) {
         this.processMutator({type: "@@INIT"}, state);
-        this.dispatch = this.wrapMutators(mutators);
+        this.dispatch = this.createDispatchers(mutators);
+        this.hooks = this.createHookSources(mutators);
 
         const pushedStateForThisStore = globalStateChanges$.map(globalState => globalState[storeName]);
         pushedStateForThisStore
@@ -136,14 +140,20 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             .map(val => val!);
     }
 
-    private wrapMutators(mutators: any) {
-        const this_ = this;
+    private createMutatorNamesList(mutators: any) {
         let baseFnNames = _.functionsIn(Mutators.prototype);
-        let fnNames = _.difference(_.functionsIn(mutators), baseFnNames, this.ignoreMembers);
+        return _.difference(_.functionsIn(mutators), baseFnNames, this.ignoreMembers);
+    }
 
-        for (let fnName of fnNames) {
-            const fn = mutators[fnName];
-            mutators[fnName] = function () {
+    private createDispatchers(mutators: any) {
+        const this_ = this;
+        let fnNames = this.createMutatorNamesList(mutators);
+
+        for (let mutName of fnNames) {
+            const fn = mutators[mutName];
+            mutators[mutName] = function () {
+                this_.invokeBeforeHook(mutName);
+
                 const args = arguments;
                 const rootMutator = this_.runningMutatorStack.length === 0;
 
@@ -154,11 +164,12 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 }
 
                 // call mutator
-                this_.runningMutatorStack.push(fnName);
+                this_.runningMutatorStack.push(mutName);
                 let result: any;
                 try {
                     result = fn.apply(mutators, args);
                     result = isDevelopmentModeEnabled() ? checkMutatorReturnType(result) : result;
+                    result = Promise.resolve(result).then(() => this_.invokeAfterHook(mutName));
                 } finally {
                     this_.runningMutatorStack.pop();
                 }
@@ -171,9 +182,9 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     _.assignIn(newState, stateProxy);
 
                     const boundMutator = () => {
-                        mutators[fnName].apply(mutators, args);
+                        mutators[mutName].apply(mutators, args);
                     };
-                    this_.processMutator(createActionFromArguments(fnName, fn, args), newState, boundMutator);
+                    this_.processMutator(createActionFromArguments(mutName, fn, args), newState, boundMutator);
 
                     if (isDevelopmentModeEnabled()) {
                         assignStateErrorGetter(mutators);
@@ -187,6 +198,20 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return mutators;
     }
 
+    private createHookSources(mutators: any) {
+        let fnNames = this.createMutatorNamesList(mutators);
+        const hooksSource: any = {};
+
+        for (let fnName of fnNames) {
+            hooksSource[fnName] = {
+                before: new Subject<void>(),
+                after: new Subject<void>()
+            };
+        }
+
+        return hooksSource;
+    }
+
     private processMutator(action: any, state: S, boundMutator?: () => void) {
         this.setState(state);
         this.eventsSubject.next(new Event(action, this._state, boundMutator));
@@ -195,6 +220,19 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     private setState(state: S) {
         this._state = isDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
+
+    private invokeBeforeHook(mutatorName: string) {
+        let mutatorHooks = this.hooks[mutatorName];
+        let subject = mutatorHooks.before as Subject<void>;
+        subject.next();
+    }
+
+    private invokeAfterHook(mutatorName: string) {
+        let mutatorHooks = this.hooks[mutatorName];
+        let subject = mutatorHooks.after as Subject<void>;
+        subject.next();
+    }
+
 }
 
 class StoreImpl<M extends Mutators<S>, S> extends Store<M, S> {
