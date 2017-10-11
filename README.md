@@ -30,11 +30,11 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
     const store = new MyStore();
 
     // directly query the state
-    console.log("direct", store.state.count);
+    console.log("query", store.state.count);
 
     // observe the state
-    store.select().subscribe(state => {
-        console.log("observe", state.count);
+    store.select(s => s.count).subscribe(count => {
+        console.log("observe", count);
     });
 
     // dispatch actions
@@ -42,7 +42,7 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
     store.dispatch.decrement();
     
     // prints
-    // >> direct 0
+    // >> query 0
     // >> observe 0
     // >> observe 1
     // >> observe 0
