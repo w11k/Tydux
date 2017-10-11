@@ -82,6 +82,9 @@ describe("Modifier hooks", function () {
         });
 
         store.dispatch.increment();
+        store.select().subscribe(state => {
+            console.log(state.count);
+        });
     });
 
 });
