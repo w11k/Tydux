@@ -51,6 +51,6 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 
 ### [Installation](https://github.com/Tydux/Tydux/tree/master/doc/installation.md)
 ### [Tutorial](https://github.com/Tydux/Tydux/tree/master/doc/tutorial.md)
-### [Modifier Hooks](https://github.com/Tydux/Tydux/tree/master/doc/modifier-hooks.md)
+### [Mutator Hooks](https://github.com/Tydux/Tydux/tree/master/doc/mutators-hooks.md)
 ### [Redux DevTools](https://github.com/Tydux/Tydux/tree/master/doc/redux-devtools.md)
 
