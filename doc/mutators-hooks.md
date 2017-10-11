@@ -1,5 +1,5 @@
 
-# Modifier Hooks
+# Mutator Hooks
 
 Tydux provides `Observable`s to observe the execution of mutators. For each individual mutator you can observe before the mutator gets executed and after the mutator has been executed.
 
