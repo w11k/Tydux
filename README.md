@@ -8,6 +8,7 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 
 # Additional Documentation
 
+### [Modifier Hooks](https://github.com/Tydux/Tydux/tree/master/doc/modifier-hooks.md)
 ### [Redux DevTools](https://github.com/Tydux/Tydux/tree/master/doc/redux-devtools.md)
 
 # Installation

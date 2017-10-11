@@ -1,9 +1,9 @@
 import {enableDevelopmentMode} from "./development";
-import {createStore, Mutators} from "./Store";
+import {createStore, Mutators, Store} from "./Store";
 import "rxjs/add/operator/take";
 
 
-describe("Store hooks", function () {
+describe("Modifier hooks", function () {
 
     beforeEach(function () {
         enableDevelopmentMode();
@@ -53,6 +53,35 @@ describe("Store hooks", function () {
             assert.isTrue(hookCalled);
             done();
         });
+    });
+
+    it("documentation", () => {
+        class MyState {
+            count = 0;
+        }
+
+        class MyMutators extends Mutators<MyState> {
+            increment() {
+                this.state.count++;
+            }
+        }
+
+        class MyStore extends Store<MyMutators, MyState> {
+            constructor() {
+                super("myStore", new MyMutators(), new MyState());
+            }
+        }
+
+        const store = new MyStore();
+
+        store.hooks.increment.before.subscribe(() => {
+            console.log("before", store.state.count);
+        });
+        store.hooks.increment.after.subscribe(() => {
+            console.log("after", store.state.count);
+        });
+
+        store.dispatch.increment();
     });
 
 });
