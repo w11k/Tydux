@@ -9,6 +9,41 @@ describe("Store", function () {
         enableDevelopmentMode();
     });
 
+    it("documentation", function() {
+        class MyState {
+            count = 0;
+        }
+
+        class MyMutators extends Mutators<MyState> {
+            increment() {
+                this.state.count++;
+            }
+            decrement() {
+                this.state.count--;
+            }
+        }
+
+        class MyStore extends Store<MyMutators, MyState> {
+            constructor() {
+                super("myStore", new MyMutators(), new MyState());
+            }
+        }
+
+        const store = new MyStore();
+
+        // directly query the state
+        console.log("query", store.state.count);
+
+        // observe the state
+        store.select(s => s.count).subscribe(count => {
+            console.log("observe", count);
+        });
+
+        // dispatch actions
+        store.dispatch.increment();
+        store.dispatch.decrement();
+    });
+
     it("select()", function () {
         class TestMutator extends Mutators<{ n1: number }> {
             inc() {
