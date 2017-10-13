@@ -1,6 +1,4 @@
 
-[![NPM](https://nodei.co/npm/tydux.png)](https://npmjs.org/package/@w11k/tydux)
-
 [![Build Status](https://travis-ci.org/Tydux/Tydux.svg?branch=master)](https://travis-ci.org/Tydux/Tydux)
 
 # Tydux

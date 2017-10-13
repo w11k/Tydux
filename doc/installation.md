@@ -1,6 +1,6 @@
 # Installation
 
-Tydux is available as [NPM package](https://npmjs.org/package/tydux):
+Tydux is available as [NPM package](https://www.npmjs.com/package/@w11k/tydux):
 
 ```
 npm install @w11k/tydux
