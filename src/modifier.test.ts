@@ -1,6 +1,6 @@
+import {enableDevelopmentMode} from "./development";
 import {createStore, Mutators} from "./Store";
 import {createAsyncPromise} from "./test-utils";
-import {enableDevelopmentMode} from "./development";
 
 
 describe("Mutators", function () {
@@ -70,6 +70,23 @@ describe("Mutators", function () {
         store.dispatch.mod1().then(() => {
             done();
         });
+    });
+
+    it("exceptions in promise handler of async mutators are not caught", function (done) {
+        class TestMutator extends Mutators<{ n1: string }> {
+            async mod1(): Promise<void> {
+                return await createAsyncPromise(this.state.n1).then(() => {
+                    throw new Error("");
+                });
+            }
+        }
+
+        const store = createStore("", new TestMutator(), {n1: ""});
+        store.dispatch.mod1().then(
+            () => {
+            }, () => {
+                done();
+            });
     });
 
     it("nested async methods are merged", function (done) {
