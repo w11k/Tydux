@@ -57,6 +57,21 @@ describe("Mutators", function () {
         assert.deepEqual(store.state, {n1: "123"});
     });
 
+    it("modifier can return a promise", function (done) {
+        class TestMutator extends Mutators<{ n1: string }> {
+            async mod1(): Promise<void> {
+                return await createAsyncPromise(this.state.n1).then(() => {
+                    // return void
+                });
+            }
+        }
+
+        const store = createStore("", new TestMutator(), {n1: ""});
+        store.dispatch.mod1().then(() => {
+            done();
+        });
+    });
+
     it("nested async methods are merged", function (done) {
         class TestMutator extends Mutators<{ n1: string }> {
             async mod1() {
