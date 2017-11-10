@@ -1,15 +1,18 @@
-import "./rx-imports";
 import * as _ from "lodash";
 
 import {Observable} from "rxjs/Observable";
 import {ReplaySubject} from "rxjs/ReplaySubject";
-import {deepFreeze} from "./deep-freeze";
-import {globalStateChanges$, subscribeStore} from "./global-state";
-import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
-import {isShallowEquals} from "./utils";
-import {isDevelopmentModeEnabled} from "./development";
-import {Hooks} from "./hooks";
 import {Subject} from "rxjs/Subject";
+import {deepFreeze} from "./deep-freeze";
+import {globalStateChanges$, subscribeStore} from "./dev-tools";
+import {isDevelopmentModeEnabled} from "./development";
+import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
+import {Hooks} from "./hooks";
+import "./rx-imports";
+import {isShallowEquals} from "./utils";
+
+const tyduxStateChangesSubject = new Subject<any>();
+export const tyduxStateChanges: Observable<any> = tyduxStateChangesSubject.asObservable();
 
 function assignStateErrorGetter(obj: { state: any }) {
     Object.defineProperty(obj, "state", {
@@ -110,6 +113,11 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             });
 
         subscribeStore(storeName, this);
+
+        this.events$
+            .subscribe(() => {
+                tyduxStateChangesSubject.next();
+            });
     }
 
     get state(): Readonly<S> {
