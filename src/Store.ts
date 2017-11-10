@@ -4,7 +4,7 @@ import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
-import {globalStateChanges$, subscribeStore} from "./devTools";
+import {globalStateChanges$, subscribeStore} from "./global-state";
 import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
 import {isShallowEquals} from "./utils";
 import {isDevelopmentModeEnabled} from "./development";
