@@ -1,5 +1,6 @@
 import {enableDevelopmentMode} from "./development";
-import {createStore, Mutators} from "./Store";
+import {createSimpleStore} from "./SimpleStore";
+import {Mutators} from "./Store";
 import {createAsyncPromise} from "./test-utils";
 
 
@@ -16,8 +17,8 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
         assert.deepEqual(store.state, {n1: 1});
     });
 
@@ -30,8 +31,8 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
         assert.deepEqual(store.state, {n1: 1});
     });
 
@@ -52,8 +53,8 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: ""});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: ""});
+        store.mutate.mod1();
         assert.deepEqual(store.state, {n1: "123"});
     });
 
@@ -66,8 +67,8 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: ""});
-        store.dispatch.mod1().then(() => {
+        const store = createSimpleStore("", new TestMutator(), {n1: ""});
+        store.mutate.mod1().then(() => {
             done();
         });
     });
@@ -81,12 +82,12 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: ""});
-        store.dispatch.mod1().then(
-            () => {
-            }, () => {
-                done();
-            });
+        const store = createSimpleStore("", new TestMutator(), {n1: ""});
+        store.mutate.mod1().then(
+                () => {
+                }, () => {
+                    done();
+                });
     });
 
     it("nested async methods are merged", function (done) {
@@ -109,8 +110,8 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: ""});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: ""});
+        store.mutate.mod1();
     });
 
     it("methods can use promises with nested mutators as callback", function (done) {
@@ -132,8 +133,8 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
     });
 
     it("methods can be async with nested mutators as callback", function (done) {
@@ -154,8 +155,8 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
     });
 
 

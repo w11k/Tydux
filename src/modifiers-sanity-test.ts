@@ -1,6 +1,7 @@
-import {createStore, Mutators} from "./Store";
+import { Mutators} from "./Store";
 import {createAsyncPromise} from "./test-utils";
 import {enableDevelopmentMode} from "./development";
+import {createSimpleStore} from "./SimpleStore";
 
 
 describe("Mutators - sanity tests", function () {
@@ -16,8 +17,8 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: [1, 2]});
-        assert.throws(() => store.dispatch.mod1());
+        const store = createSimpleStore("", new TestMutator(), {n1: [1, 2]});
+        assert.throws(() => store.mutate.mod1());
     });
 
     it("methods can not change the state asynchronously", function (done) {
@@ -30,8 +31,8 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
     });
 
     it("methods can not change the state in promise callbacks", function (done) {
@@ -44,8 +45,8 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
-        store.dispatch.mod1();
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
     });
 
     it("methods can not return a value", function () {
@@ -56,8 +57,8 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {});
-        assert.throws(() => store.dispatch.errorWrongType());
+        const store = createSimpleStore("", new TestMutator(), {});
+        assert.throws(() => store.mutate.errorWrongType());
     });
 
     it("methods can not return a Promise other than Promise<void>", function (done) {
@@ -68,8 +69,8 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {});
-        store.dispatch.errorWrongPromiseType()
+        const store = createSimpleStore("", new TestMutator(), {});
+        store.mutate.errorWrongPromiseType()
             .catch(() => {
                 done();
             });
@@ -86,8 +87,8 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {a: 0});
-        assert.throws(() => store.dispatch.mut1());
+        const store = createSimpleStore("", new TestMutator(), {a: 0});
+        assert.throws(() => store.mutate.mut1());
         assert.equal(store.state.a, 0);
     });
 

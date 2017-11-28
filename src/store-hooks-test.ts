@@ -1,6 +1,7 @@
-import {enableDevelopmentMode} from "./development";
-import {createStore, Mutators, Store} from "./Store";
 import "rxjs/add/operator/take";
+import {enableDevelopmentMode} from "./development";
+import {Mutators, Store} from "./Store";
+import {createSimpleStore} from "./SimpleStore";
 
 
 describe("Modifier hooks", function () {
@@ -16,9 +17,9 @@ describe("Modifier hooks", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
         store.hooks.mutator.before.take(1).subscribe(done);
-        store.dispatch.mutator();
+        store.mutate.mutator();
     });
 
     it("after hook", function (done) {
@@ -28,9 +29,9 @@ describe("Modifier hooks", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
         store.hooks.mutator.after.take(1).subscribe(done);
-        store.dispatch.mutator();
+        store.mutate.mutator();
     });
 
     it("after hook with asynchronous mutator", function (done) {
@@ -44,12 +45,12 @@ describe("Modifier hooks", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
         let hookCalled = false;
         store.hooks.mutator.after.take(1).subscribe(() => {
             hookCalled = true;
         });
-        store.dispatch.mutator().then(() => {
+        store.mutate.mutator().then(() => {
             assert.isTrue(hookCalled);
             done();
         });
@@ -66,13 +67,7 @@ describe("Modifier hooks", function () {
             }
         }
 
-        class MyStore extends Store<MyMutators, MyState> {
-            constructor() {
-                super("myStore", new MyMutators(), new MyState());
-            }
-        }
-
-        const store = new MyStore();
+        const store = createSimpleStore("myStore", new MyMutators(), new MyState());
 
         store.hooks.increment.before.subscribe(() => {
             console.log("before", store.state.count);
@@ -81,7 +76,7 @@ describe("Modifier hooks", function () {
             console.log("after", store.state.count);
         });
 
-        store.dispatch.increment();
+        store.mutate.increment();
         store.select().subscribe(state => {
             console.log(state.count);
         });

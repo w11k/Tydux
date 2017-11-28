@@ -25,6 +25,10 @@ export class TodoState {
 
 export class TodoMutators extends Mutators<TodoState> {
 
+    clearTodos() {
+        this.state.todos = [];
+    }
+
     addTodo(todoName: string) {
         this.state.todos = [
             ...this.state.todos,
@@ -32,26 +36,40 @@ export class TodoMutators extends Mutators<TodoState> {
         ];
     }
 
-    removeCompleted() {
-        this.state.todos = this.state.todos.filter(t => !t.complete);
-    }
-
-    async loadFromServer() {
-        const result = await fetch("/todos");
-        const todos = await result.json();
-        this.assignTodos(todos);
-    }
-
-    assignTodos(todos: Todo[]) {
+    setTodos(todos: Todo[]) {
         this.state.todos = todos;
+
+        setTimeout(() => {
+            this.state.todos = [];
+            this.clearTodos();
+        }, 1000);
+    }
+
+    removeCompleted() {
+        this.setTodos(this.state.todos.filter(t => !t.complete));
     }
 
 }
 
 export class TodoStore extends Store<TodoMutators, TodoState> {
+
+    addTodo = this.dispatch.addTodo;
+
+    removeCompleted = this.dispatch.removeCompleted;
+
     constructor() {
-        super("todo", new TodoMutators(), new TodoState());
+        super("todos", new TodoMutators(), new TodoState());
+        this.addTodo("aaa");
+        this.addTodo("bbb");
     }
+
+    async loadFromServer() {
+        this.dispatch.clearTodos();
+        const result = await fetch("/todos");
+        const todos = await result.json();
+        this.dispatch.setTodos(todos);
+    }
+
 }
 
 const store: TodoStore = new TodoStore();
@@ -62,11 +80,11 @@ const store: TodoStore = new TodoStore();
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
-            <button onclick='(${() => store.dispatch.addTodo("" + Date.now())})();'>
+            <button onclick='(${() => store.addTodo("" + Date.now())})();'>
                 Add Todo
             </button>
         
-            <button onclick='(${() => store.dispatch.removeCompleted()})();'>
+            <button onclick='(${() => store.removeCompleted()})();'>
                 remove completed
             </button>
         

@@ -87,13 +87,13 @@ function createActionFromArguments(fnName: string, fn: any, args: IArguments): a
 
 export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
-    readonly dispatch: M;
-
     private _state: S;
 
     private runningMutatorStack: string[] = [];
 
     private eventsSubject = new ReplaySubject<Event<S>>(1);
+
+    protected readonly dispatch: M;
 
     protected ignoreMembers: (keyof this)[] = ["$q"] as any;
 
@@ -101,10 +101,14 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     readonly hooks: Hooks<M>;
 
+    readonly mutatorNames: string[];
+
     constructor(storeName: string, mutators: M, state: S) {
         this.processMutator({type: "@@INIT"}, state);
+        this.mutatorNames = this.createMutatorNamesList(mutators);
         this.dispatch = this.createDispatchers(mutators);
-        this.hooks = this.createHookSources(mutators);
+        this.hooks = this.createHookSources();
+        this.wrapMethods();
 
         const pushedStateForThisStore = globalStateChanges$.map(globalState => globalState[storeName]);
 
@@ -157,9 +161,8 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private createDispatchers(mutators: any) {
         const this_ = this;
-        let fnNames = this.createMutatorNamesList(mutators);
 
-        for (let mutName of fnNames) {
+        for (let mutName of this.mutatorNames) {
             const fn = mutators[mutName];
             mutators[mutName] = function () {
                 this_.invokeBeforeHook(mutName);
@@ -194,7 +197,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     const boundMutator = () => {
                         mutators[mutName].apply(mutators, args);
                     };
-                    this_.processMutator(createActionFromArguments(mutName, fn, args), newState, boundMutator);
+
+                    const storeMethodName = (this as any).storeMethodName;
+                    const typeName = storeMethodName ? storeMethodName + " - " + mutName : mutName;
+                    this_.processMutator(createActionFromArguments(typeName, fn, args), newState, boundMutator);
 
                     if (isDevelopmentModeEnabled()) {
                         assignStateErrorGetter(mutators);
@@ -208,11 +214,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return mutators;
     }
 
-    private createHookSources(mutators: any) {
-        let fnNames = this.createMutatorNamesList(mutators);
+    private createHookSources() {
         const hooksSource: any = {};
 
-        for (let fnName of fnNames) {
+        for (let fnName of this.mutatorNames) {
             hooksSource[fnName] = {
                 before: new Subject<void>(),
                 after: new Subject<void>()
@@ -243,23 +248,28 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         subject.next();
     }
 
-}
+    private wrapMethods() {
+        const methods: string[] = _.functions(Object.getPrototypeOf(this));
 
-class StoreImpl<M extends Mutators<S>, S> extends Store<M, S> {
-    constructor(storeName: string, mutators: M, state: S) {
-        super(storeName, mutators, state);
+        for (let method of methods) {
+            const dispatcherProxy = {
+                storeMethodName: method,
+            };
+            Object.setPrototypeOf(dispatcherProxy, this.dispatch);
+
+            const storeProxy = {
+                dispatch: dispatcherProxy
+            };
+            Object.setPrototypeOf(storeProxy, this);
+
+            const original = (this as any)[method];
+            (this as any)[method] = function () {
+                original.apply(storeProxy, arguments);
+            };
+        }
     }
 }
 
-export function createStore<M extends Mutators<S>, S>(name: string,
-                                                      mutators: M,
-                                                      initialState: S): Store<M, S> {
-
-    return new StoreImpl<M, S>(name, mutators, initialState);
-}
-
 export abstract class Mutators<T> {
-
     protected state: T;
-
 }

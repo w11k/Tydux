@@ -1,6 +1,7 @@
-import {createStore, Mutators, Store} from "./Store";
+import { Mutators, Store} from "./Store";
 import {collect} from "./test-utils";
 import {enableDevelopmentMode} from "./development";
+import {createSimpleStore} from "./SimpleStore";
 
 
 describe("Store", function () {
@@ -23,13 +24,8 @@ describe("Store", function () {
             }
         }
 
-        class MyStore extends Store<MyMutators, MyState> {
-            constructor() {
-                super("myStore", new MyMutators(), new MyState());
-            }
-        }
 
-        const store = new MyStore();
+        const store = createSimpleStore("myStore", new MyMutators(), new MyState());
 
         // directly query the state
         console.log("query", store.state.count);
@@ -40,8 +36,8 @@ describe("Store", function () {
         });
 
         // dispatch actions
-        store.dispatch.increment();
-        store.dispatch.decrement();
+        store.mutate.increment();
+        store.mutate.decrement();
     });
 
     it("select()", function () {
@@ -51,10 +47,10 @@ describe("Store", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select());
-        store.dispatch.inc();
-        store.dispatch.inc();
+        store.mutate.inc();
+        store.mutate.inc();
         collected.assert({n1: 0}, {n1: 1}, {n1: 2});
     });
 
@@ -65,10 +61,10 @@ describe("Store", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: 0});
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select(s => s.n1));
-        store.dispatch.inc();
-        store.dispatch.inc();
+        store.mutate.inc();
+        store.mutate.inc();
         collected.assert(0, 1, 2);
     });
 
@@ -83,14 +79,14 @@ describe("Store", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {n1: undefined} as { n1?: number });
+        const store = createSimpleStore("", new TestMutator(), {n1: undefined} as { n1?: number });
         let collected = collect(store.selectNonNil(s => s.n1));
-        store.dispatch.inc(); // 1
-        store.dispatch.clear();
-        store.dispatch.inc(); // 1
-        store.dispatch.inc(); // 2
-        store.dispatch.clear();
-        store.dispatch.inc(); // 1
+        store.mutate.inc(); // 1
+        store.mutate.clear();
+        store.mutate.inc(); // 1
+        store.mutate.inc(); // 2
+        store.mutate.clear();
+        store.mutate.inc(); // 1
         collected.assert(1, 1, 2, 1);
     });
 
@@ -106,12 +102,12 @@ describe("Store", function () {
             }
         }
 
-        const store = createStore("", new TestMutator(), {a: 0, b: 10, c: 100});
+        const store = createSimpleStore("", new TestMutator(), {a: 0, b: 10, c: 100});
         let collected = collect(store.select(s => [s.a, s.b]));
-        store.dispatch.incAB();
-        store.dispatch.incC();
-        store.dispatch.incAB();
-        store.dispatch.incC();
+        store.mutate.incAB();
+        store.mutate.incC();
+        store.mutate.incAB();
+        store.mutate.incC();
         collected.assert([0, 10], [1, 11], [2, 12]);
     });
 
