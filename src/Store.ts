@@ -199,7 +199,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     };
 
                     const storeMethodName = (this as any).storeMethodName;
-                    const typeName = storeMethodName ? storeMethodName + " - " + mutName : mutName;
+                    const typeName = storeMethodName ? mutName + ` (${storeMethodName})` : mutName;
                     this_.processMutator(createActionFromArguments(typeName, fn, args), newState, boundMutator);
 
                     if (isDevelopmentModeEnabled()) {
