@@ -107,17 +107,19 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         this.hooks = this.createHookSources(mutators);
 
         const pushedStateForThisStore = globalStateChanges$.map(globalState => globalState[storeName]);
+
         pushedStateForThisStore
-            .subscribe(state => {
-                this.setState(state);
-            });
+                .filter(s => !_.isNil(s))
+                .subscribe(state => {
+                    this.setState(state);
+                });
 
         subscribeStore(storeName, this);
 
         this.events$
-            .subscribe(() => {
-                tyduxStateChangesSubject.next();
-            });
+                .subscribe(() => {
+                    tyduxStateChangesSubject.next();
+                });
     }
 
     get state(): Readonly<S> {
@@ -130,22 +132,22 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
         return this.eventsSubject
-            .map(event => {
-                return selector ? selector(event.state) : event.state as any;
-            })
-            .distinctUntilChanged((old, value) => {
-                if (_.isArray(old) && _.isArray(value)) {
-                    return isShallowEquals(old, value);
-                } else {
-                    return old === value;
-                }
-            });
+                .map(event => {
+                    return selector ? selector(event.state) : event.state as any;
+                })
+                .distinctUntilChanged((old, value) => {
+                    if (_.isArray(old) && _.isArray(value)) {
+                        return isShallowEquals(old, value);
+                    } else {
+                        return old === value;
+                    }
+                });
     }
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined = _.identity as any): Observable<R> {
         return this.select(selector)
-            .filter(val => !_.isNil(val))
-            .map(val => val!);
+                .filter(val => !_.isNil(val))
+                .map(val => val!);
     }
 
     private createMutatorNamesList(mutators: any) {
