@@ -194,12 +194,11 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     const newState = isDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
                     _.assignIn(newState, stateProxy);
 
+                    const storeMethodName = (this as any).storeMethodName;
+                    const typeName = storeMethodName ? mutName + ` (${storeMethodName})` : mutName;
                     const boundMutator = () => {
                         mutators[mutName].apply(mutators, args);
                     };
-
-                    const storeMethodName = (this as any).storeMethodName;
-                    const typeName = storeMethodName ? mutName + ` (${storeMethodName})` : mutName;
                     this_.processMutator(createActionFromArguments(typeName, fn, args), newState, boundMutator);
 
                     if (isDevelopmentModeEnabled()) {
