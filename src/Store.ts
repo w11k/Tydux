@@ -63,9 +63,9 @@ function checkMutatorReturnType(obj: any) {
 }
 
 export class Event<S> {
-    constructor(public readonly action: any,
-                public readonly state: S,
-                public readonly boundMutator?: () => void) {
+    constructor(readonly action: any,
+                readonly state: S,
+                readonly boundMutator?: () => void) {
     }
 }
 
