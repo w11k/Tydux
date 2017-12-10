@@ -6,61 +6,14 @@ import {Subject} from "rxjs/Subject";
 import {deepFreeze} from "./deep-freeze";
 import {globalStateChanges$, subscribeStore} from "./dev-tools";
 import {isDevelopmentModeEnabled} from "./development";
-import {illegalAccessToThisState, mutatorWrongReturnType} from "./error-messages";
-import {Hooks} from "./hooks";
+import {assignStateValue, checkMutatorReturnType, createFailingProxy, createProxy} from "./mutators";
+// import {Hooks} from "./hooks";
 import "./rx-imports";
 import {isShallowEquals} from "./utils";
 
 const tyduxStateChangesSubject = new Subject<any>();
 export const tyduxStateChanges: Observable<any> = tyduxStateChangesSubject.asObservable();
 
-function assignStateErrorGetter(obj: { state: any }) {
-    Object.defineProperty(obj, "state", {
-        configurable: true,
-        enumerable: false,
-        get: () => {
-            throw new Error(illegalAccessToThisState);
-        }
-    });
-}
-
-function assignStateValue<S>(obj: { state: S }, state: S) {
-    const stateContainer = [state];
-    Object.defineProperty(obj, "state", {
-        configurable: true,
-        enumerable: false,
-        get: () => {
-            return stateContainer[0];
-        },
-        set: (value: any) => {
-            stateContainer[0] = value;
-        }
-    });
-}
-
-function createProxy<T>(target: T): T {
-    const proxy: any = {};
-    // re-assign members. Otherwise these members would be marked as read only.
-    _.assignIn(proxy, target);
-    Object.setPrototypeOf(proxy, target);
-    return proxy;
-}
-
-function checkMutatorReturnType(obj: any) {
-    if (obj !== undefined && typeof obj.then === "function") {
-        return obj.then((val: any) => {
-            if (val !== undefined) {
-                throw new Error(mutatorWrongReturnType);
-            }
-            return undefined;
-        });
-
-    } else if (obj === undefined) {
-        return undefined;
-    }
-
-    throw new Error(mutatorWrongReturnType);
-}
 
 export class Event<S> {
     constructor(readonly action: any,
@@ -99,7 +52,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     readonly events$ = this.eventsSubject.asObservable();
 
-    readonly hooks: Hooks<M>;
+    // readonly hooks: Hooks<M>;
 
     readonly mutatorNames: string[];
 
@@ -107,7 +60,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         this.processMutator({type: "@@INIT"}, state);
         this.mutatorNames = this.createMutatorNamesList(mutators);
         this.dispatch = this.createDispatchers(mutators);
-        this.hooks = this.createHookSources();
+        // this.hooks = this.createHookSources();
         this.wrapMethods();
 
         const pushedStateForThisStore = globalStateChanges$.map(globalState => globalState[storeName]);
@@ -165,7 +118,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         for (let mutName of this.mutatorNames) {
             const fn = mutators[mutName];
             mutators[mutName] = function () {
-                this_.invokeBeforeHook(mutName);
+                // this_.invokeBeforeHook(mutName);
 
                 const args = arguments;
                 const rootMutator = this_.runningMutatorStack.length === 0;
@@ -179,10 +132,14 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 // call mutator
                 this_.runningMutatorStack.push(mutName);
                 let result: any;
+                const mutatorsThisProxy = createProxy(mutators);
                 try {
-                    result = fn.apply(mutators, args);
+                    result = fn.apply(mutatorsThisProxy, args);
+
+                    let failingProxy = createFailingProxy();
+                    Object.setPrototypeOf(mutatorsThisProxy, failingProxy);
                     result = isDevelopmentModeEnabled() ? checkMutatorReturnType(result) : result;
-                    result = Promise.resolve(result).then(() => this_.invokeAfterHook(mutName));
+                    // result = Promise.resolve(result).then(() => this_.invokeAfterHook(mutName));
                 } finally {
                     this_.runningMutatorStack.pop();
                 }
@@ -201,9 +158,9 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     };
                     this_.processMutator(createActionFromArguments(typeName, fn, args), newState, boundMutator);
 
-                    if (isDevelopmentModeEnabled()) {
-                        assignStateErrorGetter(mutators);
-                    }
+                    // if (isDevelopmentModeEnabled()) {
+                    //     assignStateErrorGetter(mutators);
+                    // }
                 }
 
                 return result;
@@ -213,18 +170,18 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return mutators;
     }
 
-    private createHookSources() {
-        const hooksSource: any = {};
-
-        for (let fnName of this.mutatorNames) {
-            hooksSource[fnName] = {
-                before: new Subject<void>(),
-                after: new Subject<void>()
-            };
-        }
-
-        return hooksSource;
-    }
+    // private createHookSources() {
+    //     const hooksSource: any = {};
+    //
+    //     for (let fnName of this.mutatorNames) {
+    //         hooksSource[fnName] = {
+    //             before: new Subject<void>(),
+    //             after: new Subject<void>()
+    //         };
+    //     }
+    //
+    //     return hooksSource;
+    // }
 
     private processMutator(action: any, state: S, boundMutator?: () => void) {
         this.setState(state);
@@ -235,17 +192,17 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         this._state = isDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
-    private invokeBeforeHook(mutatorName: string) {
-        let mutatorHooks = this.hooks[mutatorName];
-        let subject = mutatorHooks.before as Subject<void>;
-        subject.next();
-    }
-
-    private invokeAfterHook(mutatorName: string) {
-        let mutatorHooks = this.hooks[mutatorName];
-        let subject = mutatorHooks.after as Subject<void>;
-        subject.next();
-    }
+    // private invokeBeforeHook(mutatorName: string) {
+    //     let mutatorHooks = this.hooks[mutatorName];
+    //     let subject = mutatorHooks.before as Subject<void>;
+    //     subject.next();
+    // }
+    //
+    // private invokeAfterHook(mutatorName: string) {
+    //     let mutatorHooks = this.hooks[mutatorName];
+    //     let subject = mutatorHooks.after as Subject<void>;
+    //     subject.next();
+    // }
 
     private wrapMethods() {
         const methods: string[] = _.functions(Object.getPrototypeOf(this));

@@ -25,7 +25,7 @@ describe("Mutators - sanity tests", function () {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 setTimeout(() => {
-                    assert.throws(() => this.state, /Illegal access.*this\.state/);
+                    assert.throws(() => this.state, /Illegal access.*this/);
                     done();
                 }, 0);
             }
@@ -35,7 +35,7 @@ describe("Mutators - sanity tests", function () {
         store.mutate.mod1();
     });
 
-    it("methods can not change the state in promise callbacks", function (done) {
+    it("methods can not change the state in asynchronous promise callbacks", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 createAsyncPromise(1).then(val => {
@@ -61,35 +61,44 @@ describe("Mutators - sanity tests", function () {
         assert.throws(() => store.mutate.errorWrongType());
     });
 
-    it("methods can not return a Promise other than Promise<void>", function (done) {
-        class TestMutator extends Mutators<any> {
-            // noinspection JSMethodCanBeStatic
-            errorWrongPromiseType() {
-                return createAsyncPromise(1).then(val => val);
+    it("methods can not access other members asynchronously", function (done) {
+        class TestMutator extends Mutators<{ n1: number }> {
+            mod1() {
+                setTimeout(() => {
+                    assert.throws(() => this.mod2(), /Illegal access.*this/);
+                    done();
+                }, 0);
+            }
+
+            mod2() {
+                // empty
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {});
-        store.mutate.errorWrongPromiseType()
-            .catch(() => {
-                done();
-            });
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
     });
 
-    it("state changes are only persistent if the mutator did not throw an exception", function () {
-        class TestMutator extends Mutators<any> {
-            mut1() {
-                this.state.a = 1;
-                if (this.state.a > 0) {
-                    throw new Error("");
-                }
-                this.state.a = 2;
+    it("methods can not access other members in an asynchronous promise resolve", function (done) {
+        class TestMutator extends Mutators<{ n1: number }> {
+            mod1() {
+                createAsyncPromise(1)
+                        .then(() => {
+                            this.mod2();
+                        })
+                        .catch((e) => {
+                            assert.match(e, /Illegal access.*this/);
+                            done();
+                        });
+            }
+
+            mod2() {
+                // empty
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {a: 0});
-        assert.throws(() => store.mutate.mut1());
-        assert.equal(store.state.a, 0);
+        const store = createSimpleStore("", new TestMutator(), {n1: 0});
+        store.mutate.mod1();
     });
 
 });

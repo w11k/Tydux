@@ -9,7 +9,7 @@
     "moduleResolution": "node",
     "noEmitOnError": false,
     "noImplicitAny": true,
-    "strictNullChecks": true,
+    "strict": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "typeRoots": [
@@ -19,6 +19,12 @@
       "mocha",
       "chai",
       "es6-shim"
+    ],
+    "lib": [
+      "dom",
+      "es2015",
+      "es2015.core",
+      "es2015.proxy"
     ],
     "rootDir": "src",
     "target": "es5",
