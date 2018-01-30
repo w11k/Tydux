@@ -31,7 +31,7 @@ describe("Store", function () {
         console.log("query", store.state.count);
 
         // observe the state
-        store.select(s => s.count).subscribe(count => {
+        store.select(s => s.count).unbounded().subscribe(count => {
             console.log("observe", count);
         });
 
@@ -48,7 +48,7 @@ describe("Store", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.select());
+        let collected = collect(store.select().unbounded());
         store.mutate.inc();
         store.mutate.inc();
         collected.assert({n1: 0}, {n1: 1}, {n1: 2});
@@ -62,7 +62,7 @@ describe("Store", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.select(s => s.n1));
+        let collected = collect(store.select(s => s.n1).unbounded());
         store.mutate.inc();
         store.mutate.inc();
         collected.assert(0, 1, 2);
@@ -80,7 +80,7 @@ describe("Store", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {n1: undefined} as { n1?: number });
-        let collected = collect(store.selectNonNil(s => s.n1));
+        let collected = collect(store.selectNonNil(s => s.n1).unbounded());
         store.mutate.inc(); // 1
         store.mutate.clear();
         store.mutate.inc(); // 1
@@ -103,7 +103,7 @@ describe("Store", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {a: 0, b: 10, c: 100});
-        let collected = collect(store.select(s => [s.a, s.b]));
+        let collected = collect(store.select(s => [s.a, s.b]).unbounded());
         store.mutate.incAB();
         store.mutate.incC();
         store.mutate.incAB();
