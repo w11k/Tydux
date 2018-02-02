@@ -1,13 +1,14 @@
-import { Mutators, Store} from "./Store";
+import {Mutators} from "./mutators";
+import {Store} from "./Store";
 import {collect} from "./test-utils";
-import {enableDevelopmentMode} from "./development";
+import {enableTyduxDevelopmentMode} from "./development";
 import {createSimpleStore} from "./SimpleStore";
 
 
 describe("Store", function () {
 
     beforeEach(function () {
-        enableDevelopmentMode();
+        enableTyduxDevelopmentMode();
     });
 
     it("documentation", function() {

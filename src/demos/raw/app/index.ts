@@ -1,10 +1,11 @@
 import "rxjs/add/operator/first";
-import {enableDevelopmentMode} from "../../../development";
-import {Mutators, Store} from "../../../Store";
+import {enableTyduxDevelopmentMode} from "../../../development";
+import {Mutators} from "../../../mutators";
+import {Store} from "../../../Store";
 import "./index.html";
 
 
-enableDevelopmentMode();
+enableTyduxDevelopmentMode();
 
 export class Todo {
     constructor(public description: string,

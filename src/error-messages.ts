@@ -2,7 +2,6 @@
 export const mutatorWrongReturnType = "mutator methods must return void|undefined";
 
 export const illegalAccessToThis = `
-
 Illegal access to 'this'. Make sure that 'this' is not accessed in positions like the following:
 
 - inside asynchronously called callbacks, e.g. 

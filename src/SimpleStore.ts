@@ -1,4 +1,5 @@
-import {Mutators, Store} from "./Store";
+import {Mutators} from "./mutators";
+import {Store} from "./Store";
 
 
 class SimpleStoreImpl<M extends Mutators<S>, S> extends Store<M, S> {
@@ -9,9 +10,9 @@ class SimpleStoreImpl<M extends Mutators<S>, S> extends Store<M, S> {
 }
 
 export type SimpleStore<M extends Mutators<S>, S> =
-        Store<M, S>
-        // & { readonly [P in keyof M]: M[P]; }
-        & { mutate: M };
+    Store<M, S>
+    // & { readonly [P in keyof M]: M[P]; }
+    & { mutate: M };
 
 export function createSimpleStore<M extends Mutators<S>, S>(name: string,
                                                             mutators: M,

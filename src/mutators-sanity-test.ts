@@ -1,13 +1,13 @@
-import { Mutators} from "./Store";
+import {Mutators} from "./mutators";
 import {createAsyncPromise} from "./test-utils";
-import {enableDevelopmentMode} from "./development";
+import {enableTyduxDevelopmentMode} from "./development";
 import {createSimpleStore} from "./SimpleStore";
 
 
 describe("Mutators - sanity tests", function () {
 
     beforeEach(function () {
-        enableDevelopmentMode();
+        enableTyduxDevelopmentMode();
     });
 
     it("methods can not change the state deeply", function () {

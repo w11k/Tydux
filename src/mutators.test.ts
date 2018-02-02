@@ -1,12 +1,12 @@
-import {enableDevelopmentMode} from "./development";
+import {enableTyduxDevelopmentMode} from "./development";
+import {Mutators} from "./mutators";
 import {createSimpleStore} from "./SimpleStore";
-import {Mutators} from "./Store";
 
 
 describe("Mutators", function () {
 
     beforeEach(function () {
-        enableDevelopmentMode();
+        enableTyduxDevelopmentMode();
     });
 
     it("methods can change the state", function () {

@@ -12,19 +12,14 @@
     "strict": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
+    "skipLibCheck": true,
     "typeRoots": [
       "node_modules/@types"
     ],
-    "types": [
-      "mocha",
-      "chai",
-      "es6-shim"
-    ],
     "lib": [
-//      "dom",
-      "es2015",
-//      "es2015.core",
-//      "es2015.proxy"
+      "es5",
+      "es2015.proxy",
+      "dom"
     ],
     "rootDir": "src",
     "target": "es5",

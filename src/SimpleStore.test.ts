@@ -1,13 +1,13 @@
-import {enableDevelopmentMode} from "./development";
+import {enableTyduxDevelopmentMode} from "./development";
+import {Mutators} from "./mutators";
 import {createSimpleStore} from "./SimpleStore";
-import {Mutators} from "./Store";
 import {collect} from "./test-utils";
 
 
 describe("SimpleStore", function () {
 
     beforeEach(function () {
-        enableDevelopmentMode();
+        enableTyduxDevelopmentMode();
     });
 
     it("select()", function () {

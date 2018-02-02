@@ -1,9 +1,9 @@
 let developmentMode = false;
 
-export function enableDevelopmentMode(enable: boolean = true) {
+export function enableTyduxDevelopmentMode(enable: boolean = true) {
     developmentMode = enable;
 }
 
-export function isDevelopmentModeEnabled() {
+export function isTyduxDevelopmentModeEnabled() {
     return developmentMode;
 }

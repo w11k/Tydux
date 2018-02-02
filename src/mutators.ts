@@ -7,16 +7,6 @@ export function checkMutatorReturnType(obj: any): void {
     }
 }
 
-// export function assignStateErrorGetter(obj: { state: any }) {
-//     Object.defineProperty(obj, "state", {
-//         configurable: true,
-//         enumerable: false,
-//         get: () => {
-//             throw new Error(illegalAccessToThis);
-//         }
-//     });
-// }
-
 export function assignStateValue<S>(obj: { state: S }, state: S) {
     const stateContainer = [state];
     Object.defineProperty(obj, "state", {
@@ -52,4 +42,9 @@ export function createFailingProxy(): object {
     };
 
     return new Proxy(target, handler);
+}
+
+
+export abstract class Mutators<T> {
+    protected state: T = undefined as any;
 }
