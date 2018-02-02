@@ -1,7 +1,7 @@
 
 [![Build Status](https://travis-ci.org/Tydux/Tydux.svg?branch=master)](https://travis-ci.org/Tydux/Tydux)
 
-![Tydux Logo]()
+![Tydux Logo](https://raw.githubusercontent.com/w11k/Tydux/master/doc/tydux_logo.png)
 
 # Tydux
 
