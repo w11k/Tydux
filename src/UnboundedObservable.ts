@@ -1,14 +1,9 @@
-import {Observable} from "rxjs/Observable";
-
+import {Observable} from "rxjs";
+import {takeUntil} from "rxjs/operators";
 
 export class UnboundedObservable<T> {
 
     constructor(private readonly observable: Observable<T>) {
-    }
-
-    pipe<R>(operatorFunction: (source: Observable<T>) => Observable<R>) {
-        let transformed: Observable<R> = this.observable.pipe(operatorFunction);
-        return new UnboundedObservable(transformed);
     }
 
     unbounded() {
@@ -16,7 +11,8 @@ export class UnboundedObservable<T> {
     }
 
     takeUntil(notifier: Observable<any>) {
-        return this.observable.takeUntil(notifier);
+        return this.observable.pipe(
+                takeUntil(notifier));
     }
 
     first() {

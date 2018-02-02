@@ -1,20 +1,18 @@
 import * as _ from "lodash";
 
 import {Observable} from "rxjs/Observable";
+import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {Subject} from "rxjs/Subject";
 import {deepFreeze} from "./deep-freeze";
 import {globalStateChanges$, subscribeStore} from "./dev-tools";
 import {isDevelopmentModeEnabled} from "./development";
 import {assignStateValue, checkMutatorReturnType, createFailingProxy, createProxy} from "./mutators";
-// import {Hooks} from "./hooks";
-import "./rx-imports";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {isShallowEquals} from "./utils";
 
 const tyduxStateChangesSubject = new Subject<any>();
 export const tyduxStateChanges: Observable<any> = tyduxStateChangesSubject.asObservable();
-
 
 export class Event<S> {
     constructor(readonly action: any,
@@ -64,20 +62,21 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         // this.hooks = this.createHookSources();
         this.wrapMethods();
 
-        const pushedStateForThisStore = globalStateChanges$.map(globalState => globalState[storeName]);
+        const pushedStateForThisStore = globalStateChanges$.pipe(
+                map(globalState => globalState[storeName]));
 
-        pushedStateForThisStore
-            .filter(s => !_.isNil(s))
-            .subscribe(state => {
-                this.setState(state);
-            });
+        pushedStateForThisStore.pipe(
+                filter(s => !_.isNil(s)))
+                .subscribe(state => {
+                    this.setState(state);
+                });
 
         subscribeStore(storeName, this);
 
         this.events$
-            .subscribe(() => {
-                tyduxStateChangesSubject.next();
-            });
+                .subscribe(() => {
+                    tyduxStateChangesSubject.next();
+                });
     }
 
     get state(): Readonly<S> {
@@ -89,27 +88,27 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     select<R>(selector: (state: Readonly<S>) => R): UnboundedObservable<R>;
 
     select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
-        const stream = this.eventsSubject
-            .map(event => {
-                return selector ? selector(event.state) :event.state as any;
-            })
-            .distinctUntilChanged((old, value) => {
-                if (_.isArray(old) && _.isArray(value)) {
-                    return isShallowEquals(old, value);
-                } else {
-                    return old === value;
-                }
-            });
+        const stream = this.eventsSubject.pipe(
+                map(event => {
+                    return selector ? selector(event.state) : event.state as any;
+                }),
+                distinctUntilChanged((old, value) => {
+                    if (_.isArray(old) && _.isArray(value)) {
+                        return isShallowEquals(old, value);
+                    } else {
+                        return old === value;
+                    }
+                }));
 
         return new UnboundedObservable(stream);
     }
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined = _.identity as any): UnboundedObservable<R> {
-        return this.select(selector)
-            .pipe($ => $
-                .filter(val => !_.isNil(val))
-                .map(val => val!)
-            );
+        return new UnboundedObservable(
+                this.select(selector).unbounded().pipe(
+                        filter(val => !_.isNil(val)),
+                        map(val => val!)
+                ));
     }
 
     private createMutatorNamesList(mutators: any) {
@@ -143,7 +142,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
                     let failingProxy = createFailingProxy();
                     Object.setPrototypeOf(mutatorsThisProxy, failingProxy);
-                    result = isDevelopmentModeEnabled() ? checkMutatorReturnType(result) :result;
+                    result = isDevelopmentModeEnabled() ? checkMutatorReturnType(result) : result;
                     // result = Promise.resolve(result).then(() => this_.invokeAfterHook(mutName));
                 } finally {
                     this_.runningMutatorStack.pop();
@@ -153,11 +152,11 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 if (rootMutator) {
                     const stateProxy = mutators.state;
                     const stateOriginal = this_.state;
-                    const newState = isDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) :{} as S;
+                    const newState = isDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
                     _.assignIn(newState, stateProxy);
 
                     const storeMethodName = (this as any).storeMethodName;
-                    const typeName = storeMethodName ? mutName + ` (${storeMethodName})` :mutName;
+                    const typeName = storeMethodName ? mutName + ` (${storeMethodName})` : mutName;
                     const boundMutator = () => {
                         mutators[mutName].apply(mutators, args);
                     };
@@ -194,7 +193,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     }
 
     private setState(state: S) {
-        this._state = isDevelopmentModeEnabled() ? deepFreeze(state) :state;
+        this._state = isDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
     // private invokeBeforeHook(mutatorName: string) {

@@ -9,8 +9,8 @@
     "dist"
   ],
   "dependencies": {
-    "@types/es6-shim": "0.x.x",
-    "es6-shim": "0.x",
+//    "@types/es6-shim": "0.x.x",
+//    "es6-shim": "0.x",
     "lodash": "4.x",
     "rxjs": "^5.5.6"
   },
@@ -28,7 +28,7 @@
     "source-map-support": "^0.4.6",
     "ts-node": "^3.3.0",
     "tslint": "^5.8.0",
-    "typescript": "^2.6.2",
+    "typescript": "^2.7.1",
     "webpack": "^3.5.2",
     "webpack-dev-server": "^2.7.1"
   },
