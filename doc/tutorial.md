@@ -25,7 +25,7 @@ export class TodoState {
 
 ## Mutators
 
-Only mutators are able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state. The following mutator class contains one method to add a new todo:
+Only mutators are able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state. The following mutator class contains two methods to alter the state:
 
 ```
 export class TodoMutators extends Mutators<TodoState> {
@@ -82,7 +82,7 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
         this.dispatch.addTodo(todo); // access the mutator
     }
 
-    clearTodos = this.dispatch.clearTodos; // simple delegate to the mutaotr
+    clearTodos = this.dispatch.clearTodos; // simple delegate to the mutator
 
 }
 ```
