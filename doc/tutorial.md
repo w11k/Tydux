@@ -10,24 +10,14 @@ The following example shows a simple "TODO app".
 
 ## State 
 
-Normal classes are used to represent the state of the application. To implement the state in our app, we need a `Todo` and a `TodoState` class. However, only the latter is relevant for Tydux. The former simply serves for demonstration purposes.
-
-The `TodoState` class contains all the state, modelled as normal class properties, that we want to manage with Tydux.
+Normal classes are used to represent the state of the application. To implement the state in our app, we need a `TodoState` class. The `TodoState` class contains all the state, modelled as normal class properties, that we want to manage with Tydux.
 
 ```
-export class Todo {
-    constructor(public description: string, 
-                public complete: boolean = false) {
-    }
-}
-
 export class TodoState {
 
-    filter = "";
-
-    todos: Todo[] = [
-        new Todo("todo 1", true),
-        new Todo("todo 2")
+    todos: string[] = [
+        "todo 1",
+        "todo 2"
     ];
 
 }
@@ -40,10 +30,14 @@ Only mutators are able to modify the state. Tydux enforces this by deeply freezi
 ```
 export class TodoMutators extends Mutators<TodoState> {
 
-    addTodo(todoName: string) {
+    clearTodos() {
+        this.state.todos = [];
+    }
+
+    addTodo(todo: string) {
         this.state.todos = [
             ...this.state.todos,
-            new Todo(todoName)
+            todo
         ];
     }
 
@@ -62,67 +56,73 @@ But this code results in an exception (`TypeError: object is not extensible`):
 this.state.todos.push(...);
 ```
 
-If a mutator throws an exception, all changes to the state will be discarded.
+**Rules:**
 
-Mutators can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
-
-### Asynchronous mutators
-
-Almost all applications have asynchronous code to handle e.g. server responses. While mutators can *initiate* async operations, they are not allowed to access the state (via `this.state`) in an async callback. 
-
-**Important:** Once the mutator method completes, any attempt to access the state will result in an exception!
-
- The solution is to delegate the processing of the async result in *another mutator method*. The following mutator class contains two methods. `loadFromServer()` initiates an async operation und uses `assignTodos()` to handle the response:
-
-```
-export class TodoMutators extends Mutators<TodoState> {
-
-    async loadFromServer() {
-        this.state.timestampLoadRequested = Date.now();     // valid state access
-        const result = await fetch("/todos");               // async starts here...
-        const todos = await result.json();
-        this.assignTodos(todos);                            // ... delegate to other mutator
-    }
-
-    assignTodos(todos: Todo[]) {
-        this.state.todos = todos;                           // valid state access
-    }
-
-}
-```
+- If a mutator throws an exception, all changes to the state will be discarded.
+- Mutators can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
+- Mutators must not return a value. 
 
 
 ## Store
 
-The store class combines the state and the mutators:
+The store class encapsulates the state and the mutator class:
 
 ```
 export class TodoStore extends Store<TodoMutators, TodoState> {
+
     constructor() {
         super("todo", new TodoMutators(), new TodoState());
     }
+
+    addTodo(todo: string) {
+        if (todo.trim().length === 0) {
+            throw new Error("TODO must not be empty");
+        }
+
+        this.dispatch.addTodo(todo); // access the mutator
+    }
+
+    clearTodos = this.dispatch.clearTodos; // simple delegate to the mutaotr
+
 }
 ```
 
-The `super()` call registers the store globally and the first parameter (here `"todo"`) must be unique. The second parameter is the mutators instance. If you use e.g. [Angular](https://angular.io) or any other framework with dependency injection, it usually makes sense to provide/configure the store and mutator classes with the injector. The third parameter provides the initial state.
+### Constructor 
 
-You can directly instantiate the store (or use dependency injection):
+The `super()` call registers the store globally and the first parameter (here `"todo"`) must be unique. The second parameter is the mutators instance. The third parameter provides the initial state.
+
+
+### Modify the state
+
+Because the store encapsulates the mutator class, you must provide methods that provide an API and wrap or use the mutator methods. The mutator instance is available via the protected member variable `this.dispatch`. To modify the state, you simply invoke its methods:
+
+```
+this.dispatch.addTodo("new todo");
+```
+
+**Guidelines:**
+
+- Provide the store's API via the store's public methods
+- Distinguish between public and private by adding the modifier accordingly
+- Use the store's method to provide a *coarse-grained* API
+    - use cases, UI actions, etc.
+    - asynchronous code (see below)
+- Use the mutators's method to provide a *fine-grained* API
+    - reusable logic to modify the state
+  
+
+### Create the store
+
+You can directly instantiate the store (or use dependency injection to do so):
 
 ```
 const store = new TodoStore();
 ```
 
-### Modify state
-
-To modify the state, you simply invoke the mutator methods. This must be done via the store instance:
-
-```
-store.dispatch.addTodo("new todo");
-```
 
 ### Access/query state
 
-The current state can directly be accessed via the store instance:
+The current state can directly be accessed via the store member `state: Readonly<S>`: 
 
 ```
 const first: Todo = store.state.todos[0];
@@ -132,15 +132,17 @@ In order to get called on future state changes, you need to subscribe the store:
 
 ```
 store.select()
+    .unbounded()
     .subscribe(store => {
         // handle change
     });
 ```
 
-The `select()` methods returns a RxJS `Observable` and takes an optional selector to filter and reduce the state:
+The `select()` methods takes an optional selector to filter and reduce the state:
 
 ```
 store.select(s => s.todos)
+    .unbounded()
     .subscribe(todos => {
         // handle change
     });

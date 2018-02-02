@@ -7,19 +7,11 @@ import "./index.html";
 
 enableTyduxDevelopmentMode();
 
-export class Todo {
-    constructor(public description: string,
-                public complete: boolean = false) {
-    }
-}
-
 export class TodoState {
 
-    filter = "";
-
-    todos: Todo[] = [
-        new Todo("todo 1", true),
-        new Todo("todo 2")
+    todos: string[] = [
+        "todo 1",
+        "todo 2"
     ];
 
 }
@@ -30,33 +22,16 @@ export class TodoMutators extends Mutators<TodoState> {
         this.state.todos = [];
     }
 
-    addTodo(todoName: string) {
+    addTodo(todo: string) {
         this.state.todos = [
             ...this.state.todos,
-            new Todo(todoName)
+            todo
         ];
-    }
-
-    setTodos(todos: Todo[]) {
-        this.state.todos = todos;
-
-        setTimeout(() => {
-            this.state.todos = [];
-            this.clearTodos();
-        }, 1000);
-    }
-
-    removeCompleted() {
-        this.setTodos(this.state.todos.filter(t => !t.complete));
     }
 
 }
 
 export class TodoStore extends Store<TodoMutators, TodoState> {
-
-    addTodo = this.dispatch.addTodo;
-
-    removeCompleted = this.dispatch.removeCompleted;
 
     constructor() {
         super("todos", new TodoMutators(), new TodoState());
@@ -64,12 +39,15 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
         this.addTodo("bbb");
     }
 
-    async loadFromServer() {
-        this.dispatch.clearTodos();
-        const result = await fetch("/todos");
-        const todos = await result.json();
-        this.dispatch.setTodos(todos);
+    addTodo(todo: string) {
+        if (todo.trim().length === 0) {
+            throw new Error("TODO must not be empty");
+        }
+
+        this.dispatch.addTodo(todo);
     }
+
+    clearTodos = this.dispatch.clearTodos;
 
 }
 
@@ -81,26 +59,25 @@ const store: TodoStore = new TodoStore();
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
+            <button onclick='(${() => store.clearTodos()})();'>
+                Clear
+            </button>
+        
             <button onclick='(${() => store.addTodo("" + Date.now())})();'>
                 Add Todo
             </button>
         
-            <button onclick='(${() => store.removeCompleted()})();'>
-                remove completed
-            </button>
-        
             <ol>
                 ${store.state.todos!.map(t => {
-        return `<li class='${t.complete ? "completed" : ""}'>${t.description}</li>`
-    }).join("")
-            }
+        return `<li class=''>${t}</li>`
+    }).join("") }
             </ol>
         </div>
         `;
 };
 
 store.select()
-        .unbounded()
-        .subscribe(() => {
-            renderApp();
-        });
+    .unbounded()
+    .subscribe(() => {
+        renderApp();
+    });

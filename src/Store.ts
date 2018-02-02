@@ -5,7 +5,7 @@ import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {Subject} from "rxjs/Subject";
 import {deepFreeze} from "./deep-freeze";
-import {globalStateChanges$, subscribeStore} from "./dev-tools";
+import {globalStateChanges$, MutatorEvent, subscribeStore} from "./dev-tools";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {assignStateValue, checkMutatorReturnType, createFailingProxy, createProxy, Mutators} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
@@ -14,12 +14,6 @@ import {isShallowEquals} from "./utils";
 const tyduxStateChangesSubject = new Subject<any>();
 export const tyduxStateChanges: Observable<any> = tyduxStateChangesSubject.asObservable();
 
-export class Event<S> {
-    constructor(readonly action: any,
-                readonly state: S,
-                readonly boundMutator?: () => void) {
-    }
-}
 
 function createActionFromArguments(fnName: string, fn: any, args: IArguments): any {
     const fnString = fn.toString();
@@ -43,7 +37,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private runningMutatorStack: string[] = [];
 
-    private eventsSubject = new ReplaySubject<Event<S>>(1);
+    private eventsSubject = new ReplaySubject<MutatorEvent<S>>(1);
 
     protected readonly dispatch: M;
 
@@ -161,10 +155,6 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                         mutators[mutName].apply(mutators, args);
                     };
                     this_.processMutator(createActionFromArguments(typeName, fn, args), newState, boundMutator);
-
-                    // if (isDevelopmentModeEnabled()) {
-                    //     assignStateErrorGetter(mutators);
-                    // }
                 }
 
                 return result;
@@ -189,7 +179,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private processMutator(action: any, state: S, boundMutator?: () => void) {
         this.setState(state);
-        this.eventsSubject.next(new Event(action, this._state, boundMutator));
+        this.eventsSubject.next(new MutatorEvent(action, this._state, boundMutator));
     }
 
     private setState(state: S) {

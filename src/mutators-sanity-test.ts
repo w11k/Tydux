@@ -10,7 +10,7 @@ describe("Mutators - sanity tests", function () {
         enableTyduxDevelopmentMode();
     });
 
-    it("methods can not change the state deeply", function () {
+    it("can not change the state deeply", function () {
         class TestMutator extends Mutators<{ n1: number[] }> {
             mod1() {
                 this.state.n1.push(3);
@@ -21,7 +21,7 @@ describe("Mutators - sanity tests", function () {
         assert.throws(() => store.mutate.mod1());
     });
 
-    it("methods can not change the state asynchronously", function (done) {
+    it("can not change the state asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 setTimeout(() => {
@@ -35,7 +35,7 @@ describe("Mutators - sanity tests", function () {
         store.mutate.mod1();
     });
 
-    it("methods can not change the state in asynchronous promise callbacks", function (done) {
+    it("can not change the state in asynchronous promise callbacks", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 createAsyncPromise(1).then(val => {
@@ -49,7 +49,7 @@ describe("Mutators - sanity tests", function () {
         store.mutate.mod1();
     });
 
-    it("methods can not return a value", function () {
+    it("can not return a value", function () {
         class TestMutator extends Mutators<any> {
             // noinspection JSMethodCanBeStatic
             errorWrongType() {
@@ -61,7 +61,7 @@ describe("Mutators - sanity tests", function () {
         assert.throws(() => store.mutate.errorWrongType());
     });
 
-    it("methods can not access other members asynchronously", function (done) {
+    it("can not access other members asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 setTimeout(() => {
@@ -79,7 +79,7 @@ describe("Mutators - sanity tests", function () {
         store.mutate.mod1();
     });
 
-    it("methods can not access other members in an asynchronous promise resolve", function (done) {
+    it("can not access other members in an asynchronous promise resolve", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mod1() {
                 createAsyncPromise(1)

@@ -3,6 +3,12 @@ import {Observable} from "rxjs/Observable";
 import {Subject} from "rxjs/Subject";
 import {Store} from "./Store";
 
+export class MutatorEvent<S> {
+    constructor(readonly action: any,
+                readonly state: S,
+                readonly boundMutator?: () => void) {
+    }
+}
 
 interface DevToolsState {
     actionsById: {
