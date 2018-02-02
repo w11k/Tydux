@@ -12,15 +12,15 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 # Example
 
     class MyState {
-        count = 0;
+        stateNumber = 0;
     }
 
     class MyMutators extends Mutators<MyState> {
         increment() {
-            this.state.count++;
+            this.state.stateNumber++;
         }
         decrement() {
-            this.state.count--;
+            this.state.stateNumber--;
         }
     }
 
@@ -28,27 +28,28 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
         constructor() {
             super("myStore", new MyMutators(), new MyState());
         }
+        
+        rollTheDice() {
+            if (Math.random() > 0.5) {
+                this.dispatch.increment();
+            } else {
+                this.dispatch.decrement();
+            }
+        }
     }
 
     const store = new MyStore();
 
     // directly query the state
-    console.log("query", store.state.count);
+    console.log("query", store.state.stateNumber);
 
     // observe the state
-    store.select(s => s.count).subscribe(count => {
+    store.select(s => s.stateNumber).unbounded().subscribe(count => {
         console.log("observe", count);
     });
 
     // dispatch actions
-    store.dispatch.increment();
-    store.dispatch.decrement();
-    
-    // prints
-    // >> query 0
-    // >> observe 0
-    // >> observe 1
-    // >> observe 0
+    store.rollTheDice();
 
 # Documentation
 
