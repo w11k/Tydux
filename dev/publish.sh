@@ -7,9 +7,11 @@ PACKAGE_VERSION=v$(cat package.json  | grep version  | head -1  | awk -F: '{ pri
 
 npm run dist && \
 npm run test && \
-git tag ${PACKAGE_VERSION} \
+git tag ${PACKAGE_VERSION} && \
 npm publish --access public && \
 git push && \
-git push --tags \
+git push --tags && \
 npm --no-git-tag-version version patch && \
+git add . && \
+git commit -m "started new version" && \
 git push
