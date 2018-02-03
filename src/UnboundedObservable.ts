@@ -1,5 +1,6 @@
 import {Observable} from "rxjs";
-import {takeUntil} from "rxjs/operators";
+import {first, takeUntil} from "rxjs/operators";
+import {angularJs1Scoped, AngularJS1ScopeLike} from "./angularjs1-integration";
 
 export class UnboundedObservable<T> {
 
@@ -16,11 +17,17 @@ export class UnboundedObservable<T> {
     }
 
     first() {
-        return this.observable.first();
+        return this.observable.pipe(
+            first()
+        );
     }
 
     toPromise() {
         return this.observable.toPromise();
+    }
+
+    boundToAngularJS1Scope($scope: AngularJS1ScopeLike) {
+        return this.observable.lift(angularJs1Scoped($scope));
     }
 
 }
