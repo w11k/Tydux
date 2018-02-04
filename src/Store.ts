@@ -214,7 +214,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
             const original = (this as any)[method];
             (this as any)[method] = function () {
-                original.apply(storeProxy, arguments);
+                return original.apply(storeProxy, arguments);
             };
         }
     }

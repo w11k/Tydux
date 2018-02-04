@@ -1,4 +1,9 @@
 
+# Version 1.3.2
+
+- Fixed Bug in Store: Methods return value was ignored due to wrapMethods()
+
+
 # Version 1.2.0
 
 - select(...) now returns an UnboundedObservable 
