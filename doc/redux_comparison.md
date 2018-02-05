@@ -9,3 +9,5 @@ Action | String constants: <br> `const ADD_TODO = 'ADD_TODO';` | The Store's met
 Action Dispatch | `store.dispatch({ type: 'ADD_TODO', text: 'My TODO' })`    | Simple method invocation: <br> `store.addTodo("My TODO")` <br><br> **Advantage**: code completion, better refactoring, better code navigation
 Reducer | Unstructured code blocks <br> `state.concat([{ text: action.text }])` | Mutator class with methods <br>`appendTodo(todoName: string) {this.state.push(todoName)}` <br><br> **Advantage**: better code navigation, better stack traces, enforced immutable state object
 Connecting reducers to dispatched actions | `switch` or `if` statements, structure by convention | Simple method invocation from store method to a mutator method: <br> `this.mutate.appendTodo(todoName)` <br><br> **Advantage**: code completion, better stack traces
+Subscribing state changes | `store.subscribe(s => console.log(s))` | `store.select().takeUntil(until$).subscribe(s => console.log(s))` <br><br> **Advantage**: Enforced subscription management to avoid memory leaks
+

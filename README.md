@@ -31,9 +31,9 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
         
         rollTheDice() {
             if (Math.random() > 0.5) {
-                this.dispatch.increment();
+                this.mutate.increment();
             } else {
-                this.dispatch.decrement();
+                this.mutate.decrement();
             }
         }
     }
