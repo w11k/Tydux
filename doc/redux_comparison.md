@@ -3,7 +3,7 @@
 
 Property|Redux|Tydux
 -|-|-
-Action||
+Action|Arbitrary JavaScript objects\ne.g. { type: 'ADD_TODO', text: 'Go to swimming pool' }|
 
 
 
