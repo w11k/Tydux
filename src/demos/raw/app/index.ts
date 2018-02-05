@@ -22,7 +22,7 @@ export class TodoMutators extends Mutators<TodoState> {
         this.state.todos = [];
     }
 
-    addTodo(todo: string) {
+    addTodoToList(todo: string) {
         this.state.todos = [
             ...this.state.todos,
             todo
@@ -37,6 +37,7 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
         super("todos", new TodoMutators(), new TodoState());
         this.addTodo("aaa");
         this.addTodo("bbb");
+        this.addTodo("ccc");
     }
 
     addTodo(todo: string) {
@@ -44,10 +45,11 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
             throw new Error("TODO must not be empty");
         }
 
-        this.dispatch.addTodo(todo);
+        this.mutate.addTodoToList(todo);
+
     }
 
-    clearTodos = this.dispatch.clearTodos;
+    clearTodos = this.mutate.clearTodos;
 
 }
 

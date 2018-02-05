@@ -1,4 +1,3 @@
-
 import {Observable} from "rxjs/Observable";
 
 export function collect<T>(observable: Observable<T>) {
@@ -8,6 +7,9 @@ export function collect<T>(observable: Observable<T>) {
     });
 
     return {
+        getValues() {
+            return calls;
+        },
         assert(...expected: T[]) {
             subscription.unsubscribe();
             return assert.deepEqual(calls, expected);

@@ -1,3 +1,7 @@
+# Version 2.0.0
+
+- **Breaking Change:** store.dispatch renamed to store.mutate
+- Fixed several bugs involving instane variables
 
 # Version 1.3.2
 

@@ -1,21 +1,16 @@
 import * as _ from "lodash";
-
 import {Observable} from "rxjs/Observable";
 import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
-import {Subject} from "rxjs/Subject";
 import {deepFreeze} from "./deep-freeze";
 import {globalStateChanges$, MutatorEvent, subscribeStore} from "./dev-tools";
 import {isTyduxDevelopmentModeEnabled} from "./development";
-import {assignStateValue, checkMutatorReturnType, createFailingProxy, createProxy, Mutators} from "./mutators";
+import {assignStateValue, createFailingProxy, createProxy, Mutators} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {isShallowEquals} from "./utils";
 
-const tyduxStateChangesSubject = new Subject<any>();
-export const tyduxStateChanges: Observable<any> = tyduxStateChangesSubject.asObservable();
 
-
-function createActionFromArguments(fnName: string, fn: any, args: IArguments): any {
+function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): any {
     const fnString = fn.toString();
     const argsString = fnString.substring(fnString.indexOf("(") + 1, fnString.indexOf(")"));
     const argNames = argsString.split(",").map((a: string) => a.trim());
@@ -25,8 +20,7 @@ function createActionFromArguments(fnName: string, fn: any, args: IArguments): a
         const arg = "[" + i + "] " + argNames[i];
         action[arg] = args[i];
     }
-    action.type = fnName;
-    // action.__argNames = argNames;
+    action.type = actionTypeName;
 
     return action;
 }
@@ -35,42 +29,31 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private _state: S = undefined as any;
 
-    private runningMutatorStack: string[] = [];
-
     private eventsSubject = new ReplaySubject<MutatorEvent<S>>(1);
 
-    protected readonly dispatch: M;
+    protected readonly mutate: M;
 
     protected ignoreMembers: (keyof this)[] = ["$q"] as any;
 
-    readonly events$ = this.eventsSubject.asObservable();
+    readonly events$: Observable<MutatorEvent<S>> = this.eventsSubject.asObservable();
 
-    // readonly hooks: Hooks<M>;
-
-    readonly mutatorNames: string[];
-
-    constructor(storeName: string, mutators: M, state: S) {
+    constructor(public readonly storeName: string, mutators: M, state: S) {
         this.processMutator({type: "@@INIT"}, state);
-        this.mutatorNames = this.createMutatorNamesList(mutators);
-        this.dispatch = this.createDispatchers(mutators);
-        // this.hooks = this.createHookSources();
-        this.wrapMethods();
 
-        const pushedStateForThisStore = globalStateChanges$.pipe(
-            map(globalState => globalState[storeName]));
+        this.mutate = this.instrumentAndReturnMutators(mutators);
 
-        pushedStateForThisStore.pipe(
-            filter(s => !_.isNil(s)))
-            .subscribe(state => {
-                this.setState(state);
-            });
+        this.wrapStoreMethods();
+
+        // const pushedStateForThisStore = globalStateChanges$.pipe(
+        //     map(globalState => globalState[storeName]));
+        //
+        // pushedStateForThisStore.pipe(
+        //     filter(s => !_.isNil(s)))
+        //     .subscribe(state => {
+        //         this.setState(state);
+        //     });
 
         subscribeStore(storeName, this);
-
-        this.events$
-            .subscribe(() => {
-                tyduxStateChangesSubject.next();
-            });
     }
 
     get state(): Readonly<S> {
@@ -84,7 +67,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
         const stream = this.eventsSubject.pipe(
             map(event => {
-                return selector ? selector(event.state) :event.state as any;
+                return selector ? selector(event.state) : event.state as any;
             }),
             distinctUntilChanged((old, value) => {
                 if (_.isArray(old) && _.isArray(value)) {
@@ -110,51 +93,58 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return _.difference(_.functionsIn(mutators), baseFnNames, this.ignoreMembers);
     }
 
-    private createDispatchers(mutators: any) {
+    private instrumentAndReturnMutators(mutators: any): M {
         const this_ = this;
 
-        for (let mutName of this.mutatorNames) {
-            const fn = mutators[mutName];
-            mutators[mutName] = function () {
-                // this_.invokeBeforeHook(mutName);
+        const mutatorNames = this.createMutatorNamesList(mutators);
+        const mutatorCallStack: any[] = [mutators];
 
+        for (let mutName of mutatorNames) {
+            const mutatorFn = mutators[mutName];
+            mutators[mutName] = function () {
                 const args = arguments;
-                const rootMutator = this_.runningMutatorStack.length === 0;
+                const isRootMutator = mutatorCallStack.length === 1;
 
                 // create state copy
-                if (rootMutator) {
+                if (isRootMutator) {
                     const stateProxy = createProxy(this_.state);
                     assignStateValue(mutators, stateProxy);
                 }
 
                 // call mutator
-                this_.runningMutatorStack.push(mutName);
                 let result: any;
                 const mutatorsThisProxy = createProxy(mutators);
+                mutatorCallStack.push(mutatorsThisProxy);
                 try {
-                    result = fn.apply(mutatorsThisProxy, args);
+                    result = mutatorFn.apply(mutatorsThisProxy, args);
+                } finally {
+                    // transfer created/modified instance members
+                    const parentMutatorInCallStack = mutatorCallStack[mutatorCallStack.length - 2];
+                    delete mutatorsThisProxy.state;
+                    _.assignIn(parentMutatorInCallStack, mutatorsThisProxy);
 
+                    // install failing proxy to catch asynchronous code
                     let failingProxy = createFailingProxy();
                     Object.setPrototypeOf(mutatorsThisProxy, failingProxy);
-                    result = isTyduxDevelopmentModeEnabled() ? checkMutatorReturnType(result) :result;
-                    // result = Promise.resolve(result).then(() => this_.invokeAfterHook(mutName));
-                } finally {
-                    this_.runningMutatorStack.pop();
+                    mutatorCallStack.pop();
                 }
 
                 // commit new state
-                if (rootMutator) {
+                if (isRootMutator) {
                     const stateProxy = mutators.state;
                     const stateOriginal = this_.state;
-                    const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) :{} as S;
+                    const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
                     _.assignIn(newState, stateProxy);
 
                     const storeMethodName = (this as any).storeMethodName;
-                    const typeName = storeMethodName ? mutName + ` (${storeMethodName})` :mutName;
+                    const actionTypeName = storeMethodName ? storeMethodName + " / " + mutName : mutName;
                     const boundMutator = () => {
                         mutators[mutName].apply(mutators, args);
                     };
-                    this_.processMutator(createActionFromArguments(typeName, fn, args), newState, boundMutator);
+                    this_.processMutator(
+                        createActionFromArguments(actionTypeName, mutatorFn, args),
+                        newState,
+                        boundMutator);
                 }
 
                 return result;
@@ -164,57 +154,39 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return mutators;
     }
 
-    // private createHookSources() {
-    //     const hooksSource: any = {};
-    //
-    //     for (let fnName of this.mutatorNames) {
-    //         hooksSource[fnName] = {
-    //             before: new Subject<void>(),
-    //             after: new Subject<void>()
-    //         };
-    //     }
-    //
-    //     return hooksSource;
-    // }
-
     private processMutator(action: any, state: S, boundMutator?: () => void) {
         this.setState(state);
-        this.eventsSubject.next(new MutatorEvent(action, this._state, boundMutator));
+        this.eventsSubject.next(new MutatorEvent(this.storeName, action, this._state, boundMutator));
     }
 
     private setState(state: S) {
-        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) :state;
+        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
-    // private invokeBeforeHook(mutatorName: string) {
-    //     let mutatorHooks = this.hooks[mutatorName];
-    //     let subject = mutatorHooks.before as Subject<void>;
-    //     subject.next();
-    // }
-    //
-    // private invokeAfterHook(mutatorName: string) {
-    //     let mutatorHooks = this.hooks[mutatorName];
-    //     let subject = mutatorHooks.after as Subject<void>;
-    //     subject.next();
-    // }
-
-    private wrapMethods() {
+    private wrapStoreMethods() {
+        const originalMutate = this.mutate;
         const methods: string[] = _.functions(Object.getPrototypeOf(this));
 
         for (let method of methods) {
-            const dispatcherProxy = {
+            const mutatorInstanceProxy = {
                 storeMethodName: method,
             };
-            Object.setPrototypeOf(dispatcherProxy, this.dispatch);
+            Object.setPrototypeOf(mutatorInstanceProxy, originalMutate);
 
             const storeProxy = {
-                dispatch: dispatcherProxy
+                mutate: mutatorInstanceProxy
             };
             Object.setPrototypeOf(storeProxy, this);
 
             const original = (this as any)[method];
             (this as any)[method] = function () {
-                return original.apply(storeProxy, arguments);
+                try {
+                    return original.apply(storeProxy, arguments);
+                } finally {
+                    // transfer created/modified instance members
+                    _.assignInWith(this, storeProxy);
+                    this.mutate = originalMutate;
+                }
             };
         }
     }

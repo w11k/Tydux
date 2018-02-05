@@ -1,4 +1,5 @@
 import {Mutators} from "./mutators";
+import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";
 import {enableTyduxDevelopmentMode} from "./development";
 import {createSimpleStore} from "./SimpleStore";
@@ -18,12 +19,12 @@ describe("Mutators - sanity tests", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {n1: [1, 2]});
-        assert.throws(() => store.mutate.mod1());
+        assert.throws(() => store.mod1());
     });
 
     it("can not change the state asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
-            mod1() {
+            mut() {
                 setTimeout(() => {
                     assert.throws(() => this.state, /Illegal access.*this/);
                     done();
@@ -31,8 +32,14 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mutate.mod1();
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                this.mutate.mut();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
     });
 
     it("can not change the state in asynchronous promise callbacks", function (done) {
@@ -46,19 +53,7 @@ describe("Mutators - sanity tests", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mutate.mod1();
-    });
-
-    it("can not return a value", function () {
-        class TestMutator extends Mutators<any> {
-            // noinspection JSMethodCanBeStatic
-            errorWrongType() {
-                return 1;
-            }
-        }
-
-        const store = createSimpleStore("", new TestMutator(), {});
-        assert.throws(() => store.mutate.errorWrongType());
+        store.mod1();
     });
 
     it("can not access other members asynchronously", function (done) {
@@ -76,7 +71,7 @@ describe("Mutators - sanity tests", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mutate.mod1();
+        store.mod1();
     });
 
     it("can not access other members in an asynchronous promise resolve", function (done) {
@@ -98,7 +93,7 @@ describe("Mutators - sanity tests", function () {
         }
 
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mutate.mod1();
+        store.mod1();
     });
 
 });

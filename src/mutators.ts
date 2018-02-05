@@ -1,11 +1,6 @@
 import * as _ from "lodash";
-import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
+import {illegalAccessToThis} from "./error-messages";
 
-export function checkMutatorReturnType(obj: any): void {
-    if (obj !== undefined) {
-        throw new Error(mutatorWrongReturnType);
-    }
-}
 
 export function assignStateValue<S>(obj: { state: S }, state: S) {
     const stateContainer = [state];

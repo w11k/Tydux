@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 
@@ -11,8 +12,7 @@ class SimpleStoreImpl<M extends Mutators<S>, S> extends Store<M, S> {
 
 export type SimpleStore<M extends Mutators<S>, S> =
     Store<M, S>
-    // & { readonly [P in keyof M]: M[P]; }
-    & { mutate: M };
+    & { readonly [P in keyof M]: M[P]; };
 
 export function createSimpleStore<M extends Mutators<S>, S>(name: string,
                                                             mutators: M,
@@ -21,14 +21,20 @@ export function createSimpleStore<M extends Mutators<S>, S>(name: string,
     const store: any = new SimpleStoreImpl(name, mutators, initialState);
 
     // enable access to mutators
-    // for (let mutatorName of store.mutatorNames) {
-    //     store[mutatorName] = function () {
-    //         (mutators as any)[mutatorName].apply(mutators, arguments);
-    //     };
-    // }
+    let baseFnNames = _.functionsIn(Mutators.prototype);
+    const mutatorNames =  _.difference(_.functionsIn(mutators), baseFnNames);
 
-    store.mutate = store.dispatch;
+    const basePrototype: any = {};
+    Object.setPrototypeOf(basePrototype, Object.getPrototypeOf(store));
+    Object.setPrototypeOf(store, basePrototype);
 
+    for (let mutatorName of mutatorNames) {
+        basePrototype[mutatorName] = function () {
+            (mutators as any)[mutatorName].apply(mutators, arguments);
+        };
+    }
+
+    // store.instrumentStoreMethods();
     return store as any;
 }
 

@@ -26,7 +26,7 @@ export class UnboundedObservable<T> {
         return this.observable.toPromise();
     }
 
-    boundToAngularJS1Scope($scope: AngularJS1ScopeLike) {
+    boundToAngularJSScope($scope: AngularJS1ScopeLike) {
         return this.observable.lift(angularJs1Scoped($scope));
     }
 

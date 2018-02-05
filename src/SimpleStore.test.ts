@@ -20,8 +20,8 @@ describe("SimpleStore", function () {
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select().unbounded());
 
-        store.mutate.inc();
-        store.mutate.inc();
+        store.inc();
+        store.inc();
         collected.assert({n1: 0}, {n1: 1}, {n1: 2});
     });
 

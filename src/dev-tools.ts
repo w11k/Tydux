@@ -4,7 +4,8 @@ import {Subject} from "rxjs/Subject";
 import {Store} from "./Store";
 
 export class MutatorEvent<S> {
-    constructor(readonly action: any,
+    constructor(readonly storeName: string,
+                readonly action: any,
                 readonly state: S,
                 readonly boundMutator?: () => void) {
     }
@@ -22,7 +23,7 @@ interface DevToolsState {
 }
 
 const devToolsEnabled = typeof window !== "undefined"
-        && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
+    && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
 
 const devTools = devToolsEnabled ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.connect() : undefined;
 
@@ -32,12 +33,13 @@ const mutators: (() => void)[] = [];
 
 const globalState: any = {};
 
-const globalStateChangesSubject = new Subject<any>();
+const globalStateChangesSubject = new Subject<MutatorEvent<any>>();
 
-export const globalStateChanges$: Observable<any> = globalStateChangesSubject.asObservable();
+export const globalStateChanges$: Observable<MutatorEvent<any>> = globalStateChangesSubject.asObservable();
 
 if (devToolsEnabled) {
     devTools.init(globalState);
+
     devTools.subscribe((message: any) => {
         // console.log(message);
         if (message.type === "DISPATCH" && message.state) {
@@ -54,28 +56,30 @@ if (devToolsEnabled) {
 
         }
     });
+
+    globalStateChanges$
+        .subscribe(event => {
+
+            const mutator = event.boundMutator ? event.boundMutator : _.noop;
+            mutators.push(mutator);
+            const action = {
+                ...event.action,
+                "type": "[" + event.storeName + "] " + event.action.type
+            };
+
+            globalState[event.storeName] = event.state;
+            devTools.send(action, globalState);
+
+        });
 }
 
-export function subscribeStore(name: string, store: Store<any, any>) {
-    if (!devToolsEnabled) {
-        return;
-    }
-
-    stores[name] = store;
+export function subscribeStore(storeName: string, store: Store<any, any>) {
+    stores[storeName] = store;
 
     store.events$
-            .subscribe(event => {
-                const mutator = event.boundMutator ? event.boundMutator : _.noop;
-                mutators.push(mutator);
-                const action = {
-                    ...event.action,
-                    "type": "[" + name + "] " + event.action.type
-                };
-
-                globalState[name] = event.state;
-                devTools.send(action, globalState);
-            });
-
+        .subscribe(event => {
+            globalStateChangesSubject.next(event);
+        });
 }
 
 function dispatchAction(storeName: string, action: any) {

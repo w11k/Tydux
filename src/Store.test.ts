@@ -1,8 +1,8 @@
-import {Mutators} from "./mutators";
-import {Store} from "./Store";
-import {collect} from "./test-utils";
 import {enableTyduxDevelopmentMode} from "./development";
+import {Mutators} from "./mutators";
 import {createSimpleStore} from "./SimpleStore";
+import {Store} from "./Store";
+import {collect, createAsyncPromise} from "./test-utils";
 
 
 describe("Store", function () {
@@ -11,7 +11,11 @@ describe("Store", function () {
         enableTyduxDevelopmentMode();
     });
 
-    it("documentation", function() {
+    it("documentation", function () {
+        // collect output
+        const output: string[] = [];
+        const log = (...msgs: any[]) => output.push(msgs.join(" "));
+
         class MyState {
             count = 0;
         }
@@ -20,25 +24,40 @@ describe("Store", function () {
             increment() {
                 this.state.count++;
             }
+
             decrement() {
                 this.state.count--;
             }
         }
 
+        class MyStore extends Store<MyMutators, MyState> {
+            action() {
+                this.mutate.increment();
+                this.mutate.increment();
+                this.mutate.decrement();
+            }
+        }
 
-        const store = createSimpleStore("myStore", new MyMutators(), new MyState());
+        const store = new MyStore("myStore", new MyMutators(), new MyState());
 
         // directly query the state
-        console.log("query", store.state.count);
+        log("query", store.state.count);
 
         // observe the state
         store.select(s => s.count).unbounded().subscribe(count => {
-            console.log("observe", count);
+            log("observe", count);
         });
 
         // dispatch actions
-        store.mutate.increment();
-        store.mutate.decrement();
+        store.action();
+
+        assert.deepEqual(output, [
+            "query 0",
+            "observe 0",
+            "observe 1",
+            "observe 2",
+            "observe 1"
+        ]);
     });
 
     it("select()", function () {
@@ -50,8 +69,8 @@ describe("Store", function () {
 
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select().unbounded());
-        store.mutate.inc();
-        store.mutate.inc();
+        store.inc();
+        store.inc();
         collected.assert({n1: 0}, {n1: 1}, {n1: 2});
     });
 
@@ -64,8 +83,8 @@ describe("Store", function () {
 
         const store = createSimpleStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select(s => s.n1).unbounded());
-        store.mutate.inc();
-        store.mutate.inc();
+        store.inc();
+        store.inc();
         collected.assert(0, 1, 2);
     });
 
@@ -82,12 +101,12 @@ describe("Store", function () {
 
         const store = createSimpleStore("", new TestMutator(), {n1: undefined} as { n1?: number });
         let collected = collect(store.selectNonNil(s => s.n1).unbounded());
-        store.mutate.inc(); // 1
-        store.mutate.clear();
-        store.mutate.inc(); // 1
-        store.mutate.inc(); // 2
-        store.mutate.clear();
-        store.mutate.inc(); // 1
+        store.inc(); // 1
+        store.clear();
+        store.inc(); // 1
+        store.inc(); // 2
+        store.clear();
+        store.inc(); // 1
         collected.assert(1, 1, 2, 1);
     });
 
@@ -105,11 +124,90 @@ describe("Store", function () {
 
         const store = createSimpleStore("", new TestMutator(), {a: 0, b: 10, c: 100});
         let collected = collect(store.select(s => [s.a, s.b]).unbounded());
-        store.mutate.incAB();
-        store.mutate.incC();
-        store.mutate.incAB();
-        store.mutate.incC();
+        store.incAB();
+        store.incC();
+        store.incAB();
+        store.incC();
         collected.assert([0, 10], [1, 11], [2, 12]);
+    });
+
+    it("select() gets called on every `.mutate...` method invocation", function () {
+        class MyState {
+            count = 0;
+        }
+
+        class MyMutators extends Mutators<MyState> {
+            increment() {
+                this.state.count++;
+            }
+
+            decrement() {
+                this.state.count--;
+            }
+        }
+
+        class MyStore extends Store<MyMutators, MyState> {
+            action() {
+                this.mutate.increment();
+                this.mutate.increment();
+                this.mutate.decrement();
+            }
+        }
+
+        const store = new MyStore("myStore", new MyMutators(), new MyState());
+        let collected = collect(store.select(s => s.count).unbounded());
+        store.action();
+        collected.assert(0, 1, 2, 1);
+
+    });
+
+    it("member method can use async/await", function (done) {
+        class MyState {
+            count = 0;
+        }
+
+        class MyMutators extends Mutators<MyState> {
+            incrementBy(by: number) {
+                this.state.count += by;
+            }
+        }
+
+        class MyStore extends Store<MyMutators, MyState> {
+            async action() {
+                this.mutate.incrementBy(1);
+                const by = await createAsyncPromise(10);
+                this.mutate.incrementBy(by);
+                collected.assert(0, 1, 11);
+                done();
+            }
+        }
+
+        const store = new MyStore("myStore", new MyMutators(), new MyState());
+        let collected = collect(store.select(s => s.count).unbounded());
+        store.action();
+    });
+
+    it("member method can use member variables", function () {
+        class MyStore extends Store<any, any> {
+
+            counterA?: number;
+
+            counterB = 1;
+
+            action() {
+                this.counterA = 10;
+                this.innerAction();
+            }
+
+            private innerAction() {
+                this.counterB = 20;
+            }
+        }
+
+        const store = new MyStore("myStore", {}, {});
+        store.action();
+        assert.equal(store.counterA, 10);
+        assert.equal(store.counterB, 20);
     });
 
 });
