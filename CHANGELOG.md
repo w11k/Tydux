@@ -3,6 +3,7 @@
 - **Breaking Change:** store.dispatch renamed to store.mutate
 - Fixed several bugs involving instance variables
 - DevTools: Better action name support for async methods
+- Mutators must not return a Promise
 
 # Version 1.3.2
 

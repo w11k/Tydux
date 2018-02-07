@@ -97,6 +97,22 @@ describe("Mutators - sanity tests", function () {
         store.mod1();
     });
 
+    it("must not return a promise", function () {
+        class TestMutator extends Mutators<any> {
+            async mod1() {
+            }
+        }
+
+        class MyStore extends Store<TestMutator, any> {
+            action() {
+                assert.throws(() => this.mutate.mod1());
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {});
+        store.action();
+    });
+
     it("exception in mutator method does not revert changes to instance variables", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
 

@@ -1,6 +1,11 @@
 import * as _ from "lodash";
-import {illegalAccessToThis} from "./error-messages";
+import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
 
+export function failIfValueIsPromise(value: any): void {
+    if (value instanceof Promise) {
+        throw new Error(mutatorWrongReturnType);
+    }
+}
 
 export function assignStateValue<S>(obj: { state: S }, state: S) {
     const stateContainer = [state];

@@ -5,7 +5,7 @@ import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {MutatorEvent, subscribeStore} from "./dev-tools";
 import {isTyduxDevelopmentModeEnabled} from "./development";
-import {assignStateValue, createFailingProxy, createProxy, Mutators} from "./mutators";
+import {assignStateValue, createFailingProxy, createProxy, failIfValueIsPromise, Mutators} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {isShallowEquals} from "./utils";
 
@@ -93,67 +93,6 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return _.difference(_.functionsIn(mutators), baseFnNames, this.ignoreMembers);
     }
 
-    private instrumentAndReturnMutators(mutators: any): M {
-        const this_ = this;
-
-        const mutatorNames = this.createMutatorNamesList(mutators);
-        const mutatorCallStack: any[] = [mutators];
-
-        for (let mutName of mutatorNames) {
-            const mutatorFn = mutators[mutName];
-            mutators[mutName] = function () {
-                const args = arguments;
-                const isRootMutator = mutatorCallStack.length === 1;
-
-                // create state copy
-                if (isRootMutator) {
-                    const stateProxy = createProxy(this_.state);
-                    assignStateValue(mutators, stateProxy);
-                }
-
-                // call mutator
-                let result: any;
-                const mutatorsThisProxy = createProxy(mutators);
-                mutatorCallStack.push(mutatorsThisProxy);
-                try {
-                    result = mutatorFn.apply(mutatorsThisProxy, args);
-                } finally {
-                    // transfer created/modified instance members
-                    const parentMutatorInCallStack = mutatorCallStack[mutatorCallStack.length - 2];
-                    delete mutatorsThisProxy.state;
-                    _.assignIn(parentMutatorInCallStack, mutatorsThisProxy);
-
-                    // install failing proxy to catch asynchronous code
-                    let failingProxy = createFailingProxy();
-                    Object.setPrototypeOf(mutatorsThisProxy, failingProxy);
-                    mutatorCallStack.pop();
-                }
-
-                // commit new state
-                if (isRootMutator) {
-                    const stateProxy = mutators.state;
-                    const stateOriginal = this_.state;
-                    const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
-                    _.assignIn(newState, stateProxy);
-
-                    const storeMethodName = (this as any).storeMethodName;
-                    const actionTypeName = storeMethodName ? storeMethodName + " / " + mutName : mutName;
-                    const boundMutator = () => {
-                        mutators[mutName].apply(mutators, args);
-                    };
-                    this_.processMutator(
-                            createActionFromArguments(actionTypeName, mutatorFn, args),
-                            newState,
-                            boundMutator);
-                }
-
-                return result;
-            };
-        }
-
-        return mutators;
-    }
-
     private processMutator(action: any, state: S, boundMutator?: () => void) {
         this.setState(state);
         this.eventsSubject.next(new MutatorEvent(this.storeName, action, this._state, boundMutator));
@@ -216,4 +155,69 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             };
         }
     }
+
+    private instrumentAndReturnMutators(mutators: any): M {
+        const this_ = this;
+
+        const mutatorNames = this.createMutatorNamesList(mutators);
+        const mutatorCallStack: any[] = [mutators];
+
+        for (let mutName of mutatorNames) {
+            const mutatorFn = mutators[mutName];
+            mutators[mutName] = function () {
+                const args = arguments;
+                const isRootMutator = mutatorCallStack.length === 1;
+
+                // create state copy
+                if (isRootMutator) {
+                    const stateProxy = createProxy(this_.state);
+                    assignStateValue(mutators, stateProxy);
+                }
+
+                // call mutator
+                let result: any;
+                const mutatorsThisProxy = createProxy(mutators);
+                mutatorCallStack.push(mutatorsThisProxy);
+                try {
+                    result = mutatorFn.apply(mutatorsThisProxy, args);
+                } finally {
+                    // transfer created/modified instance members
+                    const parentMutatorInCallStack = mutatorCallStack[mutatorCallStack.length - 2];
+                    delete mutatorsThisProxy.state;
+                    _.assignIn(parentMutatorInCallStack, mutatorsThisProxy);
+
+                    // install failing proxy to catch asynchronous code
+                    let failingProxy = createFailingProxy();
+                    Object.setPrototypeOf(mutatorsThisProxy, failingProxy);
+                    mutatorCallStack.pop();
+
+                    // check return value
+                    failIfValueIsPromise(result);
+                }
+
+                // commit new state
+                if (isRootMutator) {
+                    const stateProxy = mutators.state;
+                    const stateOriginal = this_.state;
+                    const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
+                    _.assignIn(newState, stateProxy);
+
+                    const storeMethodName = (this as any).storeMethodName;
+                    const actionTypeName = storeMethodName ? storeMethodName + " / " + mutName : mutName;
+                    const boundMutator = () => {
+                        mutators[mutName].apply(mutators, args);
+                    };
+                    this_.processMutator(
+                            createActionFromArguments(actionTypeName, mutatorFn, args),
+                            newState,
+                            boundMutator);
+                }
+
+                return result;
+            };
+        }
+
+        return mutators;
+    }
+
 }

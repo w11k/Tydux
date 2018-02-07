@@ -1,4 +1,6 @@
 
+export const mutatorWrongReturnType = "mutator methods must not return a Promise";
+
 export const illegalAccessToThis = `
 Illegal access to 'this'. Make sure that 'this' is not accessed in positions like the following:
 
