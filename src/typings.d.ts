@@ -1,2 +1,2 @@
-import AssertStatic = Chai.AssertStatic;
-declare const assert: AssertStatic;
+// import AssertStatic = Chai.AssertStatic;
+// declare const assert: AssertStatic;

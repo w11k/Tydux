@@ -2,6 +2,7 @@
 // import {enableDevelopmentMode} from "./development";
 // import {Mutators, Store} from "./Store";
 // import {createSimpleStore} from "./SimpleStore";
+// import {assert} from "chai";
 //
 //
 // describe("Modifier hooks", function () {

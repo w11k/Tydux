@@ -3,7 +3,7 @@
 
 Property|Redux|Tydux
 -|-|-
-State | Arbitrary JavaScript object | Arbitrary JavaScript object, usually based on a TypeScript class <br><br> Tydux **enforces** immutability, only mutators can mutate the state, no `... spread syntax` required, Tydux takes care to merge the state changes  
+State | Arbitrary JavaScript object | Arbitrary JavaScript object, usually based on a TypeScript class <br><br> **Advantage**: Tydux **enforces** immutability, only mutators can mutate the state, no `... spread syntax` for top-level state members required, Tydux takes care to merge the state changes  
 Store | created with `createStore` | TypeScript class, contains "actions" as methods which delegate to mutators ("reducer") to modify the state
 Action | String constants: <br> `const ADD_TODO = 'ADD_TODO';` | The Store's methods: <br> `addTodo(todoName: string)` <br><br> **Advantage**: explicit parameters 
 Action Dispatch | `store.dispatch({ type: 'ADD_TODO', text: 'My TODO' })`    | Simple method invocation: <br> `store.addTodo("My TODO")` <br><br> **Advantage**: code completion, better refactoring, better code navigation

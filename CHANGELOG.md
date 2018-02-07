@@ -1,7 +1,8 @@
 # Version 2.0.0
 
 - **Breaking Change:** store.dispatch renamed to store.mutate
-- Fixed several bugs involving instane variables
+- Fixed several bugs involving instance variables
+- DevTools: Better action name support for async methods
 
 # Version 1.3.2
 

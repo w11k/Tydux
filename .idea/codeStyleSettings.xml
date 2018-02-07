@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectCodeStyleSettingsManager">
+    <option name="PER_PROJECT_SETTINGS">
+      <value>
+        <option name="OTHER_INDENT_OPTIONS">
+          <value>
+            <option name="INDENT_SIZE" value="4" />
+            <option name="CONTINUATION_INDENT_SIZE" value="8" />
+            <option name="TAB_SIZE" value="4" />
+            <option name="USE_TAB_CHARACTER" value="true" />
+            <option name="SMART_TABS" value="true" />
+            <option name="LABEL_INDENT_SIZE" value="0" />
+            <option name="LABEL_INDENT_ABSOLUTE" value="false" />
+            <option name="USE_RELATIVE_INDENTS" value="false" />
+          </value>
+        </option>
+        <option name="HTML_ATTRIBUTE_WRAP" value="0" />
+        <option name="HTML_TEXT_WRAP" value="0" />
+        <option name="HTML_ELEMENTS_TO_INSERT_NEW_LINE_BEFORE" value="body" />
+        <option name="HTML_KEEP_WHITESPACES_INSIDE" value="pre,textarea" />
+        <option name="FORMATTER_TAGS_ENABLED" value="true" />
+        <SqlCodeStyleSettings>
+          <option name="WRAP_INSIDE_JOIN_EXPRESSION" value="0" />
+          <option name="WRAP_INSIDE_GROUP_BY" value="0" />
+          <option name="WRAP_INSIDE_WHERE" value="0" />
+          <option name="WRAP_INSIDE_ORDER_BY" value="0" />
+          <option name="WRAP_INSIDE_SET" value="0" />
+          <option name="WRAP_INSIDE_BINARY_EXPRESSION" value="0" />
+          <option name="WRAP_INSIDE_ARGUMENT_DEFINITION" value="0" />
+          <option name="WRAP_INSIDE_CALL_EXPRESSION" value="0" />
+          <option name="WRAP_INSIDE_VALUES_EXPRESSION" value="0" />
+          <option name="WRAP_VALUES_EXPRESSION" value="0" />
+          <option name="WRAP_PARENTHESIZED_EXPRESSION_INSIDE_VALUES" value="0" />
+        </SqlCodeStyleSettings>
+        <TypeScriptCodeStyleSettings>
+          <option name="FORCE_QUOTE_STYlE" value="true" />
+          <option name="IMPORT_SORT_MODULE_NAME" value="true" />
+        </TypeScriptCodeStyleSettings>
+        <XML>
+          <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+        </XML>
+        <codeStyleSettings language="HTML">
+          <option name="RIGHT_MARGIN" value="120" />
+          <indentOptions>
+            <option name="INDENT_SIZE" value="2" />
+            <option name="CONTINUATION_INDENT_SIZE" value="4" />
+            <option name="TAB_SIZE" value="2" />
+          </indentOptions>
+        </codeStyleSettings>
+        <codeStyleSettings language="JAVA">
+          <option name="BLANK_LINES_AROUND_FIELD" value="1" />
+          <option name="ALIGN_MULTILINE_THROWS_LIST" value="true" />
+          <arrangement>
+            <rules>
+              <section>
+                <rule>
+                  <match>
+                    <INTERFACE>true</INTERFACE>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <CLASS>true</CLASS>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PUBLIC>true</PUBLIC>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PROTECTED>true</PROTECTED>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PACKAGE_PRIVATE>true</PACKAGE_PRIVATE>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PRIVATE>true</PRIVATE>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PUBLIC>true</PUBLIC>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PROTECTED>true</PROTECTED>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PACKAGE_PRIVATE>true</PACKAGE_PRIVATE>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <METHOD>true</METHOD>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <CLASS>true</CLASS>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PRIVATE>true</PRIVATE>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <INITIALIZER_BLOCK>true</INITIALIZER_BLOCK>
+                      <STATIC>true</STATIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PUBLIC>true</PUBLIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PROTECTED>true</PROTECTED>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PACKAGE_PRIVATE>true</PACKAGE_PRIVATE>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <FINAL>true</FINAL>
+                      <PRIVATE>true</PRIVATE>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PUBLIC>true</PUBLIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PROTECTED>true</PROTECTED>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PACKAGE_PRIVATE>true</PACKAGE_PRIVATE>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <FIELD>true</FIELD>
+                      <PRIVATE>true</PRIVATE>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <FIELD>true</FIELD>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <INITIALIZER_BLOCK>true</INITIALIZER_BLOCK>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <CONSTRUCTOR>true</CONSTRUCTOR>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <METHOD>true</METHOD>
+                      <PUBLIC>true</PUBLIC>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <METHOD>true</METHOD>
+                      <PROTECTED>true</PROTECTED>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <AND>
+                      <METHOD>true</METHOD>
+                      <PRIVATE>true</PRIVATE>
+                    </AND>
+                  </match>
+                </rule>
+              </section>
+              <section>
+                <rule>
+                  <match>
+                    <ENUM>true</ENUM>
+                  </match>
+                </rule>
+              </section>
+            </rules>
+          </arrangement>
+        </codeStyleSettings>
+        <codeStyleSettings language="JavaScript">
+          <option name="BINARY_OPERATION_WRAP" value="1" />
+          <option name="BINARY_OPERATION_SIGN_ON_NEXT_LINE" value="true" />
+          <indentOptions>
+            <option name="CONTINUATION_INDENT_SIZE" value="8" />
+          </indentOptions>
+        </codeStyleSettings>
+        <codeStyleSettings language="SQL">
+          <indentOptions>
+            <option name="INDENT_SIZE" value="4" />
+            <option name="CONTINUATION_INDENT_SIZE" value="8" />
+            <option name="TAB_SIZE" value="4" />
+          </indentOptions>
+        </codeStyleSettings>
+        <codeStyleSettings language="TypeScript">
+          <indentOptions>
+            <option name="CONTINUATION_INDENT_SIZE" value="8" />
+          </indentOptions>
+        </codeStyleSettings>
+        <codeStyleSettings language="XML">
+          <indentOptions>
+            <option name="INDENT_SIZE" value="2" />
+            <option name="CONTINUATION_INDENT_SIZE" value="4" />
+            <option name="TAB_SIZE" value="2" />
+          </indentOptions>
+        </codeStyleSettings>
+      </value>
+    </option>
+    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+  </component>
+</project>

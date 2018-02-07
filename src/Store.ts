@@ -3,7 +3,7 @@ import {Observable} from "rxjs/Observable";
 import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
-import {globalStateChanges$, MutatorEvent, subscribeStore} from "./dev-tools";
+import {MutatorEvent, subscribeStore} from "./dev-tools";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {assignStateValue, createFailingProxy, createProxy, Mutators} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
@@ -66,26 +66,26 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
         const stream = this.eventsSubject.pipe(
-            map(event => {
-                return selector ? selector(event.state) : event.state as any;
-            }),
-            distinctUntilChanged((old, value) => {
-                if (_.isArray(old) && _.isArray(value)) {
-                    return isShallowEquals(old, value);
-                } else {
-                    return old === value;
-                }
-            }));
+                map(event => {
+                    return selector ? selector(event.state) : event.state as any;
+                }),
+                distinctUntilChanged((old, value) => {
+                    if (_.isArray(old) && _.isArray(value)) {
+                        return isShallowEquals(old, value);
+                    } else {
+                        return old === value;
+                    }
+                }));
 
         return new UnboundedObservable(stream);
     }
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined = _.identity as any): UnboundedObservable<R> {
         return new UnboundedObservable(
-            this.select(selector).unbounded().pipe(
-                filter(val => !_.isNil(val)),
-                map(val => val!)
-            ));
+                this.select(selector).unbounded().pipe(
+                        filter(val => !_.isNil(val)),
+                        map(val => val!)
+                ));
     }
 
     private createMutatorNamesList(mutators: any) {
@@ -142,9 +142,9 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                         mutators[mutName].apply(mutators, args);
                     };
                     this_.processMutator(
-                        createActionFromArguments(actionTypeName, mutatorFn, args),
-                        newState,
-                        boundMutator);
+                            createActionFromArguments(actionTypeName, mutatorFn, args),
+                            newState,
+                            boundMutator);
                 }
 
                 return result;
@@ -164,29 +164,55 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     }
 
     private wrapStoreMethods() {
-        const originalMutate = this.mutate;
+        const memberMethodsThisCallStack: any[] = [this];
+
         const methods: string[] = _.functions(Object.getPrototypeOf(this));
+        for (let methodName of methods) {
 
-        for (let method of methods) {
-            const mutatorInstanceProxy = {
-                storeMethodName: method,
-            };
-            Object.setPrototypeOf(mutatorInstanceProxy, originalMutate);
+            const originalStoreMethod = (this as any)[methodName];
+            (this as any)[methodName] = function () {
 
-            const storeProxy = {
-                mutate: mutatorInstanceProxy
-            };
-            Object.setPrototypeOf(storeProxy, this);
+                const mutatorInstanceProxy = {
+                    storeMethodName: methodName,
+                };
+                Object.setPrototypeOf(mutatorInstanceProxy, _.last(memberMethodsThisCallStack).mutate);
 
-            const original = (this as any)[method];
-            (this as any)[method] = function () {
+                const storeProxy = {
+                    mutate: mutatorInstanceProxy
+                };
+                const parentThisInCallStack = _.last(memberMethodsThisCallStack);
+                Object.setPrototypeOf(storeProxy, parentThisInCallStack);
+
+                // new this on callstack
+                memberMethodsThisCallStack.push(storeProxy);
+
+                // cleanup after invocation (special treatment for promises below)
+                const assignThisValuesToParentInCallStack = (currentThis: any, parentThis: any) => {
+                    delete currentThis.mutate;
+                    _.assignInWith(parentThis, currentThis);
+                    memberMethodsThisCallStack.pop();
+                };
+
+                let result: any;
+                let resultIsPromise = false;
                 try {
-                    return original.apply(storeProxy, arguments);
+                    result = originalStoreMethod.apply(storeProxy, arguments);
+                    if (result instanceof Promise) {
+                        resultIsPromise = true;
+                        result = result.then((r) => {
+                            assignThisValuesToParentInCallStack(storeProxy, parentThisInCallStack);
+                            return r;
+                        }).catch(() => {
+                            assignThisValuesToParentInCallStack(storeProxy, parentThisInCallStack);
+                        });
+                    }
                 } finally {
-                    // transfer created/modified instance members
-                    _.assignInWith(this, storeProxy);
-                    this.mutate = originalMutate;
+                    if (!resultIsPromise) {
+                        assignThisValuesToParentInCallStack(storeProxy, parentThisInCallStack);
+                    }
                 }
+
+                return result;
             };
         }
     }

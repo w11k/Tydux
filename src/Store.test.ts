@@ -1,3 +1,4 @@
+import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
 import {createSimpleStore} from "./SimpleStore";
@@ -208,6 +209,75 @@ describe("Store", function () {
         store.action();
         assert.equal(store.counterA, 10);
         assert.equal(store.counterB, 20);
+    });
+
+    it("member method can use async/await and instance variables", function (done) {
+        class MyStore extends Store<any, any> {
+
+            counter = 0;
+
+            async action() {
+                this.counter = 10;
+                await createAsyncPromise(10);
+                this.counter++;
+
+                setTimeout(() => {
+                    assert.equal(this.counter, 11);
+                    done();
+                }, 0);
+
+            }
+        }
+
+        const store = new MyStore("myStore", {}, {});
+        store.action();
+    });
+
+    it("member methods and invoked sibling methods access the same instance variables", function () {
+        class MyStore extends Store<any, any> {
+
+            counter = 0;
+
+            action() {
+                this.counter = 10;
+                this.check();
+            }
+
+            private check() {
+                assert.equal(this.counter, 10);
+            }
+        }
+
+        const store = new MyStore("myStore", {}, {});
+        store.action();
+    });
+
+    it("member method can use async/await and call sibling methods", function (done) {
+        class MyStore extends Store<any, any> {
+
+            chars = "A";
+
+            async action() {
+                this.chars += "B";
+                this.append();
+                await createAsyncPromise(10);
+                this.chars += "C";
+                this.append();
+                this.chars += "E";
+
+                setTimeout(() => {
+                    assert.equal(this.chars, "ABXCXE");
+                    done();
+                }, 0);
+            }
+
+            private append() {
+                this.chars += "X";
+            }
+        }
+
+        const store = new MyStore("myStore", {}, {});
+        store.action();
     });
 
 });

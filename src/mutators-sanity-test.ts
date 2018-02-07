@@ -1,8 +1,9 @@
+import {assert} from "chai";
+import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
+import {createSimpleStore} from "./SimpleStore";
 import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";
-import {enableTyduxDevelopmentMode} from "./development";
-import {createSimpleStore} from "./SimpleStore";
 
 
 describe("Mutators - sanity tests", function () {
