@@ -1,4 +1,5 @@
 import {Observable} from "rxjs/Observable";
+import {assert} from "chai";
 
 export function collect<T>(observable: Observable<T>) {
     const calls: T[] = [];

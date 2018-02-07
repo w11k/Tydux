@@ -7,22 +7,30 @@ import "./index.html";
 
 enableTyduxDevelopmentMode();
 
-export class TodoState {
+interface Todo {
+    name: string;
+}
 
-    todos: string[] = [
-        "todo 1",
-        "todo 2"
+class TodoState {
+
+    todos: Todo[] = [
+        {name: "todo1"},
+        {name: "todo2"},
     ];
 
 }
 
-export class TodoMutators extends Mutators<TodoState> {
+class TodoMutators extends Mutators<TodoState> {
 
     clearTodos() {
         this.state.todos = [];
     }
 
-    addTodoToList(todo: string) {
+    setTodos(todos: Todo[]) {
+        this.state.todos = todos;
+    }
+
+    addTodoToList(todo: Todo) {
         this.state.todos = [
             ...this.state.todos,
             todo
@@ -31,26 +39,32 @@ export class TodoMutators extends Mutators<TodoState> {
 
 }
 
-export class TodoStore extends Store<TodoMutators, TodoState> {
+class TodoStore extends Store<TodoMutators, TodoState> {
 
     constructor() {
         super("todos", new TodoMutators(), new TodoState());
-        this.addTodo("aaa");
-        this.addTodo("bbb");
-        this.addTodo("ccc");
+        this.addTodo("Todo 1");
+        this.addTodo("Todo 2");
     }
 
-    addTodo(todo: string) {
-        if (todo.trim().length === 0) {
+    addTodo(name: string) {
+        if (name.trim().length === 0) {
             throw new Error("TODO must not be empty");
         }
 
-        this.mutate.addTodoToList(todo);
-
+        this.mutate.addTodoToList({name: name});
     }
 
-    clearTodos = this.mutate.clearTodos;
+    clearTodos() {
+        this.mutate.clearTodos();
+    }
 
+    async loadTodos() {
+        this.mutate.clearTodos();
+        const response = await fetch("/data.json");
+        let todos: Todo[] = await response.json();
+        this.mutate.setTodos(todos);
+    }
 }
 
 const store: TodoStore = new TodoStore();
@@ -69,9 +83,13 @@ const renderApp = () => {
                 Add Todo
             </button>
         
+            <button onclick='(${() => store.loadTodos()})();'>
+                Load Todos
+            </button>
+        
             <ol>
                 ${store.state.todos!.map(t => {
-        return `<li class=''>${t}</li>`
+        return `<li class=''>${t.name}</li>`
     }).join("") }
             </ol>
         </div>
