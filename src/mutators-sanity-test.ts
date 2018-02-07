@@ -97,4 +97,31 @@ describe("Mutators - sanity tests", function () {
         store.mod1();
     });
 
+    it("exception in mutator method does not revert changes to instance variables", function (done) {
+        class TestMutator extends Mutators<{ n1: number }> {
+
+            i = 0;
+
+            mut() {
+                this.i = 1;
+                throw new Error();
+            }
+        }
+
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                try {
+                    this.mutate.mut();
+                } catch (e) {
+                    assert.equal(this.mutate.i, 1);
+                    done();
+                }
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
+    });
+
+
 });

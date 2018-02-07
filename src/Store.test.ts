@@ -280,4 +280,26 @@ describe("Store", function () {
         store.action();
     });
 
+    it("exception in action method does not revert changes to instance variables", function () {
+        class MyStore extends Store<any, any> {
+
+            chars = "";
+
+            action() {
+                this.chars = "A";
+                throw new Error();
+            }
+
+        }
+
+        const store = new MyStore("myStore", {}, {});
+
+        try {
+            store.action();
+        } catch (e) {
+            // ignore
+        }
+        assert.equal(store.chars, "A");
+    });
+
 });

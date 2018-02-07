@@ -89,7 +89,6 @@ describe("DevTools", function () {
                 this.mutate.mut2();
 
                 setTimeout(() => {
-                    console.log(eventActionTypes);
                     assert.deepEqual(eventActionTypes, [
                         "myStore # @@INIT",
                         "myStore # action1 / mut1",
