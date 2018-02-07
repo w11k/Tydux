@@ -1,6 +1,6 @@
 import {assert} from "chai";
-import {globalStateChanges$} from "./dev-tools";
 import {enableTyduxDevelopmentMode} from "./development";
+import {globalStateChanges$} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";

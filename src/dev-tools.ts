@@ -1,15 +1,5 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
-import {Subject} from "rxjs/Subject";
-import {Store} from "./Store";
-
-export class MutatorEvent<S> {
-    constructor(readonly storeName: string,
-                readonly action: any,
-                readonly state: S,
-                readonly boundMutator?: () => void) {
-    }
-}
+import {getGlobalTyduxState, globalStateChanges$} from "./global-state";
 
 interface DevToolsState {
     actionsById: {
@@ -22,23 +12,19 @@ interface DevToolsState {
     stagedActionIds: number[];
 }
 
-const devToolsEnabled = typeof window !== "undefined"
-    && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
+export function enableDevTools() {
+    const devToolsEnabled = typeof window !== "undefined"
+            && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
 
-const devTools = devToolsEnabled ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.connect() : undefined;
+    if (!devToolsEnabled) {
+        return;
+    }
 
-const stores: { [name: string]: Store<any, any> } = {};
+    const devTools = devToolsEnabled ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.connect() : undefined;
 
-const mutators: (() => void)[] = [];
+    const mutators: (() => void)[] = [];
 
-const globalState: any = {};
-
-const globalStateChangesSubject = new Subject<MutatorEvent<any>>();
-
-export const globalStateChanges$: Observable<MutatorEvent<any>> = globalStateChangesSubject.asObservable();
-
-if (devToolsEnabled) {
-    devTools.init(globalState);
+    devTools.init(getGlobalTyduxState());
 
     devTools.subscribe((message: any) => {
         // console.log(message);
@@ -58,30 +44,15 @@ if (devToolsEnabled) {
     });
 
     globalStateChanges$
-        .subscribe(event => {
+            .subscribe(event => {
+                const mutator = event.boundMutator ? event.boundMutator : _.noop;
+                mutators.push(mutator);
+                const action = {
+                    ...event.action,
+                    "type": "[" + event.storeName + "] " + event.action.type
+                };
 
-            const mutator = event.boundMutator ? event.boundMutator : _.noop;
-            mutators.push(mutator);
-            const action = {
-                ...event.action,
-                "type": "[" + event.storeName + "] " + event.action.type
-            };
-
-            globalState[event.storeName] = event.state;
-            devTools.send(action, globalState);
-
-        });
-}
-
-export function subscribeStore(storeName: string, store: Store<any, any>) {
-    stores[storeName] = store;
-
-    store.events$
-        .subscribe(event => {
-            globalStateChangesSubject.next(event);
-        });
-}
-
-function dispatchAction(storeName: string, action: any) {
+                devTools.send(action, getGlobalTyduxState());
+            });
 
 }

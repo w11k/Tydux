@@ -3,14 +3,18 @@ import {Observable} from "rxjs/Observable";
 import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
-import {MutatorEvent, subscribeStore} from "./dev-tools";
 import {isTyduxDevelopmentModeEnabled} from "./development";
+import {addStoreToGlobalState, MutatorEvent} from "./global-state";
 import {assignStateValue, createFailingProxy, createProxy, failIfValueIsPromise, Mutators} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {isShallowEquals} from "./utils";
 
+export interface Action {
+    [param: string]: any;
+    type: string;
+}
 
-function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): any {
+function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): Action {
     const fnString = fn.toString();
     const argsString = fnString.substring(fnString.indexOf("(") + 1, fnString.indexOf(")"));
     const argNames = argsString.split(",").map((a: string) => a.trim());
@@ -53,7 +57,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         //         this.setState(state);
         //     });
 
-        subscribeStore(storeName, this);
+        addStoreToGlobalState(storeName, this);
     }
 
     get state(): Readonly<S> {
