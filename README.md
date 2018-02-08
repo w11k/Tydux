@@ -10,6 +10,13 @@ Tydux is a TypeScript library for predictable state management. It follows the [
 
 Other than Redux, it utilizes **types to structure the code** and **enforces immutability**.
 
+# Key benefits and philosophy
+
+- state management with enforced immutability
+- focus on code scalability
+- instance based store to perfectly support e.g. Angular's [hierarchical dependency injectors](https://angular.io/guide/hierarchical-dependency-injection)
+- utilizes pure TypeScript classes
+
 # Example
 
     class MyState {
