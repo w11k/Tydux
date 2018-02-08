@@ -6,7 +6,7 @@
 
 # Tydux
 
-Tydux is a TypeScript library for predictable state management. It follows the [command-query separation pattern](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) and was heavily influenced by [Redux](https://github.com/reactjs/redux). It is designed to be used in applications written in TypeScript, but normal ECMAScript classes also work.
+Tydux is a TypeScript library for predictable state management. It follows the [command-query separation pattern](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) and was influenced by [Redux](https://github.com/reactjs/redux). It is designed to be used in applications written in TypeScript.
 
 Other than Redux, it utilizes **types to structure the code** and **enforces immutability**.
 
@@ -14,7 +14,7 @@ Other than Redux, it utilizes **types to structure the code** and **enforces imm
 
 - state management with enforced immutability
 - focus on code scalability
-- instance based store to perfectly support e.g. Angular's [hierarchical dependency injectors](https://angular.io/guide/hierarchical-dependency-injection)
+- instance based stores to enable perfect integration with Angular's [hierarchical dependency injectors](https://angular.io/guide/hierarchical-dependency-injection)
 - utilizes pure TypeScript classes
 
 # Example
