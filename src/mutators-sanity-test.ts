@@ -23,11 +23,31 @@ describe("Mutators - sanity tests", function () {
         assert.throws(() => store.mod1());
     });
 
-    it("can not change the state asynchronously", function (done) {
+    it("can not alter the state asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mut() {
                 setTimeout(() => {
                     assert.throws(() => this.state, /Illegal access.*this/);
+                    done();
+                }, 0);
+            }
+        }
+
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                this.mutate.mut();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
+    });
+
+    it("can not replace the state asynchronously", function (done) {
+        class TestMutator extends Mutators<{ n1: number }> {
+            mut() {
+                setTimeout(() => {
+                    assert.throws(() => this.state = {n1: 99}, /Illegal access.*this/);
                     done();
                 }, 0);
             }
@@ -97,9 +117,10 @@ describe("Mutators - sanity tests", function () {
         store.mod1();
     });
 
-    it("must not return a promise", function () {
+    it("must not return a value", function () {
         class TestMutator extends Mutators<any> {
-            async mod1() {
+            mod1() {
+                return 1;
             }
         }
 

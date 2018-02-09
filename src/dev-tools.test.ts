@@ -38,7 +38,7 @@ describe("DevTools", function () {
         }
 
         globalStateChanges$.subscribe((event) => {
-            eventActionTypes.push(event.storeName + " # " + event.action.type);
+            eventActionTypes.push(event.action.type);
         });
 
         const store = new MyStore("myStore", new MyMutators(), {});
@@ -111,7 +111,7 @@ describe("DevTools", function () {
         }
 
         globalStateChanges$.subscribe((event) => {
-            eventActionTypes.push(event.storeName + " # " + event.action.type);
+            eventActionTypes.push(event.action.type);
         });
 
         const store = new MyStore("myStore", new MyMutators(), {});

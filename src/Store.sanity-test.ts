@@ -11,7 +11,7 @@ describe("Store - sanity tests", function () {
         enableTyduxDevelopmentMode();
     });
 
-    it("must not modify the state directly", function () {
+    it("can not modify the state directly", function () {
         class MyStore extends Store<any, any> {
 
             action() {
@@ -24,7 +24,7 @@ describe("Store - sanity tests", function () {
         assert.throws(() => store.action());
     });
 
-    it("must not assign the state", function () {
+    it("can not assign the state", function () {
         class MyStore extends Store<any, any> {
 
             action() {

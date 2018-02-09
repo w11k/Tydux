@@ -1,8 +1,8 @@
 import * as _ from "lodash";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
 
-export function failIfValueIsPromise(value: any): void {
-    if (value instanceof Promise) {
+export function failIfNotUndefined(value: any): void {
+    if (value !== undefined) {
         throw new Error(mutatorWrongReturnType);
     }
 }
@@ -46,5 +46,7 @@ export function createFailingProxy(): object {
 
 
 export abstract class Mutators<T> {
+
     protected state: T = undefined as any;
+
 }

@@ -5,13 +5,19 @@ import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {addStoreToGlobalState, MutatorEvent} from "./global-state";
-import {assignStateValue, createFailingProxy, createProxy, failIfValueIsPromise, Mutators} from "./mutators";
+import {assignStateValue, createFailingProxy, createProxy, failIfNotUndefined, Mutators} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {isShallowEquals} from "./utils";
 
 export interface Action {
     [param: string]: any;
+
     type: string;
+}
+
+interface StateChange<S> {
+    state: S;
+    mutatorEvent: MutatorEvent;
 }
 
 function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): Action {
@@ -20,7 +26,7 @@ function createActionFromArguments(actionTypeName: string, fn: any, args: IArgum
     const argNames = argsString.split(",").map((a: string) => a.trim());
 
     const action: any = {};
-    for (let i = 0; i < argNames.length; i++) {
+    for (let i = 0; i < args.length; i++) {
         const arg = "[" + i + "] " + argNames[i];
         action[arg] = args[i];
     }
@@ -33,31 +39,22 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private _state: S = undefined as any;
 
-    private eventsSubject = new ReplaySubject<MutatorEvent<S>>(1);
+    private stateChangesSubject = new ReplaySubject<StateChange<S>>(1);
 
     protected readonly mutate: M;
 
-    protected ignoreMembers: (keyof this)[] = ["$q"] as any;
+    readonly mutatorEvents$: Observable<MutatorEvent> = this.stateChangesSubject.pipe(
+            map(stateChange => stateChange.mutatorEvent)
+    );
 
-    readonly events$: Observable<MutatorEvent<S>> = this.eventsSubject.asObservable();
+    constructor(readonly storeName: string, mutators: M, state: S) {
+        this.processMutator({type: `${storeName} # @@INIT`}, state, _.noop);
 
-    constructor(public readonly storeName: string, mutators: M, state: S) {
-        this.processMutator({type: "@@INIT"}, state);
-
-        this.mutate = this.instrumentAndReturnMutators(mutators);
-
+        this.mutate = mutators;
+        this.instrumentMutators();
         this.wrapStoreMethods();
 
-        // const pushedStateForThisStore = globalStateChanges$.pipe(
-        //     map(globalState => globalState[storeName]));
-        //
-        // pushedStateForThisStore.pipe(
-        //     filter(s => !_.isNil(s)))
-        //     .subscribe(state => {
-        //         this.setState(state);
-        //     });
-
-        addStoreToGlobalState(storeName, this);
+        addStoreToGlobalState(this);
     }
 
     get state(): Readonly<S> {
@@ -69,9 +66,9 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     select<R>(selector: (state: Readonly<S>) => R): UnboundedObservable<R>;
 
     select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
-        const stream = this.eventsSubject.pipe(
-                map(event => {
-                    return selector ? selector(event.state) : event.state as any;
+        const stream = this.stateChangesSubject.pipe(
+                map(stateChange => {
+                    return selector ? selector(stateChange.state) : stateChange.state as any;
                 }),
                 distinctUntilChanged((old, value) => {
                     if (_.isArray(old) && _.isArray(value)) {
@@ -92,14 +89,12 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 ));
     }
 
-    private createMutatorNamesList(mutators: any) {
-        let baseFnNames = _.functionsIn(Mutators.prototype);
-        return _.difference(_.functionsIn(mutators), baseFnNames, this.ignoreMembers);
-    }
-
-    private processMutator(action: any, state: S, boundMutator?: () => void) {
+    private processMutator(action: any, state: S, boundMutator: () => void) {
         this.setState(state);
-        this.eventsSubject.next(new MutatorEvent(this.storeName, action, this._state, boundMutator));
+        this.stateChangesSubject.next({
+            mutatorEvent: new MutatorEvent(this.storeName, action, boundMutator),
+            state: this._state
+        });
     }
 
     private setState(state: S) {
@@ -160,13 +155,12 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         }
     }
 
-    private instrumentAndReturnMutators(mutators: any): M {
+    private instrumentMutators() {
         const this_ = this;
-
-        const mutatorNames = this.createMutatorNamesList(mutators);
+        const mutators = this.mutate as any;
         const mutatorCallStack: any[] = [mutators];
 
-        for (let mutName of mutatorNames) {
+        for (let mutName of _.functions(Object.getPrototypeOf(mutators))) {
             const mutatorFn = mutators[mutName];
             mutators[mutName] = function () {
                 const args = arguments;
@@ -196,7 +190,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     mutatorCallStack.pop();
 
                     // check return value
-                    failIfValueIsPromise(result);
+                    failIfNotUndefined(result);
                 }
 
                 // commit new state
@@ -206,8 +200,16 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
                     _.assignIn(newState, stateProxy);
 
-                    const storeMethodName = (this as any).storeMethodName;
-                    const actionTypeName = storeMethodName ? storeMethodName + " / " + mutName : mutName;
+                    let storeMethodName = (this as any).storeMethodName;
+                    storeMethodName = storeMethodName || "?";
+
+                    const actionTypeName =
+                            this_.storeName
+                            + " # "
+                            + storeMethodName
+                            + " / "
+                            + mutName;
+
                     const boundMutator = () => {
                         mutators[mutName].apply(mutators, args);
                     };
