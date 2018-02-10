@@ -159,7 +159,77 @@ describe("Store", function () {
         let collected = collect(store.select(s => s.count).unbounded());
         store.action();
         collected.assert(0, 1, 2, 1);
+    });
 
+    it("keeps state between action invocations", function () {
+        class MyState {
+            list: number[] = [];
+            value?: number;
+        }
+
+        class MyMutators extends Mutators<MyState> {
+            setList(list: number[]) {
+                this.state.list = list;
+            }
+
+            setValue(value: number) {
+                this.state.value = value;
+            }
+        }
+
+        class MyStore extends Store<MyMutators, MyState> {
+            setList() {
+                this.mutate.setList([1, 2, 3]);
+            }
+
+            setValue() {
+                this.mutate.setValue(99);
+            }
+        }
+
+        const store = new MyStore("myStore", new MyMutators(), new MyState());
+        store.setList();
+        store.setValue();
+
+        assert.deepEqual(store.state.list, [1, 2, 3]);
+        assert.equal(store.state.value, 99);
+    });
+
+    it("keeps state between action async invocations", async function () {
+        class MyState {
+            list: number[] = [];
+            value?: number;
+        }
+
+        class MyMutators extends Mutators<MyState> {
+            setList(list: number[]) {
+                this.state.list = list;
+            }
+
+            setValue(value: number) {
+                assert.deepEqual(this.state.list, [1, 2, 3]);
+                this.state.value = value;
+            }
+        }
+
+        class MyStore extends Store<MyMutators, MyState> {
+            async setList() {
+                const list = await createAsyncPromise([1, 2, 3]);
+                this.mutate.setList(list);
+            }
+
+            async setValue() {
+                const value = await createAsyncPromise(99);
+                this.mutate.setValue(value);
+            }
+        }
+
+        const store = new MyStore("myStore", new MyMutators(), new MyState());
+        await store.setList();
+        await store.setValue();
+
+        assert.deepEqual(store.state.list, [1, 2, 3]);
+        assert.equal(store.state.value, 99);
     });
 
 });
