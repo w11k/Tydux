@@ -5,7 +5,10 @@ import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {addStoreToGlobalState, MutatorEvent} from "./global-state";
-import {assignStateValue, createFailingProxy, createProxy, failIfNotUndefined, Mutators} from "./mutators";
+import {
+    assignStateValue, createFailingProxy, createProxy, failIfInstanceMembersExist, failIfNotUndefined,
+    Mutators
+} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {isShallowEquals} from "./utils";
 
@@ -48,10 +51,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     constructor(readonly storeName: string, mutators: M, state: S) {
         this.processMutator({type: "@@INIT"}, state, _.noop);
-
         this.mutate = this.createMutatorsProxy(mutators);
-        // this.instrumentMutators();
-
         addStoreToGlobalState(this);
     }
 
@@ -87,10 +87,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 ));
     }
 
-    private processMutator(action: any, state: S, boundMutator: () => void) {
+    private processMutator(action: any, state: S, boundMutator: () => void, duration?: number) {
         this.setState(state);
         this.stateChangesSubject.next({
-            mutatorEvent: new MutatorEvent(this.storeName, action, boundMutator),
+            mutatorEvent: new MutatorEvent(this.storeName, action, boundMutator, duration),
             state: this._state
         });
     }
@@ -100,12 +100,13 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     }
 
     private createMutatorsProxy(mutatorsSource: any) {
+        failIfInstanceMembersExist(mutatorsSource);
+
         const this_ = this;
         const mutatorsProxy: any = {};
-
         let mutatorCallStackCount = 0;
-
         let mutatorsSourcePrototype = Object.getPrototypeOf(mutatorsSource);
+
         for (let mutName of _.functions(mutatorsSourcePrototype)) {
             const mutatorFn = mutatorsSource[mutName];
 
@@ -122,11 +123,14 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 }
 
                 // call mutator
+                let duration: number;
                 let result: any;
                 let mockState: any;
                 mutatorCallStackCount++;
                 try {
+                    const start = isTyduxDevelopmentModeEnabled() ? Date.now() : 0;
                     result = mutatorFn.apply(mutatorsSource, args);
+                    duration = isTyduxDevelopmentModeEnabled() ? Date.now() - start : -1;
                 } finally {
                     mutatorCallStackCount--;
                     failIfNotUndefined(result);
@@ -137,6 +141,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     // install failing proxy to catch asynchronous code
                     mockState = mutatorsSource.state;
                     delete mutatorsSource.state;
+                    failIfInstanceMembersExist(mutatorsSource);
                     Object.setPrototypeOf(mutatorsSource, createFailingProxy());
 
                     // merge mock state -> state
@@ -150,7 +155,8 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     this_.processMutator(
                             createActionFromArguments(mutName, mutatorFn, args),
                             newState,
-                            boundMutator);
+                            boundMutator,
+                            duration);
                 }
 
                 return result;

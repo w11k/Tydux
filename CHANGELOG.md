@@ -1,3 +1,10 @@
+
+# Version 2.0.1
+
+- simplified store implementation
+- print mutator run duration in dev tools
+
+
 # Version 2.0.0
 
 - **Breaking Change:** store.dispatch renamed to store.mutate

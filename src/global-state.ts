@@ -5,7 +5,8 @@ import {Action, Store} from "./Store";
 export class MutatorEvent {
     constructor(readonly storeName: string,
                 readonly action: Action,
-                readonly boundMutator: () => void) {
+                readonly boundMutator: () => void,
+                readonly duration?: number) {
     }
 }
 

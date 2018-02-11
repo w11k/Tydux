@@ -2,7 +2,7 @@ import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
-import {collect} from "./test-utils";
+import {collect, createAsyncPromise} from "./test-utils";
 
 
 describe("Store", function () {

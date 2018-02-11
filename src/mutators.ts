@@ -1,9 +1,16 @@
 import * as _ from "lodash";
-import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
+import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
 
 export function failIfNotUndefined(value: any): void {
     if (value !== undefined) {
         throw new Error(mutatorWrongReturnType);
+    }
+}
+
+export function failIfInstanceMembersExist(obj: any) {
+    let member = _.keys(obj).filter(e => e !== "state");
+    if (member.length > 0) {
+        throw new Error(mutatorHasInstanceMembers + ": " + member.join(","));
     }
 }
 

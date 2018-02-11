@@ -1,6 +1,8 @@
 
 export const mutatorWrongReturnType = "mutator methods must not return a value";
 
+export const mutatorHasInstanceMembers = "mutators must not have instance members";
+
 export const illegalAccessToThis = `
 Illegal access to 'this'. Make sure that 'this' is not accessed in positions like the following:
 

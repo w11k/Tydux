@@ -98,29 +98,32 @@ describe("Mutators", function () {
         assert.equal(store.state.a, 0);
     });
 
-    it("member method can use member variables", function (done) {
+    it("mutators must not have instance members", function () {
+        class MyMutators extends Mutators<any> {
+            abc = 1;
+        }
+
+        class MyStore extends Store<MyMutators, any> {
+        }
+
+        assert.throws(
+                () => new MyStore("myStore", new MyMutators(), {}),
+                /abc/
+        );
+    });
+
+    it("mutators must not create instance members", function () {
         class MyMutators extends Mutators<any> {
 
-            counterA?: number;
-
-            counterB = 1;
-
-            method() {
-                this.counterA = 10;
-                this.innerMethod();
+            mut() {
+                (this as any).abc = 1;
             }
 
-            innerMethod() {
-                this.counterB = 20;
-            }
         }
 
         class MyStore extends Store<MyMutators, any> {
             action() {
-                this.mutate.method();
-                assert.equal(this.mutate.counterA, 10);
-                assert.equal(this.mutate.counterB, 20);
-                done();
+                assert.throws(() => this.mutate.mut(), /abc/);
             }
         }
 
