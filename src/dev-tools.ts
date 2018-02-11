@@ -49,7 +49,7 @@ export function enableDevTools() {
                 mutators.push(mutator);
                 const action = {
                     ...event.action,
-                    "type": "[" + event.storeName + "] " + event.action.type
+                    "type": "[" + event.storeName + " / " + event.action.type + "]"
                 };
 
                 devTools.send(action, getGlobalTyduxState());

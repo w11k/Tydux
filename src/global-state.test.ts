@@ -38,11 +38,11 @@ describe("global state", function () {
         const store = new MyStore("store", new MyMutators(), {count: 0});
         store.action1();
 
-        assert.equal(events[0].action.type, "store # @@INIT");
+        assert.equal(events[0].action.type, "@@INIT");
 
-        assert.equal(events[1].action.type, "store # action1 / mut1");
+        assert.equal(events[1].action.type, "mut1");
 
-        assert.equal(events[2].action.type, "store # action1 / mut2");
+        assert.equal(events[2].action.type, "mut2");
         assert.equal(events[2].action["[0] count"], 2);
     });
 
