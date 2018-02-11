@@ -1,7 +1,6 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
-import {createSimpleStore} from "./SimpleStore";
 import {Store} from "./Store";
 
 
@@ -13,27 +12,39 @@ describe("Mutators", function () {
 
     it("methods can change the state", function () {
         class TestMutator extends Mutators<{ n1: number }> {
-            mod1() {
+            mut1() {
                 this.state.n1 = 1;
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mod1();
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
         assert.deepEqual(store.state, {n1: 1});
     });
 
     it("methods can assign a new state", function () {
         class TestMutator extends Mutators<{ n1: number }> {
-            mod1() {
+            mut1() {
                 this.state = {
                     n1: 1
                 };
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mod1();
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
         assert.deepEqual(store.state, {n1: 1});
     });
 
@@ -54,8 +65,14 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: ""});
-        store.mod1();
+        class TestStore extends Store<TestMutator, { n1: string }> {
+            action1() {
+                this.mutate.mod1();
+            }
+        }
+
+        const store = new TestStore("TestStore", new TestMutator(), {n1: ""});
+        store.action1();
         assert.deepEqual(store.state, {n1: "123"});
     });
 
@@ -70,8 +87,14 @@ describe("Mutators", function () {
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {a: 0});
-        assert.throws(() => store.mut1());
+        class MyStore extends Store<TestMutator, { a: number }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {a: 0});
+        assert.throws(() => store.action());
         assert.equal(store.state.a, 0);
     });
 

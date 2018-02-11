@@ -1,7 +1,6 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
-import {createSimpleStore} from "./SimpleStore";
 import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";
 
@@ -14,16 +13,22 @@ describe("Mutators - sanity tests", function () {
 
     it("can not change the state deeply", function () {
         class TestMutator extends Mutators<{ n1: number[] }> {
-            mod1() {
+            mut1() {
                 this.state.n1.push(3);
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: [1, 2]});
-        assert.throws(() => store.mod1());
+        class MyStore extends Store<TestMutator, { n1: number[] }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: [1, 2]});
+        assert.throws(() => store.action());
     });
 
-    it("can not alter the state asynchronously", function (done) {
+    it("can not access the state asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mut() {
                 setTimeout(() => {
@@ -65,7 +70,7 @@ describe("Mutators - sanity tests", function () {
 
     it("can not change the state in asynchronous promise callbacks", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
-            mod1() {
+            mut1() {
                 createAsyncPromise(1).then(val => {
                     assert.throws(() => this.state.n1 = val);
                     done();
@@ -73,34 +78,46 @@ describe("Mutators - sanity tests", function () {
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mod1();
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
     });
 
     it("can not access other members asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
-            mod1() {
+            mut1() {
                 setTimeout(() => {
-                    assert.throws(() => this.mod2(), /Illegal access.*this/);
+                    assert.throws(() => this.mut2(), /Illegal access.*this/);
                     done();
                 }, 0);
             }
 
-            mod2() {
+            mut2() {
                 // empty
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mod1();
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
     });
 
     it("can not access other members in an asynchronous promise resolve", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
-            mod1() {
+            mut1() {
                 createAsyncPromise(1)
                         .then(() => {
-                            this.mod2();
+                            this.mut2();
                         })
                         .catch((e) => {
                             assert.match(e, /Illegal access.*this/);
@@ -108,13 +125,19 @@ describe("Mutators - sanity tests", function () {
                         });
             }
 
-            mod2() {
+            mut2() {
                 // empty
             }
         }
 
-        const store = createSimpleStore("", new TestMutator(), {n1: 0});
-        store.mod1();
+        class MyStore extends Store<TestMutator, { n1: number }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: 0});
+        store.action();
     });
 
     it("must not return a value", function () {
@@ -133,32 +156,5 @@ describe("Mutators - sanity tests", function () {
         const store = new MyStore("", new TestMutator(), {});
         store.action();
     });
-
-    it("exception in mutator method does not revert changes to instance variables", function (done) {
-        class TestMutator extends Mutators<{ n1: number }> {
-
-            i = 0;
-
-            mut() {
-                this.i = 1;
-                throw new Error();
-            }
-        }
-
-        class MyStore extends Store<TestMutator, { n1: number }> {
-            action() {
-                try {
-                    this.mutate.mut();
-                } catch (e) {
-                    assert.equal(this.mutate.i, 1);
-                    done();
-                }
-            }
-        }
-
-        const store = new MyStore("", new TestMutator(), {n1: 0});
-        store.action();
-    });
-
 
 });

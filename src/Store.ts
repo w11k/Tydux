@@ -11,7 +11,6 @@ import {isShallowEquals} from "./utils";
 
 export interface Action {
     [param: string]: any;
-
     type: string;
 }
 
@@ -48,11 +47,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     );
 
     constructor(readonly storeName: string, mutators: M, state: S) {
-        this.processMutator({type: `${storeName} # @@INIT`}, state, _.noop);
+        this.processMutator({type: "@@INIT"}, state, _.noop);
 
-        this.mutate = mutators;
-        this.instrumentMutators();
-        this.wrapStoreMethods();
+        this.mutate = this.createMutatorsProxy(mutators);
+        // this.instrumentMutators();
 
         addStoreToGlobalState(this);
     }
@@ -101,120 +99,56 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
-    private wrapStoreMethods() {
-        const memberMethodsThisCallStack: any[] = [this];
-
-        const methods: string[] = _.functions(Object.getPrototypeOf(this));
-        for (let methodName of methods) {
-
-            const originalStoreMethod = (this as any)[methodName];
-            (this as any)[methodName] = function () {
-
-                const mutatorInstanceProxy = {
-                    storeMethodName: methodName,
-                };
-                Object.setPrototypeOf(mutatorInstanceProxy, _.last(memberMethodsThisCallStack).mutate);
-
-                const storeProxy = {
-                    mutate: mutatorInstanceProxy
-                };
-                const parentThisInCallStack = _.last(memberMethodsThisCallStack);
-                Object.setPrototypeOf(storeProxy, parentThisInCallStack);
-
-                // new this on callstack
-                memberMethodsThisCallStack.push(storeProxy);
-
-                // cleanup after invocation (special treatment for promises below)
-                const assignThisValuesToParentInCallStack = (currentThis: any, parentThis: any) => {
-                    delete currentThis.mutate;
-                    _.assignInWith(parentThis, currentThis);
-                    memberMethodsThisCallStack.pop();
-                };
-
-                let result: any;
-                let resultIsPromise = false;
-                try {
-                    result = originalStoreMethod.apply(storeProxy, arguments);
-                    if (result instanceof Promise) {
-                        resultIsPromise = true;
-                        result = result.then((r) => {
-                            assignThisValuesToParentInCallStack(storeProxy, parentThisInCallStack);
-                            return r;
-                        }).catch(() => {
-                            assignThisValuesToParentInCallStack(storeProxy, parentThisInCallStack);
-                        });
-                    }
-                } finally {
-                    if (!resultIsPromise) {
-                        assignThisValuesToParentInCallStack(storeProxy, parentThisInCallStack);
-                    }
-                }
-
-                return result;
-            };
-        }
-    }
-
-    private instrumentMutators() {
+    private createMutatorsProxy(mutatorsSource: any) {
         const this_ = this;
-        const mutators = this.mutate as any;
-        const mutatorCallStack: any[] = [mutators];
+        const mutatorsProxy: any = {};
 
-        for (let mutName of _.functions(Object.getPrototypeOf(mutators))) {
-            const mutatorFn = mutators[mutName];
-            mutators[mutName] = function () {
+        let mutatorCallStackCount = 0;
+
+        let mutatorsSourcePrototype = Object.getPrototypeOf(mutatorsSource);
+        for (let mutName of _.functions(mutatorsSourcePrototype)) {
+            const mutatorFn = mutatorsSource[mutName];
+
+            // replace with wrapped method
+            mutatorsProxy[mutName] = function () {
                 const args = arguments;
-                const isRootMutator = mutatorCallStack.length === 1;
+                const isRootMutator = mutatorCallStackCount === 0;
 
-                // create state copy
+                // create state mock
                 if (isRootMutator) {
-                    const stateProxy = createProxy(this_.state);
-                    assignStateValue(mutators, stateProxy);
+                    const mockState = createProxy(this_.state);
+                    assignStateValue(mutatorsSource, mockState);
+                    Object.setPrototypeOf(mutatorsSource, mutatorsSourcePrototype);
                 }
 
                 // call mutator
                 let result: any;
-                const mutatorsThisProxy = createProxy(mutators);
-                mutatorCallStack.push(mutatorsThisProxy);
+                let mockState: any;
+                mutatorCallStackCount++;
                 try {
-                    result = mutatorFn.apply(mutatorsThisProxy, args);
+                    result = mutatorFn.apply(mutatorsSource, args);
                 } finally {
-                    // transfer created/modified instance members
-                    const parentMutatorInCallStack = mutatorCallStack[mutatorCallStack.length - 2];
-                    delete mutatorsThisProxy.state;
-                    _.assignIn(parentMutatorInCallStack, mutatorsThisProxy);
-
-                    // install failing proxy to catch asynchronous code
-                    let failingProxy = createFailingProxy();
-                    Object.setPrototypeOf(mutatorsThisProxy, failingProxy);
-                    mutatorCallStack.pop();
-
-                    // check return value
+                    mutatorCallStackCount--;
                     failIfNotUndefined(result);
                 }
 
                 // commit new state
                 if (isRootMutator) {
-                    const stateProxy = mutators.state;
-                    const stateOriginal = this_.state;
-                    const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(stateOriginal) : {} as S;
-                    _.assignIn(newState, stateProxy);
+                    // install failing proxy to catch asynchronous code
+                    mockState = mutatorsSource.state;
+                    delete mutatorsSource.state;
+                    Object.setPrototypeOf(mutatorsSource, createFailingProxy());
 
-                    let storeMethodName = (this as any).storeMethodName;
-                    storeMethodName = storeMethodName || "?";
-
-                    const actionTypeName =
-                            this_.storeName
-                            + " # "
-                            + storeMethodName
-                            + " / "
-                            + mutName;
+                    // merge mock state -> state
+                    const originalState = this_.state;
+                    const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(originalState) : {} as S;
+                    _.assignIn(newState, mockState);
 
                     const boundMutator = () => {
-                        mutators[mutName].apply(mutators, args);
+                        // mutators[mutName].apply(mutators, args);
                     };
                     this_.processMutator(
-                            createActionFromArguments(actionTypeName, mutatorFn, args),
+                            createActionFromArguments(mutName, mutatorFn, args),
                             newState,
                             boundMutator);
                 }
@@ -223,7 +157,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             };
         }
 
-        return mutators;
+        return mutatorsProxy;
     }
 
 }
