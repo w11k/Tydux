@@ -11,14 +11,14 @@ function forKeys(obj: any, iter: any) {
     let idx, keys;
     if (Array.isArray(obj)) {
         idx = obj.length;
-        while (idx--) {
+        while (idx-- > 0) {
             iter(idx);
         }
         return;
     }
     keys = Object.keys(obj);
     idx = keys.length;
-    while (idx--) {
+    while (idx-- > 0) {
         iter(keys[idx]);
     }
 }

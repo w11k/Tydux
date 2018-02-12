@@ -35,7 +35,9 @@
   },
   "scripts": {
     "clean": "del-cli dist",
-    "dist": "npm run clean ; tsc -p tsconfig.dist.json",
+    "tslint": "tslint --project tsconfig.json --config tslint.json",
+    "compile": "tsc -p tsconfig.dist.json",
+    "dist": "npm run clean ; npm run tslint ; npm run compile",
     "test": "mocha --opts spec/mocha.opts src/**/*test.ts",
     "test-watch": "mocha --opts spec/mocha.opts -w --watch-extensions ts src/**/*test.ts",
     "demos-raw": "webpack-dev-server --config src/demos/raw/webpack.config.js"

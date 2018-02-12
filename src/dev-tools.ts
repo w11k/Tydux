@@ -1,5 +1,4 @@
 import * as _ from "lodash";
-import {isTyduxDevelopmentModeEnabled} from "./development";
 import {getGlobalTyduxState, globalStateChanges$} from "./global-state";
 
 interface DevToolsState {
@@ -46,7 +45,7 @@ export function enableDevTools() {
 
     globalStateChanges$
             .subscribe(event => {
-                const mutator = event.boundMutator ? event.boundMutator : _.noop;
+                const mutator = !_.isNil(event.boundMutator) ? event.boundMutator : _.noop;
                 mutators.push(mutator);
                 const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
                 const action = {

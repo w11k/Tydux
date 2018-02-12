@@ -6,7 +6,11 @@ import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {addStoreToGlobalState, MutatorEvent} from "./global-state";
 import {
-    assignStateValue, createFailingProxy, createProxy, failIfInstanceMembersExist, failIfNotUndefined,
+    assignStateValue,
+    createFailingProxy,
+    createProxy,
+    failIfInstanceMembersExist,
+    failIfNotUndefined,
     Mutators
 } from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
@@ -14,6 +18,7 @@ import {isShallowEquals} from "./utils";
 
 export interface Action {
     [param: string]: any;
+
     type: string;
 }
 
@@ -66,7 +71,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
         const stream = this.stateChangesSubject.pipe(
                 map(stateChange => {
-                    return selector ? selector(stateChange.state) : stateChange.state as any;
+                    return !_.isNil(selector) ? selector(stateChange.state) : stateChange.state as any;
                 }),
                 distinctUntilChanged((old, value) => {
                     if (_.isArray(old) && _.isArray(value)) {

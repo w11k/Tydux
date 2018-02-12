@@ -1,6 +1,10 @@
 {
   "rules": {
-    "member-access": [true, "no-public"],
+    "member-access": [
+      true,
+      "no-public"
+    ],
+    "strict-boolean-expressions": true,
     "class-name": true,
     "curly": true,
     "eofline": false,
