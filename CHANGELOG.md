@@ -1,4 +1,9 @@
 
+# Version 2.0.4
+
+- fixed RxJS import
+
+
 # Version 2.0.3
 
 - added `boundToComponent()` method to `UnboundedObservable`

@@ -1,4 +1,4 @@
-import {Observable} from "rxjs";
+import {Observable} from "rxjs/Observable";
 import {first, takeUntil} from "rxjs/operators";
 import {OnDestroyLike, untilComponentDestroyed} from "./angular-integration";
 import {angularJs1Scoped, AngularJS1ScopeLike} from "./angularjs1-integration";
@@ -19,7 +19,7 @@ export class UnboundedObservable<T> {
 
     first() {
         return this.observable.pipe(
-            first()
+                first()
         );
     }
 
