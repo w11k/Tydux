@@ -10,7 +10,9 @@ export function componentDestroyed(component: OnDestroyLike): Observable<true> {
     const oldNgOnDestroy = component.ngOnDestroy;
     const stop$ = new Subject<true>();
     component.ngOnDestroy = function () {
-        oldNgOnDestroy && oldNgOnDestroy.apply(component, arguments);
+        if (oldNgOnDestroy() !== undefined && oldNgOnDestroy() !== null) {
+            oldNgOnDestroy.apply(component, arguments);
+        }
         stop$.next(true);
         stop$.complete();
     };
