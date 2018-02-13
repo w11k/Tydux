@@ -1,4 +1,5 @@
 import {assert} from "chai";
+import * as _ from "lodash";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
@@ -103,7 +104,7 @@ describe("Store", function () {
     it("selectNonNil(with selector)", function () {
         class TestMutator extends Mutators<{ n1?: number }> {
             inc() {
-                this.state.n1 = this.state.n1 ? this.state.n1 + 1 : 1;
+                this.state.n1 = !_.isNil(this.state.n1) ? this.state.n1 + 1 : 1;
             }
 
             clear() {

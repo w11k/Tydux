@@ -90,7 +90,7 @@ const renderApp = () => {
         
             <ol>
                 ${store.state.todos!.map(t => {
-        return `<li class=''>${t.name}</li>`
+        return `<li class=''>${t.name}</li>`;
     }).join("") }
             </ol>
         </div>
@@ -98,7 +98,7 @@ const renderApp = () => {
 };
 
 store.select()
-    .unbounded()
-    .subscribe(() => {
-        renderApp();
-    });
+        .unbounded()
+        .subscribe(() => {
+            renderApp();
+        });
