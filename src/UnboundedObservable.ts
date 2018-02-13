@@ -1,5 +1,6 @@
 import {Observable} from "rxjs";
 import {first, takeUntil} from "rxjs/operators";
+import {OnDestroyLike, untilComponentDestroyed} from "./angular-integration";
 import {angularJs1Scoped, AngularJS1ScopeLike} from "./angularjs1-integration";
 
 export class UnboundedObservable<T> {
@@ -28,6 +29,12 @@ export class UnboundedObservable<T> {
 
     boundToAngularJSScope($scope: AngularJS1ScopeLike) {
         return this.observable.lift(angularJs1Scoped($scope));
+    }
+
+    boundToComponent(hasOnDestroy: OnDestroyLike) {
+        return this.observable.pipe(
+                untilComponentDestroyed(hasOnDestroy)
+        );
     }
 
 }

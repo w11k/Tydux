@@ -1,4 +1,9 @@
 
+# Version 2.0.2
+
+- added `boundToComponent()` method to `UnboundedObservable`
+
+
 # Version 2.0.1
 
 - simplified store implementation
