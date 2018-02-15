@@ -1,4 +1,9 @@
 
+# Version 2.0.5
+
+- added `selectMany` and `share()` for `UnboundedObservable`
+
+
 # Version 2.0.4
 
 - fixed RxJS import

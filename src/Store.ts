@@ -46,7 +46,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private _state: S = undefined as any;
 
-    private stateChangesSubject = new ReplaySubject<StateChange<S>>(1);
+    private readonly stateChangesSubject = new ReplaySubject<StateChange<S>>(1);
 
     protected readonly mutate: M;
 
@@ -92,7 +92,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 ));
     }
 
-    private processMutator(action: any, state: S, boundMutator: () => void, duration?: number) {
+    private processMutator(action: Action, state: S, boundMutator: () => void, duration?: number) {
         this.setState(state);
         this.stateChangesSubject.next({
             mutatorEvent: new MutatorEvent(this.storeName, action, boundMutator, duration),
