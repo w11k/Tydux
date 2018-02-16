@@ -45,7 +45,7 @@ describe("Store", function () {
         log("query", store.state.count);
 
         // observe the state
-        store.select(s => s.count).unbounded().subscribe(count => {
+        store.select(s => s.count).asObservable().subscribe(count => {
             log("observe", count);
         });
 
@@ -75,7 +75,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.select().unbounded());
+        let collected = collect(store.select().asObservable());
         store.actionInc();
         store.actionInc();
         collected.assert({n1: 0}, {n1: 1}, {n1: 2});
@@ -95,7 +95,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.select(s => s.n1).unbounded());
+        let collected = collect(store.select(s => s.n1).asObservable());
         store.actionInc();
         store.actionInc();
         collected.assert(0, 1, 2);
@@ -123,7 +123,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: undefined});
-        let collected = collect(store.selectNonNil(s => s.n1).unbounded());
+        let collected = collect(store.selectNonNil(s => s.n1).asObservable());
         store.actionInc(); // 1
         store.actionClear();
         store.actionInc(); // 1
@@ -156,7 +156,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {a: 0, b: 10, c: 100});
-        let collected = collect(store.select(s => [s.a, s.b]).unbounded());
+        let collected = collect(store.select(s => [s.a, s.b]).asObservable());
         store.actionIncAB();
         store.actionIncC();
         store.actionIncAB();
@@ -188,7 +188,7 @@ describe("Store", function () {
         }
 
         const store = new MyStore("myStore", new MyMutators(), new MyState());
-        let collected = collect(store.select(s => s.count).unbounded());
+        let collected = collect(store.select(s => s.count).asObservable());
         store.action();
         collected.assert(0, 1, 2, 1);
     });

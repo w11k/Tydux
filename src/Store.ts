@@ -84,9 +84,9 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return new UnboundedObservable(stream);
     }
 
-    selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined = _.identity as any): UnboundedObservable<R> {
+    selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): UnboundedObservable<R> {
         return new UnboundedObservable(
-                this.select(selector).unbounded().pipe(
+                this.select(selector).asObservable().pipe(
                         filter(val => !_.isNil(val)),
                         map(val => val!)
                 ));
@@ -105,26 +105,30 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     }
 
     private createMutatorsProxy(mutatorsSource: any) {
+        delete mutatorsSource.state;
         failIfInstanceMembersExist(mutatorsSource);
 
         const this_ = this;
-        const mutatorsProxy: any = {};
-        let mutatorCallStackCount = 0;
-        let mutatorsSourcePrototype = Object.getPrototypeOf(mutatorsSource);
 
-        for (let mutName of _.functions(mutatorsSourcePrototype)) {
+        const mutatorMethods: any = {};
+
+        let mutatorCallStackCount = 0;
+        // let mutatorsSourcePrototype = Object.getPrototypeOf(mutatorsSource);
+
+        for (let mutName of _.functionsIn(mutatorsSource)) {
             const mutatorFn = mutatorsSource[mutName];
 
             // replace with wrapped method
-            mutatorsProxy[mutName] = function () {
+            mutatorMethods[mutName] = function () {
                 const args = arguments;
                 const isRootMutator = mutatorCallStackCount === 0;
+                const mutatorThis: any = isRootMutator ? {} : this;
 
                 // create state mock
                 if (isRootMutator) {
                     const mockState = createProxy(this_.state);
-                    assignStateValue(mutatorsSource, mockState);
-                    Object.setPrototypeOf(mutatorsSource, mutatorsSourcePrototype);
+                    assignStateValue(mutatorThis, mockState);
+                    Object.setPrototypeOf(mutatorThis, mutatorMethods);
                 }
 
                 // call mutator
@@ -134,7 +138,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 mutatorCallStackCount++;
                 try {
                     const start = isTyduxDevelopmentModeEnabled() ? Date.now() : 0;
-                    result = mutatorFn.apply(mutatorsSource, args);
+                    result = mutatorFn.apply(mutatorThis, args);
                     duration = isTyduxDevelopmentModeEnabled() ? Date.now() - start : -1;
                 } finally {
                     mutatorCallStackCount--;
@@ -144,10 +148,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 // commit new state
                 if (isRootMutator) {
                     // install failing proxy to catch asynchronous code
-                    mockState = mutatorsSource.state;
-                    delete mutatorsSource.state;
-                    failIfInstanceMembersExist(mutatorsSource);
-                    Object.setPrototypeOf(mutatorsSource, createFailingProxy());
+                    mockState = mutatorThis.state;
+                    delete mutatorThis.state;
+                    failIfInstanceMembersExist(mutatorThis);
+                    Object.setPrototypeOf(mutatorThis, createFailingProxy());
 
                     // merge mock state -> state
                     const originalState = this_.state;
@@ -168,7 +172,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             };
         }
 
-        return mutatorsProxy;
+        return mutatorMethods;
     }
 
 }

@@ -8,13 +8,14 @@ export function failIfNotUndefined(value: any): void {
 }
 
 export function failIfInstanceMembersExist(obj: any) {
-    let member = _.keys(obj).filter(e => e !== "state");
-    if (member.length > 0) {
-        throw new Error(mutatorHasInstanceMembers + ": " + member.join(","));
+    let members = _.keys(obj);
+    if (members.length > 0) {
+        throw new Error(mutatorHasInstanceMembers + ": " + members.join(","));
     }
 }
 
 export function assignStateValue<S>(obj: { state: S }, state: S) {
+    delete obj.state;
     const stateContainer = [state];
     Object.defineProperty(obj, "state", {
         configurable: true,

@@ -107,8 +107,8 @@ describe("Mutators", function () {
         }
 
         assert.throws(
-                () => new MyStore("myStore", new MyMutators(), {}),
-                /abc/
+            () => new MyStore("myStore", new MyMutators(), {}),
+            /abc/
         );
     });
 
