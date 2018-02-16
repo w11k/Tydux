@@ -1,5 +1,4 @@
 import {assert} from "chai";
-import {tap} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
