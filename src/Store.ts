@@ -14,7 +14,7 @@ import {
     Mutators
 } from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
-import {isShallowEquals} from "./utils";
+import {areArraysShallowEquals, arePlainObjectsShallowEquals} from "./utils";
 
 export interface Action {
     [param: string]: any;
@@ -75,7 +75,9 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                 }),
                 distinctUntilChanged((old, value) => {
                     if (_.isArray(old) && _.isArray(value)) {
-                        return isShallowEquals(old, value);
+                        return areArraysShallowEquals(old, value);
+                    } else if (_.isPlainObject(value) && _.isPlainObject(value)) {
+                        return arePlainObjectsShallowEquals(old, value);
                     } else {
                         return old === value;
                     }

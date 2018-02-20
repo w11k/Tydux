@@ -1,4 +1,9 @@
 
+# Version 2.0.7
+
+- when `Store#select()` returns a plain object, values will only be emitted when the content of the returned object changed (shallow comparision)
+
+
 # Version 2.0.6
 
 - removed `UnboundedObservable.share()`

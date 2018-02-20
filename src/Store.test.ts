@@ -164,6 +164,46 @@ describe("Store", function () {
         collected.assert([0, 10], [1, 11], [2, 12]);
     });
 
+    it("select(with selector return an object) only emits values when the content of the object changes", function () {
+        class TestMutator extends Mutators<{ a: number; b: number; c: number }> {
+            incAB() {
+                this.state.a++;
+                this.state.b++;
+            }
+
+            incC() {
+                this.state.c++;
+            }
+        }
+
+        class TestStore extends Store<TestMutator, { a: number; b: number; c: number }> {
+            actionIncAB() {
+                this.mutate.incAB();
+            }
+
+            actionIncC() {
+                this.mutate.incC();
+            }
+        }
+
+        const store = new TestStore("", new TestMutator(), {a: 0, b: 10, c: 100});
+        let collected = collect(store.select(s => {
+            return {
+                a: s.a,
+                b: s.b
+            };
+        }).asObservable());
+        store.actionIncAB();
+        store.actionIncC();
+        store.actionIncAB();
+        store.actionIncC();
+        collected.assert(
+            {a: 0, b: 10},
+            {a: 1, b: 11},
+            {a: 2, b: 12},
+        );
+    });
+
     it("select() gets called on every `.mutate...` method invocation", function () {
         class MyState {
             count = 0;
