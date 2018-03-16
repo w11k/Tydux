@@ -28,10 +28,13 @@ export class EntityMutators<T> extends Mutators<EntityState<T>> {
 
     add(id: string, obj: T) {
         this.state.ids = [...this.state.ids, id];
-        this.state.entities = {
-            ...this.state.entities,
-            id: obj
+        const entities = {
+            ...this.state.entities
         };
+        entities[id] = obj;
+
+        this.state.entities = entities;
+
     }
 
     update(id: string, obj: T) {
@@ -60,9 +63,13 @@ export class EntityMutators<T> extends Mutators<EntityState<T>> {
 
 }
 
+export type Constructor<T> = {
+    new(...args: any[]): T;
+};
+
 export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, EntityState<T>> {
 
-    constructor(storeId: string, readonly entityIdField: I) {
+    constructor(storeId: string, readonly constructor: Constructor<T>, readonly entityIdField: I) {
         super(storeId, new EntityMutators(), {
             ids: [],
             entities: {}
