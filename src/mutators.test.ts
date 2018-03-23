@@ -1,14 +1,15 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
+import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 
 
 describe("Mutators", function () {
 
-    beforeEach(function () {
-        enableTyduxDevelopmentMode();
-    });
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    afterEach(() => resetTydux());
 
     it("methods can change the state", function () {
         class TestMutator extends Mutators<{ n1: number }> {

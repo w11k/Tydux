@@ -1,4 +1,10 @@
 
+# Version 2.1.0
+
+- fixed bug: JavaScript Proxy was used in prod mode
+- store IDs must now be unique
+ 
+
 # Version 2.0.7
 
 - when `Store#select()` returns a plain object, values will only be emitted when the content of the returned object changed (shallow comparision)

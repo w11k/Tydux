@@ -1,5 +1,6 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
+import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";
@@ -7,9 +8,9 @@ import {createAsyncPromise} from "./test-utils";
 
 describe("Mutators - sanity tests", function () {
 
-    beforeEach(function () {
-        enableTyduxDevelopmentMode();
-    });
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    afterEach(() => resetTydux());
 
     it("can not change the state deeply", function () {
         class TestMutator extends Mutators<{ n1: number[] }> {

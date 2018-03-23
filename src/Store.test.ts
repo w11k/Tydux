@@ -1,6 +1,7 @@
 import {assert} from "chai";
 import * as _ from "lodash";
 import {enableTyduxDevelopmentMode} from "./development";
+import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 import {collect, createAsyncPromise} from "./test-utils";
@@ -8,9 +9,9 @@ import {collect, createAsyncPromise} from "./test-utils";
 
 describe("Store", function () {
 
-    beforeEach(function () {
-        enableTyduxDevelopmentMode();
-    });
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    afterEach(() => resetTydux());
 
     it("documentation", function () {
         // collect output
@@ -59,6 +60,17 @@ describe("Store", function () {
             "observe 2",
             "observe 1"
         ]);
+    });
+
+    it("ID must be unique", function () {
+        class TestStore extends Store<any, any> {
+        }
+
+        new TestStore("s1", {}, {});
+        new TestStore("s2", {}, {});
+        assert.throws(() => {
+            new TestStore("s2", {}, {});
+        });
     });
 
     it("select()", function () {

@@ -1,5 +1,6 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
+import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 import {collect, createAsyncPromise} from "./test-utils";
@@ -7,9 +8,9 @@ import {collect, createAsyncPromise} from "./test-utils";
 
 describe("Store - sanity tests", function () {
 
-    beforeEach(function () {
-        enableTyduxDevelopmentMode();
-    });
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    afterEach(() => resetTydux());
 
     it("can not modify the state directly", function () {
         class MyStore extends Store<any, any> {

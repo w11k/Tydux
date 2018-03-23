@@ -54,7 +54,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             map(stateChange => stateChange.mutatorEvent)
     );
 
-    constructor(readonly storeName: string, mutators: M, state: S) {
+    constructor(readonly storeId: string, mutators: M, state: S) {
         this.processMutator({type: "@@INIT"}, state, _.noop);
         this.mutate = this.createMutatorsProxy(mutators);
         addStoreToGlobalState(this);
@@ -97,7 +97,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     private processMutator(action: Action, state: S, boundMutator: () => void, duration?: number) {
         this.setState(state);
         this.stateChangesSubject.next({
-            mutatorEvent: new MutatorEvent(this.storeName, action, boundMutator, duration),
+            mutatorEvent: new MutatorEvent(this.storeId, action, boundMutator, duration),
             state: this._state
         });
     }
@@ -153,7 +153,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     mockState = mutatorThis.state;
                     delete mutatorThis.state;
                     failIfInstanceMembersExist(mutatorThis);
-                    Object.setPrototypeOf(mutatorThis, createFailingProxy());
+
+                    if (isTyduxDevelopmentModeEnabled()) {
+                        Object.setPrototypeOf(mutatorThis, createFailingProxy());
+                    }
 
                     // merge mock state -> state
                     const originalState = this_.state;

@@ -1,15 +1,15 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
-import {globalStateChanges$} from "./global-state";
+import {globalStateChanges$, resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";
 
 describe("DevTools", function () {
 
-    beforeEach(function () {
-        enableTyduxDevelopmentMode();
-    });
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    afterEach(() => resetTydux());
 
     it("events contain the store and mutators name", function (done) {
         const eventActionTypes: string[] = [];

@@ -1,6 +1,7 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {EntityStore} from "./Entity.store";
+import {resetTydux} from "./global-state";
 
 class MyEnt {
     constructor(readonly id: number, public fieldA: string) {
@@ -9,9 +10,9 @@ class MyEnt {
 
 describe("EntityStore", function () {
 
-    beforeEach(function () {
-        enableTyduxDevelopmentMode();
-    });
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    afterEach(() => resetTydux());
 
     it("instances can be added with `add`", function () {
         let es = new EntityStore("es1", MyEnt, "id");
@@ -25,7 +26,7 @@ describe("EntityStore", function () {
     it("instances can be subscribed by id", function () {
         let es = new EntityStore("es1", MyEnt, "id");
 
-        es.get(1)
+        // TODO
 
         es.add(new MyEnt(1, "a"));
         const entity = es.state.entities["1"];
