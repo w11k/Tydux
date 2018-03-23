@@ -3,6 +3,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
+import {collect} from "./test-utils";
 
 
 describe("Mutators", function () {
@@ -72,9 +73,10 @@ describe("Mutators", function () {
             }
         }
 
-        const store = new TestStore("TestStore", new TestMutator(), {n1: ""});
+        const store = new TestStore("TestStore", TestMutator, {n1: ""});
+        let collected = collect(store.select(s => s.n1).asObservable());
         store.action1();
-        assert.deepEqual(store.state, {n1: "123"});
+        collected.assert("", "123");
     });
 
     it("state changes are only persistent if the mutator did not throw an exception", function () {

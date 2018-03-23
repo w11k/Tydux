@@ -15,6 +15,7 @@ import {
 } from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {areArraysShallowEquals, arePlainObjectsShallowEquals} from "./utils";
+import produce from "immer";
 
 export interface Action {
     [param: string]: any;
@@ -22,12 +23,12 @@ export interface Action {
     type: string;
 }
 
-interface StateChange<S> {
+export interface StateChange<S> {
     state: S;
     mutatorEvent: MutatorEvent;
 }
 
-function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): Action {
+export function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): Action {
     const fnString = fn.toString();
     const argsString = fnString.substring(fnString.indexOf("(") + 1, fnString.indexOf(")"));
     const argNames = argsString.split(",").map((a: string) => a.trim());
@@ -42,21 +43,34 @@ function createActionFromArguments(actionTypeName: string, fn: any, args: IArgum
     return action;
 }
 
+export type MutatorsConstructor<M, S> = {
+    new(mutateState: (fn: (state: S) => StateChange<S>) => void): M;
+};
+
 export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     private _state: S = undefined as any;
+
+    private mutatorCallStackCount = 0;
 
     private readonly stateChangesSubject = new ReplaySubject<StateChange<S>>(1);
 
     protected readonly mutate: M;
 
     readonly mutatorEvents$: Observable<MutatorEvent> = this.stateChangesSubject.pipe(
-            map(stateChange => stateChange.mutatorEvent)
+        map(stateChange => stateChange.mutatorEvent)
     );
 
-    constructor(readonly storeId: string, mutators: M, state: S) {
-        this.processMutator({type: "@@INIT"}, state, _.noop);
-        this.mutate = this.createMutatorsProxy(mutators);
+    constructor(readonly storeId: string,
+                mutatorsConstructor: MutatorsConstructor<M, S>,
+                state: S) {
+
+        this.processMutator({type: "@@INIT"}, state);
+
+        this.mutate = new mutatorsConstructor(this.mutateState.bind(this));
+        delete (this.mutate as any).state;
+        // failIfInstanceMembersExist(this.mutate);
+
         addStoreToGlobalState(this);
     }
 
@@ -70,52 +84,71 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
         const stream = this.stateChangesSubject.pipe(
-                map(stateChange => {
-                    return !_.isNil(selector) ? selector(stateChange.state) : stateChange.state as any;
-                }),
-                distinctUntilChanged((old, value) => {
-                    if (_.isArray(old) && _.isArray(value)) {
-                        return areArraysShallowEquals(old, value);
-                    } else if (_.isPlainObject(value) && _.isPlainObject(value)) {
-                        return arePlainObjectsShallowEquals(old, value);
-                    } else {
-                        return old === value;
-                    }
-                }));
+            map(stateChange => {
+                return !_.isNil(selector) ? selector(stateChange.state) : stateChange.state as any;
+            }),
+            distinctUntilChanged((old, value) => {
+                if (_.isArray(old) && _.isArray(value)) {
+                    return areArraysShallowEquals(old, value);
+                } else if (_.isPlainObject(value) && _.isPlainObject(value)) {
+                    return arePlainObjectsShallowEquals(old, value);
+                } else {
+                    return old === value;
+                }
+            }));
 
         return new UnboundedObservable(stream);
     }
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): UnboundedObservable<R> {
         return new UnboundedObservable(
-                this.select(selector).asObservable().pipe(
-                        filter(val => !_.isNil(val)),
-                        map(val => val!)
-                ));
+            this.select(selector).asObservable().pipe(
+                filter(val => !_.isNil(val)),
+                map(val => val!)
+            ));
     }
 
-    private processMutator(action: Action, state: S, boundMutator: () => void, duration?: number) {
+    private processMutator(action: Action, state: S, duration?: number) {
         this.setState(state);
         this.stateChangesSubject.next({
-            mutatorEvent: new MutatorEvent(this.storeId, action, boundMutator, duration),
+            mutatorEvent: new MutatorEvent(this.storeId, action, duration),
             state: this._state
         });
     }
 
     private setState(state: S) {
-        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
+        // this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
+        this._state = state;
     }
+
+    private mutateState(fn: (state: S) => StateChange<S>): void {
+        const isRoot = this.mutatorCallStackCount === 0;
+        this.mutatorCallStackCount++;
+        try {
+            const newState = produce(this.state, draftState => {
+                let stateChange = fn(draftState);
+                this.stateChangesSubject.next(stateChange);
+                return stateChange.state;
+            });
+
+            if (isRoot) {
+                this.setState(newState);
+            }
+        } finally {
+            this.mutatorCallStackCount--;
+        }
+
+
+    }
+
 
     private createMutatorsProxy(mutatorsSource: any) {
         delete mutatorsSource.state;
-        failIfInstanceMembersExist(mutatorsSource);
-
         const this_ = this;
 
         const mutatorMethods: any = {};
 
         let mutatorCallStackCount = 0;
-        // let mutatorsSourcePrototype = Object.getPrototypeOf(mutatorsSource);
 
         for (let mutName of _.functionsIn(mutatorsSource)) {
             const mutatorFn = mutatorsSource[mutName];
@@ -163,14 +196,10 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
                     const newState = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(originalState) : {} as S;
                     _.assignIn(newState, mockState);
 
-                    const boundMutator = () => {
-                        // mutators[mutName].apply(mutators, args);
-                    };
                     this_.processMutator(
-                            createActionFromArguments(mutName, mutatorFn, args),
-                            newState,
-                            boundMutator,
-                            duration);
+                        createActionFromArguments(mutName, mutatorFn, args),
+                        newState,
+                        duration);
                 }
 
                 return result;

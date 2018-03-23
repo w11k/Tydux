@@ -33,6 +33,7 @@ describe("Store", function () {
         }
 
         class MyStore extends Store<MyMutators, MyState> {
+
             action() {
                 this.mutate.increment();
                 this.mutate.increment();
@@ -40,7 +41,7 @@ describe("Store", function () {
             }
         }
 
-        const store = new MyStore("myStore", new MyMutators(), new MyState());
+        const store = new MyStore("myStore", MyMutators, new MyState());
 
         // directly query the state
         log("query", store.state.count);
@@ -86,7 +87,7 @@ describe("Store", function () {
             }
         }
 
-        const store = new TestStore("", new TestMutator(), {n1: 0});
+        const store = new TestStore("", TestMutator, {n1: 0});
         let collected = collect(store.select().asObservable());
         store.actionInc();
         store.actionInc();
