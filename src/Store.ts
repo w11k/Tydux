@@ -87,13 +87,13 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
             map(stateChange => {
                 return !_.isNil(selector) ? selector(stateChange.state) : stateChange.state as any;
             }),
-            distinctUntilChanged((old, value) => {
-                if (_.isArray(old) && _.isArray(value)) {
-                    return areArraysShallowEquals(old, value);
-                } else if (_.isPlainObject(value) && _.isPlainObject(value)) {
-                    return arePlainObjectsShallowEquals(old, value);
+            distinctUntilChanged((oldVal, newVal) => {
+                if (_.isArray(oldVal) && _.isArray(newVal)) {
+                    return areArraysShallowEquals(oldVal, newVal);
+                } else if (_.isPlainObject(newVal) && _.isPlainObject(newVal)) {
+                    return arePlainObjectsShallowEquals(oldVal, newVal);
                 } else {
-                    return old === value;
+                    return oldVal === newVal;
                 }
             }));
 
@@ -127,11 +127,12 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         try {
             const newState = produce(this.state, draftState => {
                 let stateChange = fn(draftState);
-                this.stateChangesSubject.next(stateChange);
+                console.log("stateChange", stateChange);
                 return stateChange.state;
             });
 
             if (isRoot) {
+                this.stateChangesSubject.next(newState);
                 this.setState(newState);
             }
         } finally {

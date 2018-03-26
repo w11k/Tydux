@@ -66,6 +66,8 @@ export abstract class Mutators<S> {
         for (let mutatorName of _.functionsIn(self)) {
             const mutatorFn = self[mutatorName];
 
+            console.log("mutatorName", mutatorName);
+
             // replace with wrapped method
             self[mutatorName] = function () {
                 const args = arguments;
@@ -94,9 +96,9 @@ export abstract class Mutators<S> {
                         // mutatorCallStackCount--;
                         failIfNotUndefined(result);
 
-                        if (isTyduxDevelopmentModeEnabled()) {
-                            Object.setPrototypeOf(self, createFailingProxy());
-                        }
+                        // if (isTyduxDevelopmentModeEnabled()) {
+                        //     Object.setPrototypeOf(self, createFailingProxy());
+                        // }
                     }
 
                     // commit new state
