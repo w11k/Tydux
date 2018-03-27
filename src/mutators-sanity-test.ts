@@ -12,23 +12,6 @@ describe("Mutators - sanity tests", function () {
 
     afterEach(() => resetTydux());
 
-    it("can not change the state deeply", function () {
-        class TestMutator extends Mutators<{ n1: number[] }> {
-            mut1() {
-                this.state.n1.push(3);
-            }
-        }
-
-        class MyStore extends Store<TestMutator, { n1: number[] }> {
-            action() {
-                this.mutate.mut1();
-            }
-        }
-
-        const store = new MyStore("", new TestMutator(), {n1: [1, 2]});
-        assert.throws(() => store.action());
-    });
-
     it("can not access the state asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mut() {
@@ -117,13 +100,13 @@ describe("Mutators - sanity tests", function () {
         class TestMutator extends Mutators<{ n1: number }> {
             mut1() {
                 createAsyncPromise(1)
-                        .then(() => {
-                            this.mut2();
-                        })
-                        .catch((e) => {
-                            assert.match(e, /Illegal access.*this/);
-                            done();
-                        });
+                    .then(() => {
+                        this.mut2();
+                    })
+                    .catch((e) => {
+                        assert.match(e, /Illegal access.*this/);
+                        done();
+                    });
             }
 
             mut2() {

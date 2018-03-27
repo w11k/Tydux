@@ -50,7 +50,7 @@ export function enableDevTools() {
                 const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
                 const action = {
                     ...event.action,
-                    "type": "[" + event.storeName + " / " + event.action.type + "]" + meta
+                    "type": "[" + event.storeId + " / " + event.action.type + "]" + meta
                 };
 
                 devTools.send(action, getGlobalTyduxState());

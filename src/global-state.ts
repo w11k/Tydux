@@ -1,22 +1,15 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Subject} from "rxjs/Subject";
-import {Action, Store} from "./Store";
-
-export class MutatorEvent {
-    constructor(readonly storeName: string,
-                readonly action: Action,
-                readonly duration?: number) {
-    }
-}
+import {MutatorEvent, Store} from "./Store";
 
 const stores: { [name: string]: Store<any, any> } = {};
 
 let globalState: any = {};
 
-const globalStateChangesSubject = new Subject<MutatorEvent>();
+const globalStateChangesSubject = new Subject<MutatorEvent<any>>();
 
-export const globalStateChanges$: Observable<MutatorEvent> = globalStateChangesSubject.asObservable();
+export const globalStateChanges$: Observable<MutatorEvent<any>> = globalStateChangesSubject.asObservable();
 
 export function resetTydux() {
     globalState = {};
@@ -34,8 +27,8 @@ export function addStoreToGlobalState(store: Store<any, any>) {
 
     stores[store.storeId] = store;
     store.mutatorEvents$
-        .subscribe((event: MutatorEvent) => {
-            globalState[event.storeName] = store.state;
+        .subscribe((event: MutatorEvent<any>) => {
+            globalState[event.storeId] = store.state;
             globalStateChangesSubject.next(event);
         });
 }

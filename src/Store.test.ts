@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
+import {EmptyMutators} from "./mutators.test";
 import {Store} from "./Store";
 import {collect, createAsyncPromise} from "./test-utils";
 
@@ -41,7 +42,7 @@ describe("Store", function () {
             }
         }
 
-        const store = new MyStore("myStore", MyMutators, new MyState());
+        const store = new MyStore("myStore", new MyMutators(), new MyState());
 
         // directly query the state
         log("query", store.state.count);
@@ -67,10 +68,10 @@ describe("Store", function () {
         class TestStore extends Store<any, any> {
         }
 
-        new TestStore("s1", {}, {});
-        new TestStore("s2", {}, {});
+        new TestStore("s1", new EmptyMutators(), {});
+        new TestStore("s2", new EmptyMutators(), {});
         assert.throws(() => {
-            new TestStore("s2", {}, {});
+            new TestStore("s2", new EmptyMutators(), {});
         });
     });
 
@@ -87,7 +88,7 @@ describe("Store", function () {
             }
         }
 
-        const store = new TestStore("", TestMutator, {n1: 0});
+        const store = new TestStore("", new TestMutator(), {n1: 0});
         let collected = collect(store.select().asObservable());
         store.actionInc();
         store.actionInc();

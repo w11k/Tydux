@@ -6,6 +6,9 @@ import {Store} from "./Store";
 import {collect} from "./test-utils";
 
 
+export class EmptyMutators extends Mutators<any> {
+}
+
 describe("Mutators", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
@@ -50,6 +53,24 @@ describe("Mutators", function () {
         assert.deepEqual(store.state, {n1: 1});
     });
 
+    it("can change the state deeply", function () {
+        class TestMutator extends Mutators<{ n1: number[] }> {
+            mut1() {
+                this.state.n1.push(3);
+            }
+        }
+
+        class MyStore extends Store<TestMutator, { n1: number[] }> {
+            action() {
+                this.mutate.mut1();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), {n1: [1, 2]});
+        store.action();
+        assert.deepEqual(store.state.n1, [1, 2, 3]);
+    });
+
     it("nested methods are merged", function () {
         class TestMutator extends Mutators<{ n1: string }> {
             mod1() {
@@ -73,7 +94,7 @@ describe("Mutators", function () {
             }
         }
 
-        const store = new TestStore("TestStore", TestMutator, {n1: ""});
+        const store = new TestStore("TestStore", new TestMutator(), {n1: ""});
         let collected = collect(store.select(s => s.n1).asObservable());
         store.action1();
         collected.assert("", "123");
@@ -103,6 +124,7 @@ describe("Mutators", function () {
 
     it("mutators must not have instance members", function () {
         class MyMutators extends Mutators<any> {
+            // noinspection JSUnusedGlobalSymbols
             abc = 1;
         }
 

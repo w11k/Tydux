@@ -2,6 +2,7 @@ import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
+import {EmptyMutators} from "./mutators.test";
 import {Store} from "./Store";
 import {collect, createAsyncPromise} from "./test-utils";
 
@@ -21,7 +22,7 @@ describe("Store - sanity tests", function () {
 
         }
 
-        const store = new MyStore("myStore", {}, {});
+        const store = new MyStore("myStore", new EmptyMutators(), {});
         assert.throws(() => store.action());
     });
 
@@ -34,7 +35,7 @@ describe("Store - sanity tests", function () {
 
         }
 
-        const store = new MyStore("myStore", {}, {});
+        const store = new MyStore("myStore", new EmptyMutators(), {});
         assert.throws(() => store.action());
     });
 
@@ -81,7 +82,7 @@ describe("Store - sanity tests", function () {
             }
         }
 
-        const store = new MyStore("myStore", {}, {});
+        const store = new MyStore("myStore", new EmptyMutators(), {});
         store.action();
         assert.equal(store.counterA, 10);
         assert.equal(store.counterB, 20);
@@ -105,7 +106,7 @@ describe("Store - sanity tests", function () {
             }
         }
 
-        const store = new MyStore("myStore", {}, {});
+        const store = new MyStore("myStore", new EmptyMutators(), {});
         store.action();
     });
 
@@ -124,7 +125,7 @@ describe("Store - sanity tests", function () {
             }
         }
 
-        const store = new MyStore("myStore", {}, {});
+        const store = new MyStore("myStore", new EmptyMutators(), {});
         store.action();
     });
 
@@ -152,7 +153,7 @@ describe("Store - sanity tests", function () {
             }
         }
 
-        const store = new MyStore("myStore", {}, {});
+        const store = new MyStore("myStore", new EmptyMutators(), {});
         store.action();
     });
 
@@ -168,7 +169,7 @@ describe("Store - sanity tests", function () {
 
         }
 
-        const store = new MyStore("myStore", {}, {});
+        const store = new MyStore("myStore", new EmptyMutators(), {});
 
         try {
             store.action();
