@@ -91,7 +91,7 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     select<R>(selector: (state: Readonly<S>) => R): UnboundedObservable<R>;
 
     select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
-        const stream = this.mutatorEventsSubject.pipe(
+        const stream = this.mutatorEvents$.pipe(
             map(mutatorEvent => {
                 return !_.isNil(selector) ? selector(mutatorEvent.state) : mutatorEvent.state as any;
             }),
