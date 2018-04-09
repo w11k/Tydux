@@ -8,7 +8,13 @@ import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
 import {Mutators} from "./mutators";
 import {UnboundedObservable} from "./UnboundedObservable";
-import {areArraysShallowEquals, arePlainObjectsShallowEquals, createFailingProxy, failIfNotUndefined} from "./utils";
+import {
+    areArraysShallowEquals,
+    arePlainObjectsShallowEquals,
+    createFailingProxy,
+    createProxy,
+    failIfNotUndefined
+} from "./utils";
 
 export interface Action {
     [param: string]: any;
@@ -65,8 +71,8 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
     );
 
     constructor(readonly storeId: string,
-                mutatorInstance: Mutators<S>,
-                state: S) {
+                          mutatorInstance: Mutators<S>,
+                          state: S) {
 
         this.processMutator(new MutatorEvent(
             this.storeId,
@@ -129,10 +135,9 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         const isRoot = this.mutatorCallStackCount === 0;
         this.mutatorCallStackCount++;
         try {
-            const stateCopy = isTyduxDevelopmentModeEnabled() ? _.cloneDeep(this.state) : this.state;
-
+            const stateProxy = createProxy(this.state);
             const start = isTyduxDevelopmentModeEnabled() ? Date.now() : 0;
-            let mutatorEvent = fn(stateCopy, isRoot);
+            let mutatorEvent = fn(stateProxy, isRoot);
             if (isTyduxDevelopmentModeEnabled()) {
                 mutatorEvent.duration = Date.now() - start;
             }

@@ -32,6 +32,28 @@ describe("Mutators - sanity tests", function () {
         store.action();
     });
 
+    it("can not modify the state asynchronously by keeping a reference to a nested state property", function (done) {
+        class TestMutator extends Mutators<{ root: { child: number[] } }> {
+            mut() {
+                const child = this.state.root.child;
+                setTimeout(() => {
+                    assert.throws(() => child.push(3), /not extensible/);
+                    done();
+                }, 0);
+            }
+        }
+
+        class MyStore extends Store<TestMutator, { root: { child: number[] } }> {
+            action() {
+                this.mutate.mut();
+            }
+        }
+
+        const state = {root: {child: [1, 2]}};
+        const store = new MyStore("", new TestMutator(), state);
+        store.action();
+    });
+
     it("can not replace the state asynchronously", function (done) {
         class TestMutator extends Mutators<{ n1: number }> {
             mut() {

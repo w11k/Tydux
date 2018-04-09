@@ -53,10 +53,10 @@ describe("Mutators", function () {
         assert.deepEqual(store.state, {n1: 1});
     });
 
-    it("can change the state deeply", function () {
+    it("can not change the state deeply", function () {
         class TestMutator extends Mutators<{ n1: number[] }> {
             mut1() {
-                this.state.n1.push(3);
+                assert.throws(() => this.state.n1.push(3), "not extensible");
             }
         }
 
@@ -68,7 +68,6 @@ describe("Mutators", function () {
 
         const store = new MyStore("", new TestMutator(), {n1: [1, 2]});
         store.action();
-        assert.deepEqual(store.state.n1, [1, 2, 3]);
     });
 
     it("nested methods are merged", function () {

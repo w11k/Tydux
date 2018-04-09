@@ -46,6 +46,7 @@ export function assignStateValue<S>(obj: { state: S }, state: S) {
 export function createProxy<T>(target: T): T {
     const proxy: any = {};
     // re-assign members. Otherwise these members would be marked as read only.
+    // Also flattens the new state object.
     _.assignIn(proxy, target);
     Object.setPrototypeOf(proxy, target);
     return proxy;

@@ -208,13 +208,38 @@ describe("Store", function () {
             };
         }).asObservable());
         store.actionIncAB();
-        store.actionIncC();
+        store.actionIncC(); // should not trigger select()
         store.actionIncAB();
-        store.actionIncC();
+        store.actionIncC(); // should not trigger select()
         collected.assert(
             {a: 0, b: 10},
             {a: 1, b: 11},
             {a: 2, b: 12},
+        );
+    });
+
+    it("select() only triggers when the selected value deeply changed" +
+        "", function () {
+        class TestMutator extends Mutators<{ root: { child: { val1: number } } }> {
+            dummy() {
+            }
+        }
+
+        class TestStore extends Store<TestMutator, { root: { child: { val1: number } } }> {
+            action() {
+                this.mutate.dummy();
+            }
+        }
+
+        const state = {root: {child: {val1: 1}}};
+        const store = new TestStore("", new TestMutator(), state);
+        let collected = collect(store.select(s => s.root).asObservable());
+        store.action(); // should not trigger select()
+        store.action(); // should not trigger select()
+        store.action(); // should not trigger select()
+        console.log("collected", collected);
+        collected.assert(
+            state.root
         );
     });
 
