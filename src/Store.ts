@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
+import {Operator} from "rxjs/Operator";
 import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
@@ -7,6 +8,7 @@ import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
 import {Mutators} from "./mutators";
+import {StoreObserver} from "./StoreObserver";
 import {UnboundedObservable} from "./UnboundedObservable";
 import {
     areArraysShallowEquals,
@@ -90,6 +92,14 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     get state(): Readonly<S> {
         return this._state;
+    }
+
+    bounded(operator: Operator<S, S>): StoreObserver<M, S> {
+        return new StoreObserver(this, operator);
+    }
+
+    unbounded(): StoreObserver<M, S> {
+        return new StoreObserver(this);
     }
 
     select<R>(): UnboundedObservable<Readonly<S>>;
