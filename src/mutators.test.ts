@@ -94,7 +94,7 @@ describe("Mutators", function () {
         }
 
         const store = new TestStore("TestStore", new TestMutator(), {n1: ""});
-        let collected = collect(store.select(s => s.n1).asObservable());
+        let collected = collect(store.unbounded().select(s => s.n1));
         store.action1();
         collected.assert("", "123");
     });

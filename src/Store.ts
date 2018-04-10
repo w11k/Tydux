@@ -1,22 +1,14 @@
 import * as _ from "lodash";
+import {OperatorFunction} from "rxjs/interfaces";
 import {Observable} from "rxjs/Observable";
-import {Operator} from "rxjs/Operator";
-import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
 import {Mutators} from "./mutators";
-import {StoreObserver} from "./StoreObserver";
-import {UnboundedObservable} from "./UnboundedObservable";
-import {
-    areArraysShallowEquals,
-    arePlainObjectsShallowEquals,
-    createFailingProxy,
-    createProxy,
-    failIfNotUndefined
-} from "./utils";
+import {noopOperator, StoreObserver} from "./StoreObserver";
+import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
 
 export interface Action {
     [param: string]: any;
@@ -58,7 +50,7 @@ export function createActionFromArguments(actionTypeName: string, fn: any, args:
     return action;
 }
 
-export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
+export abstract class Store<M extends Mutators<S>, S> {
 
     private _state: S = undefined as any;
 
@@ -68,13 +60,11 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
 
     protected readonly mutate: M;
 
-    readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject.pipe(
-        // map(stateChange => stateChange)
-    );
+    readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject;
 
     constructor(readonly storeId: string,
-                          mutatorInstance: Mutators<S>,
-                          state: S) {
+                mutatorInstance: Mutators<S>,
+                state: S) {
 
         this.processMutator(new MutatorEvent(
             this.storeId,
@@ -94,42 +84,12 @@ export abstract class Store<M extends Mutators<S>, S> implements Store<M, S> {
         return this._state;
     }
 
-    bounded(operator: Operator<S, S>): StoreObserver<M, S> {
-        return new StoreObserver(this, operator);
+    bounded(operator: OperatorFunction<MutatorEvent<S>, MutatorEvent<S>>): StoreObserver<S> {
+        return new StoreObserver(this.mutatorEvents$, operator);
     }
 
-    unbounded(): StoreObserver<M, S> {
-        return new StoreObserver(this);
-    }
-
-    select<R>(): UnboundedObservable<Readonly<S>>;
-
-    select<R>(selector: (state: Readonly<S>) => R): UnboundedObservable<R>;
-
-    select<R>(selector?: (state: Readonly<S>) => R): UnboundedObservable<R> {
-        const stream = this.mutatorEvents$.pipe(
-            map(mutatorEvent => {
-                return !_.isNil(selector) ? selector(mutatorEvent.state) : mutatorEvent.state as any;
-            }),
-            distinctUntilChanged((oldVal, newVal) => {
-                if (_.isArray(oldVal) && _.isArray(newVal)) {
-                    return areArraysShallowEquals(oldVal, newVal);
-                } else if (_.isPlainObject(newVal) && _.isPlainObject(newVal)) {
-                    return arePlainObjectsShallowEquals(oldVal, newVal);
-                } else {
-                    return oldVal === newVal;
-                }
-            }));
-
-        return new UnboundedObservable(stream);
-    }
-
-    selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): UnboundedObservable<R> {
-        return new UnboundedObservable(
-            this.select(selector).asObservable().pipe(
-                filter(val => !_.isNil(val)),
-                map(val => val!)
-            ));
+    unbounded(): StoreObserver<S> {
+        return new StoreObserver(this.mutatorEvents$, noopOperator);
     }
 
     private processMutator(mutatorEvent: MutatorEvent<S>) {

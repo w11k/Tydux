@@ -1,8 +1,9 @@
 import * as _ from "lodash";
-import {map} from "rxjs/operators";
+import {OperatorFunction} from "rxjs/interfaces";
+import {EntityStoreObserver} from "./EntityStoreObserver";
 import {Mutators} from "./mutators";
-import {Store} from "./Store";
-import {UnboundedObservable} from "./UnboundedObservable";
+import {MutatorEvent, Store} from "./Store";
+import {noopOperator} from "./StoreObserver";
 
 
 export interface EntityMap<T> {
@@ -76,11 +77,11 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
         });
     }
 
-    clear() {
+    clear(): void {
         this.mutate.clear();
     }
 
-    load(objs: { [id: string]: T }) {
+    load(objs: { [id: string]: T }): void {
         this.mutate.load(objs);
     }
 
@@ -117,13 +118,12 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
         });
     }
 
-    selectAll(): UnboundedObservable<T[]> {
-        return this.select()
-            .pipe(
-                map(state => {
-                    return state.ids.map((id) => state.entities[id]);
-                })
-            );
+
+    bounded(operator: OperatorFunction<MutatorEvent<EntityState<T>>, MutatorEvent<EntityState<T>>>) {
+        return new EntityStoreObserver(this.mutatorEvents$, operator);
     }
 
+    unbounded() {
+        return new EntityStoreObserver(this.mutatorEvents$, noopOperator);
+    }
 }

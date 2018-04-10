@@ -1,8 +1,8 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
-import {globalStateChanges$, MutatorEvent} from "./global-state";
+import {globalStateChanges$} from "./global-state";
 import {Mutators} from "./mutators";
-import {Store} from "./Store";
+import {MutatorEvent, Store} from "./Store";
 
 
 describe("global state", function () {
@@ -12,7 +12,7 @@ describe("global state", function () {
     });
 
     it("collects MutatorEvents", function () {
-        const events: MutatorEvent[] = [];
+        const events: MutatorEvent<any>[] = [];
 
         class MyMutators extends Mutators<{ count: number }> {
             mut1() {

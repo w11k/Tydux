@@ -61,7 +61,7 @@ describe("Store - sanity tests", function () {
         }
 
         const store = new MyStore("myStore", new MyMutators(), new MyState());
-        let collected = collect(store.select(s => s.count).asObservable());
+        let collected = collect(store.unbounded().select(s => s.count));
         store.action();
     });
 

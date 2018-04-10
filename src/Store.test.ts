@@ -48,7 +48,7 @@ describe("Store", function () {
         log("query", store.state.count);
 
         // observe the state
-        store.select(s => s.count).asObservable().subscribe(count => {
+        store.unbounded().select(s => s.count).subscribe(count => {
             log("observe", count);
         });
 
@@ -89,7 +89,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.select().asObservable());
+        let collected = collect(store.unbounded().select());
         store.actionInc();
         store.actionInc();
         collected.assert({n1: 0}, {n1: 1}, {n1: 2});
@@ -109,7 +109,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.select(s => s.n1).asObservable());
+        let collected = collect(store.unbounded().select(s => s.n1));
         store.actionInc();
         store.actionInc();
         collected.assert(0, 1, 2);
@@ -137,7 +137,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: undefined});
-        let collected = collect(store.selectNonNil(s => s.n1).asObservable());
+        let collected = collect(store.unbounded().selectNonNil(s => s.n1));
         store.actionInc(); // 1
         store.actionClear();
         store.actionInc(); // 1
@@ -170,7 +170,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {a: 0, b: 10, c: 100});
-        let collected = collect(store.select(s => [s.a, s.b]).asObservable());
+        let collected = collect(store.unbounded().select(s => [s.a, s.b]));
         store.actionIncAB();
         store.actionIncC();
         store.actionIncAB();
@@ -201,12 +201,12 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {a: 0, b: 10, c: 100});
-        let collected = collect(store.select(s => {
+        let collected = collect(store.unbounded().select(s => {
             return {
                 a: s.a,
                 b: s.b
             };
-        }).asObservable());
+        }));
         store.actionIncAB();
         store.actionIncC(); // should not trigger select()
         store.actionIncAB();
@@ -233,7 +233,7 @@ describe("Store", function () {
 
         const state = {root: {child: {val1: 1}}};
         const store = new TestStore("", new TestMutator(), state);
-        let collected = collect(store.select(s => s.root).asObservable());
+        let collected = collect(store.unbounded().select(s => s.root));
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
@@ -267,7 +267,7 @@ describe("Store", function () {
         }
 
         const store = new MyStore("myStore", new MyMutators(), new MyState());
-        let collected = collect(store.select(s => s.count).asObservable());
+        let collected = collect(store.unbounded().select(s => s.count));
         store.action();
         collected.assert(0, 1, 2, 1);
     });
