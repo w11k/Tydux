@@ -24,7 +24,8 @@ export class StoreObserver<S> {
     select<R>(selector: (state: Readonly<S>) => R): Observable<R>;
 
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
-        return this.mutatorEvents$.pipe(
+        return this.mutatorEvents$
+            .pipe(
             this.operator!,
             map(mutatorEvent => {
                 return !_.isNil(selector) ? selector(mutatorEvent.state) : mutatorEvent.state as any;

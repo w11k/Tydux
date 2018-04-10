@@ -150,7 +150,7 @@ export abstract class Store<M extends Mutators<S>, S> {
                     proxyObj.state = thisObj.state;
 
                     const mutatorEvent = new MutatorEvent(
-                        this.storeId,
+                        self.storeId,
                         createActionFromArguments(mutatorName, mutatorFn, args),
                         proxyObj.state
                     );
