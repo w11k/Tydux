@@ -76,7 +76,6 @@ describe("selectMany()", function () {
                 done();
             });
 
-        console.log("selected", selected);
         selected.subscribe();
 
         store1.action1();
