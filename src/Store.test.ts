@@ -237,7 +237,6 @@ describe("Store", function () {
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
-        console.log("collected", collected);
         collected.assert(
             state.root
         );
