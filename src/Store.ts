@@ -1,13 +1,14 @@
 import * as _ from "lodash";
 import {OperatorFunction} from "rxjs/interfaces";
 import {Observable} from "rxjs/Observable";
+import {Operator} from "rxjs/Operator";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
 import {Mutators} from "./mutators";
-import {noopOperator, StoreObserver} from "./StoreObserver";
+import {StoreObserver} from "./StoreObserver";
 import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
 
 export interface Action {
@@ -84,12 +85,12 @@ export abstract class Store<M extends Mutators<S>, S> {
         return this._state;
     }
 
-    bounded(operator: OperatorFunction<MutatorEvent<S>, MutatorEvent<S>>): StoreObserver<S> {
+    bounded(operator: Operator<MutatorEvent<S>, MutatorEvent<S>>): StoreObserver<S> {
         return new StoreObserver(this.mutatorEvents$, operator);
     }
 
     unbounded(): StoreObserver<S> {
-        return new StoreObserver(this.mutatorEvents$, noopOperator);
+        return new StoreObserver(this.mutatorEvents$);
     }
 
     private processMutator(mutatorEvent: MutatorEvent<S>) {

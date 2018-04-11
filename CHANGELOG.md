@@ -1,4 +1,11 @@
 
+# Version 3.0.0
+
+- removed `UnboundedObservable`
+- added `Store#unbound()`
+- added `Store#bounded(operator)`
+- added `selectMany()`
+
 # Version 2.1.0
 
 - fixed bug: JavaScript Proxy was used in prod mode

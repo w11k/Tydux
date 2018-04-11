@@ -3,8 +3,6 @@ import {OperatorFunction} from "rxjs/interfaces";
 import {EntityStoreObserver} from "./EntityStoreObserver";
 import {Mutators} from "./mutators";
 import {MutatorEvent, Store} from "./Store";
-import {noopOperator} from "./StoreObserver";
-
 
 export interface EntityMap<T> {
     [id: string]: T;
@@ -124,6 +122,6 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
     }
 
     unbounded() {
-        return new EntityStoreObserver(this.mutatorEvents$, noopOperator);
+        return new EntityStoreObserver(this.mutatorEvents$);
     }
 }

@@ -97,8 +97,7 @@ const renderApp = () => {
         `;
 };
 
-store.select()
-        .asObservable()
-        .subscribe(() => {
-            renderApp();
-        });
+store.unbounded().select()
+    .subscribe(() => {
+        renderApp();
+    });

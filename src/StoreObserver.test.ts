@@ -3,11 +3,13 @@ import {Observable} from "rxjs/Observable";
 import {takeUntil} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {Subject} from "rxjs/Subject";
+import {Subscriber} from "rxjs/Subscriber";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {MutatorEvent, Store} from "./Store";
 import {collect} from "./test-utils";
+import {operatorFactory} from "./utils";
 
 
 describe("StoreObserver", function () {
@@ -18,13 +20,15 @@ describe("StoreObserver", function () {
 
     it("bounded() can be used to complete the stream", function () {
 
-        class TestMutator extends Mutators<{ a: number; }> {
+        type State = { a: number };
+
+        class TestMutator extends Mutators<State> {
             inc() {
                 this.state.a++;
             }
         }
 
-        class TestStore extends Store<TestMutator, { a: number; }> {
+        class TestStore extends Store<TestMutator, State> {
             action() {
                 this.mutate.inc();
             }
@@ -33,11 +37,18 @@ describe("StoreObserver", function () {
         const store = new TestStore("", new TestMutator(), {a: 0});
 
         const stopTrigger = new Subject<true>();
-        const operator = (stream: Observable<MutatorEvent<any>>) => {
-            return stream.pipe(
-                takeUntil(stopTrigger)
-            );
-        };
+        const operator = operatorFactory(
+            (subscriber: Subscriber<MutatorEvent<State>>, source: Observable<MutatorEvent<State>>) => {
+                const sub = source
+                    .pipe(
+                        takeUntil(stopTrigger)
+                    )
+                    .subscribe(subscriber);
+                return () => {
+                    sub.unsubscribe();
+                    subscriber.complete();
+                };
+            });
 
         let collected = collect(store.bounded(operator).select(s => s.a));
 
@@ -56,13 +67,15 @@ describe("StoreObserver", function () {
 
     it("bounded() can be used to wrap the stream", function () {
 
-        class TestMutator extends Mutators<{ a: number }> {
+        type State = { a: number };
+
+        class TestMutator extends Mutators<State> {
             inc() {
                 this.state.a++;
             }
         }
 
-        class TestStore extends Store<TestMutator, { a: number }> {
+        class TestStore extends Store<TestMutator, State> {
             action() {
                 this.mutate.inc();
             }
@@ -72,20 +85,23 @@ describe("StoreObserver", function () {
 
         const events: any[] = [];
 
-        const operator = (stream: Observable<MutatorEvent<{ a: number }>>) => {
-            const hub = new ReplaySubject<MutatorEvent<any>>(1);
-            const sub = stream.subscribe(
-                val => {
-                    events.push("pre-" + val.state.a);
-                    hub.next(val);
-                    events.push("post-" + val.state.a);
-                },
-                err => hub.error(err),
-                () => hub.complete()
-            );
+        const operator = operatorFactory(
+            (subscriber: Subscriber<MutatorEvent<State>>, source: Observable<MutatorEvent<State>>) => {
+                const subscription = source.subscribe(
+                    val => {
+                        events.push("pre-" + val.state.a);
+                        subscriber.next(val);
+                        events.push("post-" + val.state.a);
+                    },
+                    exception => subscriber.error(exception),
+                    () => subscriber.complete()
+                );
 
-            return hub.asObservable();
-        };
+                return () => {
+                    subscription.unsubscribe();
+                    subscriber.complete();
+                };
+            });
 
         store.bounded(operator)
             .select(s => s.a)
@@ -94,7 +110,6 @@ describe("StoreObserver", function () {
         store.action();
         store.action();
 
-        console.log("events", events);
         assert.deepEqual(events, [
             "pre-0",
             0,

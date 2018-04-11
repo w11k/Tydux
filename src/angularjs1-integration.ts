@@ -12,7 +12,7 @@ function runInScopeDigest(scope: AngularJS1ScopeLike, fn: () => void) {
     }
 }
 
-export function angularJs1Scoped<T>(scope: AngularJS1ScopeLike): Operator<T, T> {
+export function toNgScope<T>(scope: AngularJS1ScopeLike): Operator<T, T> {
     return {
         call: <T>(subscriber: Subscriber<T>, source: Observable<T>) => {
             const subscription = source.subscribe(

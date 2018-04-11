@@ -1,4 +1,7 @@
 import * as _ from "lodash";
+import {Observable} from "rxjs/Observable";
+import {Operator} from "rxjs/Operator";
+import {Subscriber} from "rxjs/Subscriber";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
 
 export function areArraysShallowEquals(array1: any[], array2: any[]): boolean {
@@ -67,3 +70,10 @@ export function createFailingProxy(): object {
     return new Proxy(target, handler);
 }
 
+export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Observable<T>) => () => void): Operator<T, T> {
+    return {
+        call: (subscriber: Subscriber<T>, source: Observable<T>) => {
+            return fn(subscriber, source);
+        }
+    };
+}
