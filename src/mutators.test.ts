@@ -35,7 +35,7 @@ describe("Mutators", function () {
 
     it("methods can assign state properties successively", function () {
         class State {
-            list1: number[] = [];
+            list1?: number[];
             list2: number[] = [];
         }
 
@@ -60,10 +60,13 @@ describe("Mutators", function () {
         }
 
         const store = new MyStore("", new TestMutator(), new State());
+
+        store.unbounded().selectNonNil(s => s.list1)
+            .subscribe(() => {
+                store.action2();
+            });
+
         store.action1();
-        store.action1();
-        store.action2();
-        store.action2();
 
         assert.deepEqual(store.state.list1, [1]);
         assert.deepEqual(store.state.list2, [2]);

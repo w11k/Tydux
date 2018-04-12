@@ -106,18 +106,22 @@ export abstract class Store<M extends Mutators<S>, S> {
 
         const isRoot = this.mutatorCallStackCount === 0;
         this.mutatorCallStackCount++;
+
+        let mutatorEvent: MutatorEvent<S>;
         try {
             const stateProxy = createProxy(this.state);
+
             const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
-            let mutatorEvent = fn(stateProxy, isRoot);
+            mutatorEvent = fn(stateProxy, isRoot);
             if (tyduxDevelopmentModeEnabled) {
                 mutatorEvent.duration = Date.now() - start;
             }
-            if (isRoot) {
-                this.processMutator(mutatorEvent);
-            }
         } finally {
             this.mutatorCallStackCount--;
+        }
+
+        if (isRoot) {
+            this.processMutator(mutatorEvent);
         }
     }
 
