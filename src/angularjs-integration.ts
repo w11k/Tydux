@@ -5,7 +5,10 @@ import {Subscriber} from "rxjs/Subscriber";
 
 
 function runInScopeDigest(scope: AngularJS1ScopeLike, fn: () => void) {
-    if (!_.isNil(scope) && scope.$root.$$phase !== "$apply" && scope.$root.$$phase !== "$digest") {
+    if (!_.isNil(scope)
+        && !_.isNil(scope.$root)
+        && scope.$root.$$phase !== "$apply"
+        && scope.$root.$$phase !== "$digest") {
         scope.$apply(fn);
     } else {
         fn();
@@ -16,17 +19,17 @@ export function toNgScope<T>(scope: AngularJS1ScopeLike): Operator<T, T> {
     return {
         call: <T>(subscriber: Subscriber<T>, source: Observable<T>) => {
             const subscription = source.subscribe(
-                    value => {
-                        runInScopeDigest(scope, () => subscriber.next(value));
-                    },
-                    exception => {
-                        unsubDestroy();
-                        runInScopeDigest(scope, () => subscriber.error(exception));
-                    },
-                    () => {
-                        unsubDestroy();
-                        runInScopeDigest(scope, () => subscriber.complete());
-                    }
+                value => {
+                    runInScopeDigest(scope, () => subscriber.next(value));
+                },
+                exception => {
+                    unsubDestroy();
+                    runInScopeDigest(scope, () => subscriber.error(exception));
+                },
+                () => {
+                    unsubDestroy();
+                    runInScopeDigest(scope, () => subscriber.complete());
+                }
             );
 
             const unsubDestroy = scope.$on("$destroy", () => {
@@ -60,7 +63,7 @@ export interface IAngularEvent {
 
 export interface AngularJS1ScopeLike {
 
-    $root: AngularJS1ScopeLike;
+    $root?: AngularJS1ScopeLike;
 
     $$phase: any;
 
