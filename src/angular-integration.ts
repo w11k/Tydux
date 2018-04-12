@@ -22,7 +22,7 @@ export function componentDestroyed(component: OnDestroyLike): Observable<true> {
     return stop$.asObservable();
 }
 
-export function toNgComponent<T>(component: OnDestroyLike): Operator<T, T> {
+export function toAngularComponent<T>(component: OnDestroyLike): Operator<T, T> {
     return operatorFactory(
         (subscriber: Subscriber<T>, source: Observable<T>) => {
             const subscription = source

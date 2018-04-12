@@ -1,4 +1,5 @@
 import {assert} from "chai";
+import {OnDestroyLike, toAngularComponent} from "./angular-integration";
 import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
@@ -6,13 +7,13 @@ import {Mutators} from "./mutators";
 import {Store} from "./Store";
 
 
-describe("AngularJS integration", function () {
+describe("Angular integration", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
     afterEach(() => resetTydux());
 
-    it("wraps the delivery of events in scope.$apply()", function () {
+    it("completes all subscriptions when the component gets destroyed", function () {
 
         type State = { a: number };
 
@@ -31,41 +32,28 @@ describe("AngularJS integration", function () {
         const events: any[] = [];
         const store = new TestStore("", new TestMutator(), {a: 0});
 
-        class DummyScope implements AngularJS1ScopeLike {
-
-            $$phase = "";
-
-            constructor(public $root?: AngularJS1ScopeLike) {
-            }
-
-            $apply(exp: (scope: AngularJS1ScopeLike) => any) {
-                events.push("pre");
-                exp(this);
-                events.push("post");
-            }
-
-            $on(name: string, listener: (event: IAngularEvent, ...args: any[]) => any) {
-                return () => {
-                };
+        class DummyComponent implements OnDestroyLike {
+            ngOnDestroy() {
+                events.push("ngOnDestroy");
             }
         }
 
-        const rootScope = new DummyScope();
-        const scope = new DummyScope(rootScope);
+        const component = new DummyComponent();
 
-        store.bounded(toAngularJSScope(scope))
+        store.bounded(toAngularComponent(component))
             .select(s => s.a)
             .subscribe(a => events.push(a));
 
-        store.action();
+        store.action(); // 1
+        store.action(); // 2
+        component.ngOnDestroy();
+        store.action(); // 3
 
         assert.deepEqual(events, [
-            "pre",
             0,
-            "post",
-            "pre",
             1,
-            "post",
+            2,
+            "ngOnDestroy"
         ]);
 
     });
