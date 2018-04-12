@@ -15,7 +15,7 @@ describe("Mutators", function () {
 
     afterEach(() => resetTydux());
 
-    it("methods can change the state", function () {
+    it("methods can assign state properties", function () {
         class TestMutator extends Mutators<{ n1: number }> {
             mut1() {
                 this.state.n1 = 1;
@@ -31,6 +31,42 @@ describe("Mutators", function () {
         const store = new MyStore("", new TestMutator(), {n1: 0});
         store.action();
         assert.deepEqual(store.state, {n1: 1});
+    });
+
+    it("methods can assign state properties successively", function () {
+        class State {
+            list1: number[] = [];
+            list2: number[] = [];
+        }
+
+        class TestMutator extends Mutators<State> {
+            mut1() {
+                this.state.list1 = [1];
+            }
+
+            mut2() {
+                this.state.list2 = [2];
+            }
+        }
+
+        class MyStore extends Store<TestMutator, State> {
+            action1() {
+                this.mutate.mut1();
+            }
+
+            action2() {
+                this.mutate.mut2();
+            }
+        }
+
+        const store = new MyStore("", new TestMutator(), new State());
+        store.action1();
+        store.action1();
+        store.action2();
+        store.action2();
+
+        assert.deepEqual(store.state.list1, [1]);
+        assert.deepEqual(store.state.list2, [2]);
     });
 
     it("methods can assign a new state", function () {

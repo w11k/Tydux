@@ -1,5 +1,4 @@
 import * as _ from "lodash";
-import {OperatorFunction} from "rxjs/interfaces";
 import {Observable} from "rxjs/Observable";
 import {Operator} from "rxjs/Operator";
 import {ReplaySubject} from "rxjs/ReplaySubject";
@@ -103,13 +102,15 @@ export abstract class Store<M extends Mutators<S>, S> {
     }
 
     private mutateState(fn: (state: S, isRootCall: boolean) => MutatorEvent<S>): void {
+        let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
+
         const isRoot = this.mutatorCallStackCount === 0;
         this.mutatorCallStackCount++;
         try {
             const stateProxy = createProxy(this.state);
-            const start = isTyduxDevelopmentModeEnabled() ? Date.now() : 0;
+            const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
             let mutatorEvent = fn(stateProxy, isRoot);
-            if (isTyduxDevelopmentModeEnabled()) {
+            if (tyduxDevelopmentModeEnabled) {
                 mutatorEvent.duration = Date.now() - start;
             }
             if (isRoot) {
