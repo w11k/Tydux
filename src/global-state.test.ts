@@ -1,3 +1,4 @@
+/*
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {globalStateChanges$} from "./global-state";
@@ -63,3 +64,4 @@ describe("global state", function () {
 
 
 });
+*/

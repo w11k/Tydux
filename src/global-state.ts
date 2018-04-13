@@ -1,3 +1,4 @@
+/*
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Subject} from "rxjs/Subject";
@@ -33,3 +34,4 @@ export function addStoreToGlobalState(store: Store<any, any>) {
         });
 }
 
+*/

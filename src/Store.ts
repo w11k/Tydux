@@ -4,6 +4,151 @@ import {Operator} from "rxjs/Operator";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
+import {StoreObserver} from "./StoreObserver";
+import {createActionFromArguments, createProxy} from "./utils";
+
+export class StateGroup<S> {
+
+    protected state!: S;
+
+    // noinspection JSUnusedLocalSymbols: read during Store initialization
+    constructor(private initialState: S) {
+    }
+}
+
+export type StateGroupState<G> = G extends StateGroup<infer S> ? Readonly<S> : never;
+
+export type State<S> = {
+    [K in keyof S]: S[K] extends StateGroup<any> ? StateGroupState<S[K]> : State<S[K]>;
+};
+
+export interface Action {
+    [param: string]: any;
+
+    type: string;
+}
+
+export class StateChangeEvent<S> {
+    constructor(readonly action: Action,
+                readonly state: S,
+                public duration: number|null) {
+    }
+}
+
+export class Store<S> {
+
+    readonly mutate: S;
+
+    private _state: State<S>;
+
+    get state(): Readonly<State<S>> {
+        return this._state;
+    }
+
+    private readonly stateChangesSubject = new ReplaySubject<StateChangeEvent<State<S>>>(1);
+
+    readonly stateChanges: Observable<StateChangeEvent<State<S>>> = this.stateChangesSubject.asObservable();
+
+    constructor(rootStateGroup: S) {
+        this.mutate = rootStateGroup;
+        this._state = {} as any;
+
+        this.traverse([], rootStateGroup);
+
+        deepFreeze(this._state);
+
+        this.setState({type: "@@INIT"}, null, this.state, true);
+    }
+
+    private traverse(path: string[], obj: any) {
+        _.forIn(obj, (val, key) => {
+            const localPath = _.cloneDeep(path);
+            localPath.push(key);
+
+            if (_.isPlainObject(val)) {
+                this.traverse(localPath, val);
+            } else if (val instanceof StateGroup) {
+                _.set(this._state, localPath, (val as any).initialState);
+                this.instrumentStateGroup(localPath, val);
+            } else {
+                _.set(this._state, localPath, val);
+            }
+        });
+    }
+
+    private instrumentStateGroup(StateGroupPath: string[], stateGroup: any) {
+        const this_ = this;
+
+        for (let mutatorName of _.functionsIn(stateGroup)) {
+            const mutatorFn = stateGroup[mutatorName];
+
+            stateGroup[mutatorName] = function () {
+                const tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
+
+                const args = arguments;
+                const tempThis: any = {};
+
+                const localState = _.get(this_.state, StateGroupPath);
+                const tempState = createProxy(localState);
+                tempThis.state = tempState;
+
+                Object.setPrototypeOf(tempThis, stateGroup);
+
+                const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
+                const result = mutatorFn.apply(tempThis, args);
+                const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : null;
+
+                this_.mergeState(
+                    createActionFromArguments(mutatorName, mutatorFn, args),
+                    duration,
+                    StateGroupPath,
+                    tempThis.state
+                );
+                return result;
+            };
+
+        }
+    }
+
+    private mergeState(action: Action, duration: number|null, path: string[], stateChange: any) {
+        if (path.length === 0) {
+            this.setState(action, duration, stateChange);
+            return;
+        }
+
+        const parentStateChange: any = {};
+        let parentPath = path.slice(0, path.length - 1);
+        Object.assign(parentStateChange, _.get(this._state, parentPath));
+        parentStateChange[_.last(path)!] = stateChange;
+
+        this.mergeState(action, duration, parentPath, parentStateChange);
+    }
+
+    private setState(action: Action, duration: number|null, state: State<S>, force = false) {
+        if (force || state !== this._state) {
+            this._state = state;
+            const event = new StateChangeEvent(action, state, duration);
+            this.stateChangesSubject.next(event);
+        }
+    }
+
+    bounded(operator: Operator<StateChangeEvent<State<S>>, StateChangeEvent<State<S>>>): StoreObserver<State<S>> {
+        return new StoreObserver(this.stateChanges, operator);
+    }
+
+    unbounded(): StoreObserver<State<S>> {
+        return new StoreObserver(this.stateChanges);
+    }
+
+}
+
+/*
+import * as _ from "lodash";
+import {Observable} from "rxjs/Observable";
+import {Operator} from "rxjs/Operator";
+import {ReplaySubject} from "rxjs/ReplaySubject";
+import {deepFreeze} from "./deep-freeze";
+import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
 import {Mutators} from "./mutators";
@@ -176,3 +321,5 @@ export abstract class Store<M extends Mutators<S>, S> {
     }
 
 }
+*/
+

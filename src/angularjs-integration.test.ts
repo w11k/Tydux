@@ -1,38 +1,38 @@
 import {assert} from "chai";
 import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
-import {Store} from "./Store";
+import {StateGroup, Store} from "./Store";
 
 
 describe("AngularJS integration", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    afterEach(() => resetTydux());
+    // afterEach(() => resetTydux());
 
     it("wraps the delivery of events in scope.$apply()", function () {
 
-        type State = { a: number };
+        const state = {
+            count: 0
+        };
 
-        class TestMutator extends Mutators<State> {
-            inc() {
-                this.state.a++;
+        class CounterStateGroup extends StateGroup<typeof state> {
+            increment() {
+                this.state.count++;
             }
         }
 
-        class TestStore extends Store<TestMutator, State> {
-            action() {
-                this.mutate.inc();
-            }
-        }
+        const rootStateGroup = {
+            counter: new CounterStateGroup(state)
+        };
+
+        const store = new Store(rootStateGroup);
 
         const events: any[] = [];
-        const store = new TestStore("", new TestMutator(), {a: 0});
 
         class DummyScope implements AngularJS1ScopeLike {
 
+            // noinspection JSUnusedGlobalSymbols: required for interface
             $$phase = "";
 
             constructor(public $root?: AngularJS1ScopeLike) {
@@ -54,10 +54,10 @@ describe("AngularJS integration", function () {
         const scope = new DummyScope(rootScope);
 
         store.bounded(toAngularJSScope(scope))
-            .select(s => s.a)
+            .select(s => s.counter.count)
             .subscribe(a => events.push(a));
 
-        store.action();
+        store.mutate.counter.increment();
 
         assert.deepEqual(events, [
             "pre",

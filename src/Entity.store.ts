@@ -1,3 +1,4 @@
+/*
 import * as _ from "lodash";
 import {OperatorFunction} from "rxjs/interfaces";
 import {EntityStoreObserver} from "./EntityStoreObserver";
@@ -125,3 +126,4 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
         return new EntityStoreObserver(this.mutatorEvents$);
     }
 }
+*/

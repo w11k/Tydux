@@ -3,6 +3,7 @@ import {Observable} from "rxjs/Observable";
 import {Operator} from "rxjs/Operator";
 import {Subscriber} from "rxjs/Subscriber";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
+import {Action} from "./Store";
 
 export function areArraysShallowEquals(array1: any[], array2: any[]): boolean {
     if (array1.length !== array2.length) {
@@ -76,4 +77,19 @@ export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Obser
             return fn(subscriber, source);
         }
     };
+}
+
+export function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): Action {
+    const fnString = fn.toString();
+    const argsString = fnString.substring(fnString.indexOf("(") + 1, fnString.indexOf(")"));
+    const argNames = argsString.split(",").map((a: string) => a.trim());
+
+    const action: any = {};
+    for (let i = 0; i < args.length; i++) {
+        const arg = "[" + i + "] " + argNames[i];
+        action[arg] = args[i];
+    }
+    action.type = actionTypeName;
+
+    return action;
 }

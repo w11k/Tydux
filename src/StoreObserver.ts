@@ -4,13 +4,13 @@ import {Operator} from "rxjs/Operator";
 import {distinctUntilChanged} from "rxjs/operators/distinctUntilChanged";
 import {filter} from "rxjs/operators/filter";
 import {map} from "rxjs/operators/map";
-import {MutatorEvent} from "./Store";
+import {StateChangeEvent} from "./Store";
 import {areArraysShallowEquals, arePlainObjectsShallowEquals} from "./utils";
 
 export class StoreObserver<S> {
 
-    constructor(readonly mutatorEvents$: Observable<MutatorEvent<S>>,
-                readonly operator?: Operator<MutatorEvent<S>, MutatorEvent<S>>) {
+    constructor(readonly mutatorEvents$: Observable<StateChangeEvent<S>>,
+                readonly operator?: Operator<StateChangeEvent<S>, StateChangeEvent<S>>) {
     }
 
     select(): Observable<Readonly<S>>;
@@ -30,7 +30,7 @@ export class StoreObserver<S> {
                 distinctUntilChanged((oldVal, newVal) => {
                     if (_.isArray(oldVal) && _.isArray(newVal)) {
                         return areArraysShallowEquals(oldVal, newVal);
-                    } else if (_.isPlainObject(newVal) && _.isPlainObject(newVal)) {
+                    } else if (_.isPlainObject(oldVal) && _.isPlainObject(newVal)) {
                         return arePlainObjectsShallowEquals(oldVal, newVal);
                     } else {
                         return oldVal === newVal;

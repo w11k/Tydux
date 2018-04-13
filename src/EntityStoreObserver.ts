@@ -1,3 +1,4 @@
+/*
 import {Observable} from "rxjs/Observable";
 import {map} from "rxjs/operators/map";
 import {EntityState} from "./Entity.store";
@@ -19,3 +20,4 @@ export class EntityStoreObserver<T> extends StoreObserver<EntityState<T>> {
     }
 
 }
+*/

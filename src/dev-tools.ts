@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+/*
 import {getGlobalTyduxState, globalStateChanges$} from "./global-state";
 
 interface DevToolsState {
@@ -14,7 +14,7 @@ interface DevToolsState {
 
 export function enableDevTools() {
     const devToolsEnabled = typeof window !== "undefined"
-            && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
+        && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
 
     if (!devToolsEnabled) {
         return;
@@ -44,16 +44,17 @@ export function enableDevTools() {
     });
 
     globalStateChanges$
-            .subscribe(event => {
-                // const mutator = !_.isNil(event.boundMutator) ? event.boundMutator : _.noop;
-                // mutators.push(mutator);
-                const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
-                const action = {
-                    ...event.action,
-                    "type": "[" + event.storeId + " / " + event.action.type + "]" + meta
-                };
+        .subscribe(event => {
+            // const mutator = !_.isNil(event.boundMutator) ? event.boundMutator : _.noop;
+            // mutators.push(mutator);
+            const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
+            const action = {
+                ...event.action,
+                "type": "[" + event.storeId + " / " + event.action.type + "]" + meta
+            };
 
-                devTools.send(action, getGlobalTyduxState());
-            });
+            devTools.send(action, getGlobalTyduxState());
+        });
 
 }
+*/

@@ -1,3 +1,4 @@
+/*
 import {Observable} from "rxjs/Observable";
 import {combineLatest} from "rxjs/observable/combineLatest";
 import {debounceTime, map} from "rxjs/operators";
@@ -44,3 +45,4 @@ export function selectMany<R>(...args: Array<Observable<any> | ((...values: Arra
             map((args: any[]) => mapFn(...args))
         );
 }
+*/

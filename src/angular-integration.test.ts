@@ -1,36 +1,34 @@
 import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
-import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
-import {Store} from "./Store";
+import {StateGroup, Store} from "./Store";
 
 
 describe("Angular integration", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    afterEach(() => resetTydux());
+    // afterEach(() => resetTydux());
 
     it("completes all subscriptions when the component gets destroyed", function () {
 
-        type State = { a: number };
+        const state = {
+            count: 0
+        };
 
-        class TestMutator extends Mutators<State> {
-            inc() {
-                this.state.a++;
+        class CounterStateGroup extends StateGroup<typeof state> {
+            increment() {
+                this.state.count++;
             }
         }
 
-        class TestStore extends Store<TestMutator, State> {
-            action() {
-                this.mutate.inc();
-            }
-        }
+        const rootStateGroup = {
+            counter: new CounterStateGroup(state)
+        };
+
+        const store = new Store(rootStateGroup);
 
         const events: any[] = [];
-        const store = new TestStore("", new TestMutator(), {a: 0});
 
         class DummyComponent implements OnDestroyLike {
             ngOnDestroy() {
@@ -41,13 +39,13 @@ describe("Angular integration", function () {
         const component = new DummyComponent();
 
         store.bounded(toAngularComponent(component))
-            .select(s => s.a)
+            .select(s => s.counter.count)
             .subscribe(a => events.push(a));
 
-        store.action(); // 1
-        store.action(); // 2
+        store.mutate.counter.increment();
+        store.mutate.counter.increment();
         component.ngOnDestroy();
-        store.action(); // 3
+        store.mutate.counter.increment();
 
         assert.deepEqual(events, [
             0,
