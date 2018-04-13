@@ -45,9 +45,13 @@ describe("Store", function () {
             });
 
         // dispatch actions
+        console.log("store.state.counter.count", store.state.counter.count);
         store.mutate.counter.increment();
+        console.log("store.state.counter.count", store.state.counter.count);
         store.mutate.counter.increment();
+        console.log("store.state.counter.count", store.state.counter.count);
         store.mutate.counter.decrement();
+        console.log("store.state.counter.count", store.state.counter.count);
 
         assert.deepEqual(output, [
             "snapshot1 0",

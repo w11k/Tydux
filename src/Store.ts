@@ -2,7 +2,6 @@ import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Operator} from "rxjs/Operator";
 import {ReplaySubject} from "rxjs/ReplaySubject";
-import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {StoreObserver} from "./StoreObserver";
 import {createActionFromArguments, createProxy} from "./utils";
@@ -11,15 +10,15 @@ export class StateMutators<S> {
 
     protected state!: S;
 
-    // noinspection JSUnusedLocalSymbols: read during Store initialization
+    // noinspection JSUnusedLocalSymbols: accessed during Store initialization
     constructor(private initialState: S) {
     }
 }
 
-export type StateGroupState<G> = G extends StateMutators<infer S> ? Readonly<S> : never;
+export type MutatorsState<G> = G extends StateMutators<infer S> ? Readonly<S> : never;
 
 export type State<S> = {
-    [K in keyof S]: S[K] extends StateMutators<any> ? StateGroupState<S[K]> : State<S[K]>;
+    [K in keyof S]: S[K] extends StateMutators<any> ? MutatorsState<S[K]> : State<S[K]>;
 };
 
 export interface Action {
@@ -31,8 +30,77 @@ export interface Action {
 export class StateChangeEvent<S> {
     constructor(readonly action: Action,
                 readonly state: S,
-                public duration: number|null) {
+                public duration: number | null) {
     }
+}
+
+type MergeStateFn = (action: Action, duration: number | null, path: string[], stateChange: any) => void;
+
+function instrumentStructure(mergeState: MergeStateFn,
+                             stateGetter: () => any,
+                             mutatorsStructure: any,
+                             path: string[],
+                             obj: any) {
+
+    _.forIn(obj, (val, key) => {
+        const localPath = _.cloneDeep(path);
+        localPath.push(key);
+
+        if (_.isPlainObject(val)) {
+            instrumentStructure(mergeState, stateGetter, mutatorsStructure, path, obj);
+        } else {
+            _.set(mutatorsStructure, localPath, val);
+
+            if (val instanceof StateMutators) {
+                _.set(stateGetter(), localPath, (val as any).initialState);
+                instrumentMutators(mergeState, stateGetter, localPath, val);
+            } else {
+                _.set(stateGetter(), localPath, val);
+            }
+        }
+    });
+}
+
+function instrumentMutators(mergeState: MergeStateFn,
+                            stateGetter: () => any,
+                            path: string[],
+                            mutators: any) {
+
+    for (let mutatorName of _.functionsIn(mutators)) {
+        const mutatorFn = mutators[mutatorName];
+
+        mutators[mutatorName] = function () {
+            const tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
+
+            const args = arguments;
+            const tempThis: any = {};
+
+            const localState = _.get(stateGetter(), path);
+            tempThis.state = createProxy(localState);
+
+            Object.setPrototypeOf(tempThis, mutators);
+
+            const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
+            const result = mutatorFn.apply(tempThis, args);
+            const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : null;
+            const actionName = path.join(".") + "." + mutatorName;
+            mergeState(
+                createActionFromArguments(actionName, mutatorFn, args),
+                duration,
+                path,
+                tempThis.state
+            );
+            return result;
+        };
+
+    }
+}
+
+export function createStore<S>(structure: S) {
+    const mutatorsStructure: any = {};
+    const state = {} as any;
+    instrumentStructure(this.mergeState.bind(this), () => this.state, mutatorsStructure, [], structure);
+
 }
 
 export class Store<S> {
@@ -49,67 +117,15 @@ export class Store<S> {
 
     readonly stateChanges: Observable<StateChangeEvent<State<S>>> = this.stateChangesSubject.asObservable();
 
-    constructor(rootStateGroup: S) {
-        this.mutate = rootStateGroup;
-        this._state = {} as any;
+    constructor(structure: S) {
 
-        this.traverse([], rootStateGroup);
-
-        deepFreeze(this._state);
+        this.mutate = mutatorsStructure;
 
         this.setState({type: "@@INIT"}, null, this.state, true);
     }
 
-    private traverse(path: string[], obj: any) {
-        _.forIn(obj, (val, key) => {
-            const localPath = _.cloneDeep(path);
-            localPath.push(key);
 
-            if (_.isPlainObject(val)) {
-                this.traverse(localPath, val);
-            } else if (val instanceof StateMutators) {
-                _.set(this._state, localPath, (val as any).initialState);
-                this.instrumentStateGroup(localPath, val);
-            } else {
-                _.set(this._state, localPath, val);
-            }
-        });
-    }
-
-    private instrumentStateGroup(stateGroupPath: string[], stateGroup: any) {
-        const this_ = this;
-
-        for (let mutatorName of _.functionsIn(stateGroup)) {
-            const mutatorFn = stateGroup[mutatorName];
-
-            stateGroup[mutatorName] = function () {
-                const tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
-
-                const args = arguments;
-                const tempThis: any = {};
-
-                const localState = _.get(this_.state, stateGroupPath);
-                tempThis.state = createProxy(localState);
-
-                Object.setPrototypeOf(tempThis, stateGroup);
-
-                const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
-                const result = mutatorFn.apply(tempThis, args);
-                const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : null;
-                const actionName = stateGroupPath.join(".") + "." + mutatorName;
-                this_.mergeState(
-                    createActionFromArguments(actionName, mutatorFn, args),
-                    duration,
-                    stateGroupPath,
-                    tempThis.state
-                );
-                return result;
-            };
-
-        }
-    }
-
-    private mergeState(action: Action, duration: number|null, path: string[], stateChange: any) {
+    private mergeState(action: Action, duration: number | null, path: string[], stateChange: any) {
         if (path.length === 0) {
             this.setState(action, duration, stateChange);
             return;
@@ -123,7 +139,7 @@ export class Store<S> {
         this.mergeState(action, duration, parentPath, parentStateChange);
     }
 
-    private setState(action: Action, duration: number|null, state: State<S>, force = false) {
+    private setState(action: Action, duration: number | null, state: State<S>, force = false) {
         if (force || state !== this._state) {
             this._state = state;
             const event = new StateChangeEvent(action, state, duration);
@@ -140,10 +156,11 @@ export class Store<S> {
     }
 
     getChild<C>(fn: (store: S) => C): Store<C> {
-        return {
-            mutate: fn(this.mutate) as any as C,
-            state: null as any as State<C>
-        };
+        // return {
+        //     mutate: fn(this.mutate) as any as C,
+        //     state: null as any as State<C>
+        // };
+        return null as any;
     }
 
 }

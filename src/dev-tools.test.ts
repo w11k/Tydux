@@ -44,9 +44,9 @@ describe("DevTools", function () {
                 setTimeout(() => {
                     assert.deepEqual(eventActionTypes, [
                         "@@INIT",
-                        "increment",
-                        "increment",
-                        "decrement",
+                        "counter.increment",
+                        "counter.increment",
+                        "counter.decrement",
                     ]);
                     done();
                 }, 0);
