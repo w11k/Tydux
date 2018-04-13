@@ -1,64 +1,52 @@
-/*
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
-import {globalStateChanges$, resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
-import {Store} from "./Store";
-import {createAsyncPromise} from "./test-utils";
+import {StateMutators, Store} from "./Store";
 
 describe("DevTools", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    afterEach(() => resetTydux());
-
     it("events contain the store and mutators name", function (done) {
         const eventActionTypes: string[] = [];
 
-        class MyMutators extends Mutators<any> {
-            mut1() {
+        class MyState {
+            count = 0;
+        }
+
+        class CounterStateGroup extends StateMutators<MyState> {
+            increment() {
+                this.state.count++;
             }
 
-            mut2() {
-            }
-
-            mut3() {
+            decrement() {
+                this.state.count--;
             }
         }
 
-        class MyStore extends Store<MyMutators, any> {
-            action1() {
-                this.mutate.mut1();
-                this.mutate.mut2();
-            }
+        const rootStateGroup = {
+            counter: new CounterStateGroup(new MyState())
+        };
 
-            action2() {
-                this.mutate.mut1();
-                this.mutate.mut3();
-            }
-        }
+        const store = new Store(rootStateGroup);
 
-        globalStateChanges$.subscribe((event) => {
+
+        store.stateChanges.subscribe((event) => {
             eventActionTypes.push(event.action.type);
         });
 
-        const store = new MyStore("myStore", new MyMutators(), {});
         setTimeout(() => {
-            store.action1();
-            store.action1();
+            store.mutate.counter.increment();
+            store.mutate.counter.increment();
 
             setTimeout(() => {
-                store.action2();
+                store.mutate.counter.decrement();
 
                 setTimeout(() => {
                     assert.deepEqual(eventActionTypes, [
                         "@@INIT",
-                        "mut1",
-                        "mut2",
-                        "mut1",
-                        "mut2",
-                        "mut1",
-                        "mut3",
+                        "increment",
+                        "increment",
+                        "decrement",
                     ]);
                     done();
                 }, 0);
@@ -67,58 +55,57 @@ describe("DevTools", function () {
 
     });
 
-    it("events contain the store and mutators name, support for async methods", function (done) {
-        const eventActionTypes: string[] = [];
+    /*    it("events contain the store and mutators name, support for async methods", function (done) {
+            const eventActionTypes: string[] = [];
 
-        class MyMutators extends Mutators<any> {
-            mut1() {
+            class MyMutators extends Mutators<any> {
+                mut1() {
+                }
+
+                mut2() {
+                }
             }
 
-            mut2() {
+            class MyStore extends Store<MyMutators, any> {
+
+                async action1() {
+                    this.mutate.mut1();
+                    this.innerAction();
+                    this.mutate.mut2();
+                    await createAsyncPromise(10);
+                    this.mutate.mut1();
+                    this.innerAction();
+                    this.mutate.mut2();
+
+                    setTimeout(() => {
+                        assert.deepEqual(eventActionTypes, [
+                            "@@INIT",
+                            "mut1",
+                            "mut1",
+                            "mut2",
+                            "mut2",
+                            "mut1",
+                            "mut1",
+                            "mut2",
+                            "mut2",
+                        ]);
+                        done();
+                    }, 0);
+                }
+
+                private innerAction() {
+                    this.mutate.mut1();
+                    this.mutate.mut2();
+                }
             }
-        }
 
-        class MyStore extends Store<MyMutators, any> {
+            globalStateChanges$.subscribe((event) => {
+                eventActionTypes.push(event.action.type);
+            });
 
-            async action1() {
-                this.mutate.mut1();
-                this.innerAction();
-                this.mutate.mut2();
-                await createAsyncPromise(10);
-                this.mutate.mut1();
-                this.innerAction();
-                this.mutate.mut2();
-
-                setTimeout(() => {
-                    assert.deepEqual(eventActionTypes, [
-                        "@@INIT",
-                        "mut1",
-                        "mut1",
-                        "mut2",
-                        "mut2",
-                        "mut1",
-                        "mut1",
-                        "mut2",
-                        "mut2",
-                    ]);
-                    done();
-                }, 0);
-            }
-
-            private innerAction() {
-                this.mutate.mut1();
-                this.mutate.mut2();
-            }
-        }
-
-        globalStateChanges$.subscribe((event) => {
-            eventActionTypes.push(event.action.type);
-        });
-
-        const store = new MyStore("myStore", new MyMutators(), {});
-        store.action1();
-    });
+            const store = new MyStore("myStore", new MyMutators(), {});
+            store.action1();
+        });*/
 
 
 });
-*/

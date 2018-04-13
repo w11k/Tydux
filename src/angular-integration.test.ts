@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateGroup, Store} from "./Store";
+import {StateMutators, Store} from "./Store";
 
 
 describe("Angular integration", function () {
@@ -16,7 +16,7 @@ describe("Angular integration", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateGroup<typeof state> {
+        class CounterStateGroup extends StateMutators<typeof state> {
             increment() {
                 this.state.count++;
             }

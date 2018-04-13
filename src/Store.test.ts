@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateGroup, Store} from "./Store";
+import {StateMutators, Store} from "./Store";
 
 
 describe("Store", function () {
@@ -17,7 +17,7 @@ describe("Store", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateGroup<typeof state> {
+        class CounterStateGroup extends StateMutators<typeof state> {
             increment() {
                 this.state.count++;
             }

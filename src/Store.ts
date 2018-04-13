@@ -7,7 +7,7 @@ import {isTyduxDevelopmentModeEnabled} from "./development";
 import {StoreObserver} from "./StoreObserver";
 import {createActionFromArguments, createProxy} from "./utils";
 
-export class StateGroup<S> {
+export class StateMutators<S> {
 
     protected state!: S;
 
@@ -16,10 +16,10 @@ export class StateGroup<S> {
     }
 }
 
-export type StateGroupState<G> = G extends StateGroup<infer S> ? Readonly<S> : never;
+export type StateGroupState<G> = G extends StateMutators<infer S> ? Readonly<S> : never;
 
 export type State<S> = {
-    [K in keyof S]: S[K] extends StateGroup<any> ? StateGroupState<S[K]> : State<S[K]>;
+    [K in keyof S]: S[K] extends StateMutators<any> ? StateGroupState<S[K]> : State<S[K]>;
 };
 
 export interface Action {
@@ -67,7 +67,7 @@ export class Store<S> {
 
             if (_.isPlainObject(val)) {
                 this.traverse(localPath, val);
-            } else if (val instanceof StateGroup) {
+            } else if (val instanceof StateMutators) {
                 _.set(this._state, localPath, (val as any).initialState);
                 this.instrumentStateGroup(localPath, val);
             } else {
@@ -76,7 +76,7 @@ export class Store<S> {
         });
     }
 
-    private instrumentStateGroup(StateGroupPath: string[], stateGroup: any) {
+    private instrumentStateGroup(stateGroupPath: string[], stateGroup: any) {
         const this_ = this;
 
         for (let mutatorName of _.functionsIn(stateGroup)) {
@@ -88,20 +88,19 @@ export class Store<S> {
                 const args = arguments;
                 const tempThis: any = {};
 
-                const localState = _.get(this_.state, StateGroupPath);
-                const tempState = createProxy(localState);
-                tempThis.state = tempState;
+                const localState = _.get(this_.state, stateGroupPath);
+                tempThis.state = createProxy(localState);
 
                 Object.setPrototypeOf(tempThis, stateGroup);
 
                 const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
                 const result = mutatorFn.apply(tempThis, args);
                 const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : null;
-
+                const actionName = stateGroupPath.join(".") + "." + mutatorName;
                 this_.mergeState(
-                    createActionFromArguments(mutatorName, mutatorFn, args),
+                    createActionFromArguments(actionName, mutatorFn, args),
                     duration,
-                    StateGroupPath,
+                    stateGroupPath,
                     tempThis.state
                 );
                 return result;
@@ -138,6 +137,13 @@ export class Store<S> {
 
     unbounded(): StoreObserver<State<S>> {
         return new StoreObserver(this.stateChanges);
+    }
+
+    getChild<C>(fn: (store: S) => C): Store<C> {
+        return {
+            mutate: fn(this.mutate) as any as C,
+            state: null as any as State<C>
+        };
     }
 
 }

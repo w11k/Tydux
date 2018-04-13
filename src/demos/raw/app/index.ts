@@ -1,7 +1,7 @@
 import "rxjs/add/operator/first";
+import {enableDevToolsForStore} from "../../../dev-tools";
 import {enableTyduxDevelopmentMode} from "../../../development";
-import {Mutators} from "../../../mutators";
-import {Store} from "../../../Store";
+import {StateMutators, Store} from "../../../Store";
 import "./index.html";
 
 
@@ -21,7 +21,7 @@ class TodoState {
 }
 
 
-class TodoMutators extends Mutators<TodoState> {
+class TodoStateGroup extends StateMutators<TodoState> {
 
     clearTodos() {
         this.state.todos = [];
@@ -40,56 +40,55 @@ class TodoMutators extends Mutators<TodoState> {
 
 }
 
-class TodoStore extends Store<TodoMutators, TodoState> {
+const rootStateGroup = {
+    todos: new TodoStateGroup(new TodoState())
+};
 
-    constructor() {
-        super("todos", new TodoMutators(), new TodoState());
-        this.addTodo("Todo 1");
-        this.addTodo("Todo 2");
-    }
+const store = new Store(rootStateGroup);
+enableDevToolsForStore(store);
+
+class TodoService {
 
     addTodo(name: string) {
         if (name.trim().length === 0) {
             throw new Error("TODO must not be empty");
         }
 
-        this.mutate.addTodoToList({name: name});
+        store.mutate.todos.addTodoToList({name: name});
     }
 
     clearTodos() {
-        this.mutate.clearTodos();
+        store.mutate.todos.clearTodos();
     }
 
     async loadTodos() {
-        this.mutate.clearTodos();
+        this.clearTodos();
         const response = await fetch("/data.json");
         let todos: Todo[] = await response.json();
-        this.mutate.setTodos(todos);
+        store.mutate.todos.setTodos(todos);
     }
 }
 
-const store: TodoStore = new TodoStore();
-
-
-(window as any).store = store;
+const todoService = new TodoService();
+(window as any).todoService = todoService;
 
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
-            <button onclick='(${() => store.clearTodos()})();'>
+            <button onclick='(${() => todoService.clearTodos()})();'>
                 Clear
             </button>
         
-            <button onclick='(${() => store.addTodo("" + Date.now())})();'>
+            <button onclick='(${() => todoService.addTodo("" + Date.now())})();'>
                 Add Todo
             </button>
         
-            <button onclick='(${() => store.loadTodos()})();'>
+            <button onclick='(${() => todoService.loadTodos()})();'>
                 Load Todos
             </button>
         
             <ol>
-                ${store.state.todos!.map(t => {
+                ${store.state.todos.todos.map(t => {
         return `<li class=''>${t.name}</li>`;
     }).join("") }
             </ol>

@@ -1,5 +1,5 @@
-/*
-import {getGlobalTyduxState, globalStateChanges$} from "./global-state";
+import {isTyduxDevelopmentModeEnabled} from "./development";
+import {Store} from "./Store";
 
 interface DevToolsState {
     actionsById: {
@@ -12,7 +12,11 @@ interface DevToolsState {
     stagedActionIds: number[];
 }
 
-export function enableDevTools() {
+export function enableDevToolsForStore(store: Store<any>) {
+    if (!isTyduxDevelopmentModeEnabled()) {
+        return;
+    }
+
     const devToolsEnabled = typeof window !== "undefined"
         && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
 
@@ -22,20 +26,14 @@ export function enableDevTools() {
 
     const devTools = devToolsEnabled ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.connect() : undefined;
 
-    // const mutators: (() => void)[] = [];
-
-    devTools.init(getGlobalTyduxState());
+    // devTools.init(store.state);
 
     devTools.subscribe((message: any) => {
-        // console.log(message);
         if (message.type === "DISPATCH" && message.state) {
             const state: DevToolsState = JSON.parse(message.state);
-            // console.log(state);
             switch (message.payload.type) {
                 case "TOGGLE_ACTION":
                     const id = message.payload.id;
-                    console.log(state);
-
                     devTools.send(null, state);
                     break;
             }
@@ -43,18 +41,14 @@ export function enableDevTools() {
         }
     });
 
-    globalStateChanges$
+    store.stateChanges
         .subscribe(event => {
-            // const mutator = !_.isNil(event.boundMutator) ? event.boundMutator : _.noop;
-            // mutators.push(mutator);
-            const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
+            const meta = event.duration !== null ? ` (${event.duration}ms)` : "";
             const action = {
                 ...event.action,
-                "type": "[" + event.storeId + " / " + event.action.type + "]" + meta
+                "type": event.action.type + meta
             };
-
-            devTools.send(action, getGlobalTyduxState());
+            devTools.send(action, event.state);
         });
 
 }
-*/

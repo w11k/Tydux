@@ -5,7 +5,7 @@ import {takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs/Subject";
 import {Subscriber} from "rxjs/Subscriber";
 import {enableTyduxDevelopmentMode} from "./development";
-import {State, StateChangeEvent, StateGroup, Store} from "./Store";
+import {State, StateChangeEvent, StateMutators, Store} from "./Store";
 import {collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
@@ -19,7 +19,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateGroup<typeof state> {
+        class CounterStateGroup extends StateMutators<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -46,7 +46,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateGroup<typeof state> {
+        class CounterStateGroup extends StateMutators<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -70,7 +70,7 @@ describe("StoreObserver", function () {
             count?: number;
         }
 
-        class CounterStateGroup extends StateGroup<MyState> {
+        class CounterStateGroup extends StateMutators<MyState> {
             increment() {
                 this.state.count = !_.isNil(this.state.count) ? this.state.count + 1 : 1;
             }
@@ -106,7 +106,7 @@ describe("StoreObserver", function () {
             c = 100;
         }
 
-        class CounterStateGroup extends StateGroup<MyState> {
+        class CounterStateGroup extends StateMutators<MyState> {
             incrementAB() {
                 this.state.a++;
                 this.state.b++;
@@ -141,7 +141,7 @@ describe("StoreObserver", function () {
             c = 100;
         }
 
-        class CounterStateGroup extends StateGroup<MyState> {
+        class CounterStateGroup extends StateMutators<MyState> {
             incrementAB() {
                 this.state.a++;
                 this.state.b++;
@@ -190,7 +190,7 @@ describe("StoreObserver", function () {
             };
         }
 
-        class CounterStateGroup extends StateGroup<MyState> {
+        class CounterStateGroup extends StateMutators<MyState> {
             increment1() {
                 this.state.root = {
                     child1: {
@@ -234,7 +234,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateGroup<typeof state> {
+        class CounterStateGroup extends StateMutators<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -282,7 +282,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateGroup<typeof state> {
+        class CounterStateGroup extends StateMutators<typeof state> {
             increment() {
                 this.state.count++;
             }
