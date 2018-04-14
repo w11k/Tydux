@@ -52,8 +52,8 @@ const storeStructure = {
     // })
 };
 
-const store = new Store(storeStructure);
-store.getChild(s => s.other.earth).mutate.city.addCity("Rom");
+const store = Store.create(storeStructure);
+// store.getChild(s => s.other.earth).mutate.city.addCity("Rom");
 // let x = store.getChild(s => s.other.earth).state.city.cityList.length;
 
 

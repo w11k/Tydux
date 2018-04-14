@@ -36,26 +36,34 @@ export class StateChangeEvent<S> {
 
 type MergeStateFn = (action: Action, duration: number | null, path: string[], stateChange: any) => void;
 
+// const mutatorsToStateSymbol = Symbol("mutators-to-state-symbol");
+const mutatorsToStateSymbol = "__mutators-to-state-symbol__";
+
 function instrumentStructure(mergeState: MergeStateFn,
                              stateGetter: () => any,
                              mutatorsStructure: any,
                              path: string[],
-                             obj: any) {
+                             structure: any) {
 
-    _.forIn(obj, (val, key) => {
+
+
+    _.forIn(structure, (child, key) => {
         const localPath = _.cloneDeep(path);
         localPath.push(key);
 
-        if (_.isPlainObject(val)) {
-            instrumentStructure(mergeState, stateGetter, mutatorsStructure, path, obj);
-        } else {
-            _.set(mutatorsStructure, localPath, val);
+        _.set(mutatorsStructure, localPath, child);
 
-            if (val instanceof StateMutators) {
-                _.set(stateGetter(), localPath, (val as any).initialState);
-                instrumentMutators(mergeState, stateGetter, localPath, val);
+        if (_.isPlainObject(child)) {
+            _.set(mutatorsStructure, [...localPath, mutatorsToStateSymbol], 123);
+
+
+            instrumentStructure(mergeState, stateGetter, mutatorsStructure, localPath, child);
+        } else {
+            if (child instanceof StateMutators) {
+                _.set(stateGetter(), localPath, (child as any).initialState);
+                instrumentMutators(mergeState, stateGetter, localPath, child);
             } else {
-                _.set(stateGetter(), localPath, val);
+                _.set(stateGetter(), localPath, child);
             }
         }
     });
@@ -75,7 +83,8 @@ function instrumentMutators(mergeState: MergeStateFn,
             const args = arguments;
             const tempThis: any = {};
 
-            const localState = _.get(stateGetter(), path);
+            let storeState = stateGetter();
+            const localState = _.get(storeState, path);
             tempThis.state = createProxy(localState);
 
             Object.setPrototypeOf(tempThis, mutators);
@@ -84,6 +93,7 @@ function instrumentMutators(mergeState: MergeStateFn,
             const result = mutatorFn.apply(tempThis, args);
             const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : null;
             const actionName = path.join(".") + "." + mutatorName;
+
             mergeState(
                 createActionFromArguments(actionName, mutatorFn, args),
                 duration,
@@ -96,18 +106,31 @@ function instrumentMutators(mergeState: MergeStateFn,
     }
 }
 
-export function createStore<S>(structure: S) {
-    const mutatorsStructure: any = {};
-    const state = {} as any;
-    instrumentStructure(this.mergeState.bind(this), () => this.state, mutatorsStructure, [], structure);
-
-}
-
 export class Store<S> {
 
-    readonly mutate: S;
+    static create<S>(structure: S): Store<S> {
 
-    private _state: State<S>;
+        const mutatorsStructure: any = {};
+
+        const store = new Store<S>(mutatorsStructure);
+        store._state = {} as any;
+
+        instrumentStructure(
+            store.mergeState.bind(store),
+            () => store.state,
+            store.mutate,
+            [],
+            structure
+        );
+
+        store.setState({type: "@@INIT"}, null, store.state, true);
+
+        return store;
+    }
+
+    readonly mutate!: S;
+
+    private _state!: State<S>;
 
     get state(): Readonly<State<S>> {
         return this._state;
@@ -117,15 +140,14 @@ export class Store<S> {
 
     readonly stateChanges: Observable<StateChangeEvent<State<S>>> = this.stateChangesSubject.asObservable();
 
-    constructor(structure: S) {
-
+    private constructor(mutatorsStructure: any) {
         this.mutate = mutatorsStructure;
-
-        this.setState({type: "@@INIT"}, null, this.state, true);
+        // this.setState({type: "@@INIT"}, null, this.state, true);
     }
 
 
     private mergeState(action: Action, duration: number | null, path: string[], stateChange: any) {
+
         if (path.length === 0) {
             this.setState(action, duration, stateChange);
             return;
@@ -133,7 +155,8 @@ export class Store<S> {
 
         const parentStateChange: any = {};
         let parentPath = path.slice(0, path.length - 1);
-        Object.assign(parentStateChange, _.get(this._state, parentPath));
+        let parentState = parentPath.length > 0 ? _.get(this.state, parentPath) : this.state;
+        Object.assign(parentStateChange, parentState);
         parentStateChange[_.last(path)!] = stateChange;
 
         this.mergeState(action, duration, parentPath, parentStateChange);
@@ -155,12 +178,15 @@ export class Store<S> {
         return new StoreObserver(this.stateChanges);
     }
 
-    getChild<C>(fn: (store: S) => C): Store<C> {
-        // return {
-        //     mutate: fn(this.mutate) as any as C,
-        //     state: null as any as State<C>
-        // };
-        return null as any;
+    getView<C>(fn: (store: S) => C): Store<C> {
+        let viewMutators = fn(this.mutate);
+        const view = new Store<C>(viewMutators);
+
+        console.log("viewMutators", JSON.stringify(viewMutators));
+        let viewState = (viewMutators as any)[mutatorsToStateSymbol];
+        console.log("viewState", viewState);
+
+        return view;
     }
 
 }

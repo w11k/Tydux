@@ -27,7 +27,7 @@ describe("DevTools", function () {
             counter: new CounterStateGroup(new MyState())
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
 
         store.stateChanges.subscribe((event) => {

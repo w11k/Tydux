@@ -29,7 +29,7 @@ describe("StoreObserver", function () {
             counter: new CounterStateGroup(state)
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         let collected = collect(store.unbounded().select());
         store.mutate.counter.increment();
@@ -56,7 +56,7 @@ describe("StoreObserver", function () {
             counter: new CounterStateGroup(state)
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         let collected = collect(store.unbounded()
             .select(s => s.counter.count));
@@ -84,7 +84,7 @@ describe("StoreObserver", function () {
             counter: new CounterStateGroup(new MyState())
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         let collected = collect(store.unbounded()
             .selectNonNil(s => s.counter.count));
@@ -121,7 +121,7 @@ describe("StoreObserver", function () {
             counter: new CounterStateGroup(new MyState())
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         let collected = collect(store.unbounded()
             .select(s => [s.counter.a, s.counter.b]));
@@ -156,7 +156,7 @@ describe("StoreObserver", function () {
             counter: new CounterStateGroup(new MyState())
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         let collected = collect(store.unbounded()
             .select(s => {
@@ -207,7 +207,7 @@ describe("StoreObserver", function () {
             childs: new CounterStateGroup(new MyState())
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         let collectChild1 = collect(store.unbounded()
             .select(s => s.childs.root.child1));
@@ -244,7 +244,7 @@ describe("StoreObserver", function () {
             counter: new CounterStateGroup(state)
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
@@ -292,7 +292,7 @@ describe("StoreObserver", function () {
             counter: new CounterStateGroup(state)
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         const events: any[] = [];
 

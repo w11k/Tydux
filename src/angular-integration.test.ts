@@ -8,8 +8,6 @@ describe("Angular integration", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    // afterEach(() => resetTydux());
-
     it("completes all subscriptions when the component gets destroyed", function () {
 
         const state = {
@@ -26,7 +24,7 @@ describe("Angular integration", function () {
             counter: new CounterStateGroup(state)
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         const events: any[] = [];
 

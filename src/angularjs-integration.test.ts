@@ -8,8 +8,6 @@ describe("AngularJS integration", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    // afterEach(() => resetTydux());
-
     it("wraps the delivery of events in scope.$apply()", function () {
 
         const state = {
@@ -26,7 +24,7 @@ describe("AngularJS integration", function () {
             counter: new CounterStateGroup(state)
         };
 
-        const store = new Store(rootStateGroup);
+        const store = Store.create(rootStateGroup);
 
         const events: any[] = [];
 
