@@ -36,8 +36,7 @@ export class StateChangeEvent<S> {
 
 type MergeStateFn = (action: Action, duration: number | null, path: string[], stateChange: any) => void;
 
-// const mutatorsToStateSymbol = Symbol("mutators-to-state-symbol");
-const mutatorsToStateSymbol = "__mutators-to-state-symbol__";
+const mutatorsToStateSymbol = "[__mutators-to-state__]";
 
 function instrumentStructure(mergeState: MergeStateFn,
                              stateGetter: () => any,
@@ -45,28 +44,39 @@ function instrumentStructure(mergeState: MergeStateFn,
                              path: string[],
                              structure: any) {
 
-
-
     _.forIn(structure, (child, key) => {
         const localPath = _.cloneDeep(path);
         localPath.push(key);
 
-        _.set(mutatorsStructure, localPath, child);
+        if (child instanceof StateMutators) {
+            _.set(stateGetter(), localPath, (child as any).initialState);
+            delete (child as any).initialState;
+            instrumentMutators(mergeState, stateGetter, localPath, child);
+            _.set(mutatorsStructure, localPath, child);
+        } else {
+            _.set(stateGetter(), localPath, child);
+        }
 
         if (_.isPlainObject(child)) {
-            _.set(mutatorsStructure, [...localPath, mutatorsToStateSymbol], 123);
-
-
             instrumentStructure(mergeState, stateGetter, mutatorsStructure, localPath, child);
         } else {
-            if (child instanceof StateMutators) {
-                _.set(stateGetter(), localPath, (child as any).initialState);
-                instrumentMutators(mergeState, stateGetter, localPath, child);
-            } else {
-                _.set(stateGetter(), localPath, child);
-            }
+
         }
     });
+
+    const currentMutatorsLevel = path.length > 0
+        ? _.get(mutatorsStructure, path)
+        : mutatorsStructure;
+    Object.defineProperty(currentMutatorsLevel, mutatorsToStateSymbol, {
+        configurable: false,
+        enumerable: false,
+        get: () => {
+            return () => path.length > 0
+                ? _.get(stateGetter(), path)
+                : stateGetter();
+        }
+    });
+
 }
 
 function instrumentMutators(mergeState: MergeStateFn,
@@ -183,8 +193,8 @@ export class Store<S> {
         const view = new Store<C>(viewMutators);
 
         console.log("viewMutators", JSON.stringify(viewMutators));
-        let viewState = (viewMutators as any)[mutatorsToStateSymbol];
-        console.log("viewState", viewState);
+        let viewStateFn = (viewMutators as any)[mutatorsToStateSymbol];
+        console.log("viewStateFn", viewStateFn);
 
         return view;
     }
