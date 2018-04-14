@@ -43,12 +43,7 @@ export function enableDevToolsForStore(store: Store<any>) {
 
     store.stateChanges
         .subscribe(event => {
-            const meta = event.duration !== null ? ` (${event.duration}ms)` : "";
-            const action = {
-                ...event.action,
-                "type": event.action.type + meta
-            };
-            devTools.send(action, event.state);
+            devTools.send(event.action, event.state);
         });
 
 }

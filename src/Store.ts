@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Operator} from "rxjs/Operator";
+import {filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {StoreObserver} from "./StoreObserver";
@@ -21,6 +22,13 @@ export type State<S> = {
     [K in keyof S]: S[K] extends StateMutators<any> ? MutatorsState<S[K]> : State<S[K]>;
 };
 
+type MergeStateFn = (action: Action,
+                     currentState: any,
+                     pathOrigin: string,
+                     path: string[],
+                     stateChange: any,
+                     stateSetter: (event: StateChangeEvent<any>) => void) => void;
+
 export interface Action {
     [param: string]: any;
 
@@ -30,43 +38,79 @@ export interface Action {
 export class StateChangeEvent<S> {
     constructor(readonly action: Action,
                 readonly state: S,
-                public duration: number | null) {
+                readonly changeOriginPath: string) {
     }
 }
 
-type MergeStateFn = (action: Action, duration: number | null, path: string[], stateChange: any) => void;
-
 const mutatorsToStateSymbol = "[__mutators-to-state__]";
+const mutatorsLevelPathSymbol = "[__mutators-level-path__]";
+
+function mergeState(action: Action,
+                    currentState: any,
+                    changeOriginPath: string,
+                    path: string[],
+                    stateChange: any,
+                    stateSetter: (event: StateChangeEvent<any>) => void): void {
+
+    if (path.length === 0) {
+        stateSetter(new StateChangeEvent(action, stateChange, changeOriginPath));
+        return;
+    }
+
+    const parentStateChange: any = {};
+    let parentPath = path.slice(0, path.length - 1);
+    let parentState = parentPath.length > 0
+        ? _.get(currentState, parentPath)
+        : currentState;
+    Object.assign(parentStateChange, parentState);
+    parentStateChange[_.last(path)!] = stateChange;
+
+    return mergeState(
+        action,
+        currentState,
+        changeOriginPath,
+        parentPath,
+        parentStateChange,
+        stateSetter);
+}
 
 function instrumentStructure(mergeState: MergeStateFn,
+                             stateSetter: (event: StateChangeEvent<any>) => void,
                              stateGetter: () => any,
-                             mutatorsStructure: any,
+                             rootMutatorsStructure: any,
                              path: string[],
-                             structure: any) {
+                             structureToMerge: any) {
 
-    _.forIn(structure, (child, key) => {
+    _.forIn(structureToMerge, (child, key) => {
         const localPath = _.cloneDeep(path);
         localPath.push(key);
 
         if (child instanceof StateMutators) {
             _.set(stateGetter(), localPath, (child as any).initialState);
             delete (child as any).initialState;
-            instrumentMutators(mergeState, stateGetter, localPath, child);
-            _.set(mutatorsStructure, localPath, child);
+            instrumentMutators(mergeState, stateSetter, stateGetter, localPath, child);
+            _.set(rootMutatorsStructure, localPath, child);
         } else {
             _.set(stateGetter(), localPath, child);
         }
 
         if (_.isPlainObject(child)) {
-            instrumentStructure(mergeState, stateGetter, mutatorsStructure, localPath, child);
+            instrumentStructure(
+                mergeState,
+                stateSetter,
+                stateGetter,
+                rootMutatorsStructure,
+                localPath,
+                child);
         } else {
 
         }
     });
 
     const currentMutatorsLevel = path.length > 0
-        ? _.get(mutatorsStructure, path)
-        : mutatorsStructure;
+        ? _.get(rootMutatorsStructure, path)
+        : rootMutatorsStructure;
+
     Object.defineProperty(currentMutatorsLevel, mutatorsToStateSymbol, {
         configurable: false,
         enumerable: false,
@@ -77,10 +121,17 @@ function instrumentStructure(mergeState: MergeStateFn,
         }
     });
 
+    Object.defineProperty(currentMutatorsLevel, mutatorsLevelPathSymbol, {
+        configurable: false,
+        enumerable: true,
+        value: path.join(".")
+    });
+
 }
 
 function instrumentMutators(mergeState: MergeStateFn,
-                            stateGetter: () => any,
+                            stateSetter: (event: StateChangeEvent<State<any>>) => void,
+                            stateGetter: () => State<any>,
                             path: string[],
                             mutators: any) {
 
@@ -101,15 +152,21 @@ function instrumentMutators(mergeState: MergeStateFn,
 
             const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
             const result = mutatorFn.apply(tempThis, args);
-            const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : null;
-            const actionName = path.join(".") + "." + mutatorName;
+            let actionName = path.join(".") + "." + mutatorName;
+
+            if (tyduxDevelopmentModeEnabled) {
+                const duration = Date.now() - start;
+                actionName += ` (${duration}ms)`;
+            }
 
             mergeState(
                 createActionFromArguments(actionName, mutatorFn, args),
-                duration,
+                storeState,
+                path.join("."),
                 path,
-                tempThis.state
-            );
+                tempThis.state,
+                stateSetter);
+
             return result;
         };
 
@@ -119,65 +176,52 @@ function instrumentMutators(mergeState: MergeStateFn,
 export class Store<S> {
 
     static create<S>(structure: S): Store<S> {
+        const stateContainer = {
+            state: {} as State<S>
+        };
+
+        const stateChangesSubject = new ReplaySubject<StateChangeEvent<State<S>>>(1);
+
+        const stateGetter = () => stateContainer.state;
+        const stateSetter = (event: StateChangeEvent<State<S>>) => {
+            stateContainer.state = event.state;
+            stateChangesSubject.next(event);
+        };
 
         const mutatorsStructure: any = {};
 
-        const store = new Store<S>(mutatorsStructure);
-        store._state = {} as any;
-
-        instrumentStructure(
-            store.mergeState.bind(store),
-            () => store.state,
-            store.mutate,
-            [],
-            structure
+        const store = new Store<S>(
+            mutatorsStructure,
+            stateChangesSubject.asObservable(),
+            stateGetter
         );
 
-        store.setState({type: "@@INIT"}, null, store.state, true);
+        instrumentStructure(
+            mergeState,
+            stateSetter,
+            stateGetter,
+            store.mutate,
+            [],
+            structure);
+
+        mergeState(
+            {type: "@@INIT"},
+            {},
+            "",
+            [],
+            stateContainer.state,
+            stateSetter);
 
         return store;
     }
 
-    readonly mutate!: S;
-
-    private _state!: State<S>;
-
     get state(): Readonly<State<S>> {
-        return this._state;
+        return this.stateGetter();
     }
 
-    private readonly stateChangesSubject = new ReplaySubject<StateChangeEvent<State<S>>>(1);
-
-    readonly stateChanges: Observable<StateChangeEvent<State<S>>> = this.stateChangesSubject.asObservable();
-
-    private constructor(mutatorsStructure: any) {
-        this.mutate = mutatorsStructure;
-        // this.setState({type: "@@INIT"}, null, this.state, true);
-    }
-
-
-    private mergeState(action: Action, duration: number | null, path: string[], stateChange: any) {
-
-        if (path.length === 0) {
-            this.setState(action, duration, stateChange);
-            return;
-        }
-
-        const parentStateChange: any = {};
-        let parentPath = path.slice(0, path.length - 1);
-        let parentState = parentPath.length > 0 ? _.get(this.state, parentPath) : this.state;
-        Object.assign(parentStateChange, parentState);
-        parentStateChange[_.last(path)!] = stateChange;
-
-        this.mergeState(action, duration, parentPath, parentStateChange);
-    }
-
-    private setState(action: Action, duration: number | null, state: State<S>, force = false) {
-        if (force || state !== this._state) {
-            this._state = state;
-            const event = new StateChangeEvent(action, state, duration);
-            this.stateChangesSubject.next(event);
-        }
+    private constructor(readonly mutate: S,
+                        readonly stateChanges: Observable<StateChangeEvent<State<S>>>,
+                        private readonly stateGetter: () => State<S>) {
     }
 
     bounded(operator: Operator<StateChangeEvent<State<S>>, StateChangeEvent<State<S>>>): StoreObserver<State<S>> {
@@ -190,195 +234,24 @@ export class Store<S> {
 
     getView<C>(fn: (store: S) => C): Store<C> {
         let viewMutators = fn(this.mutate);
-        const view = new Store<C>(viewMutators);
 
-        console.log("viewMutators", JSON.stringify(viewMutators));
-        let viewStateFn = (viewMutators as any)[mutatorsToStateSymbol];
-        console.log("viewStateFn", viewStateFn);
+        const viewStateFn = (viewMutators as any)[mutatorsToStateSymbol];
+        const viewPath = (viewMutators as any)[mutatorsLevelPathSymbol];
 
-        return view;
+        return new Store<C>(
+            viewMutators,
+            this.stateChanges.pipe(
+                filter(event => {
+                    return _.startsWith(event.changeOriginPath, viewPath);
+                }),
+                map(event => {
+                    return new StateChangeEvent(
+                        event.action,
+                        viewStateFn(),
+                        event.changeOriginPath);
+                })
+            ) as any,
+            viewStateFn);
     }
 
 }
-
-/*
-import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
-import {Operator} from "rxjs/Operator";
-import {ReplaySubject} from "rxjs/ReplaySubject";
-import {deepFreeze} from "./deep-freeze";
-import {isTyduxDevelopmentModeEnabled} from "./development";
-import {mutatorHasInstanceMembers} from "./error-messages";
-import {addStoreToGlobalState} from "./global-state";
-import {Mutators} from "./mutators";
-import {StoreObserver} from "./StoreObserver";
-import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
-
-export interface Action {
-    [param: string]: any;
-
-    type: string;
-}
-
-export class MutatorEvent<S> {
-    constructor(readonly storeId: string,
-                readonly action: Action,
-                readonly state: S,
-                public duration?: number) {
-    }
-}
-
-export function failIfInstanceMembersExistExceptState(obj: any) {
-    let members = _.keys(obj);
-    let idxOfState = members.indexOf("state");
-    if (idxOfState >= 0) {
-        members.splice(idxOfState, 1);
-    }
-    if (members.length > 0) {
-        throw new Error(mutatorHasInstanceMembers + ": " + members.join(","));
-    }
-}
-
-export function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): Action {
-    const fnString = fn.toString();
-    const argsString = fnString.substring(fnString.indexOf("(") + 1, fnString.indexOf(")"));
-    const argNames = argsString.split(",").map((a: string) => a.trim());
-
-    const action: any = {};
-    for (let i = 0; i < args.length; i++) {
-        const arg = "[" + i + "] " + argNames[i];
-        action[arg] = args[i];
-    }
-    action.type = actionTypeName;
-
-    return action;
-}
-
-export abstract class Store<M extends Mutators<S>, S> {
-
-    private _state: S = undefined as any;
-
-    private mutatorCallStackCount = 0;
-
-    private readonly mutatorEventsSubject = new ReplaySubject<MutatorEvent<S>>(1);
-
-    protected readonly mutate: M;
-
-    readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject;
-
-    constructor(readonly storeId: string,
-                mutatorInstance: Mutators<S>,
-                state: S) {
-
-        this.processMutator(new MutatorEvent(
-            this.storeId,
-            {type: "@@INIT"},
-            state
-        ));
-
-        failIfInstanceMembersExistExceptState(mutatorInstance);
-
-        this.mutate = this.createMutatorsProxy(mutatorInstance);
-        delete (this.mutate as any).state;
-
-        addStoreToGlobalState(this);
-    }
-
-    get state(): Readonly<S> {
-        return this._state;
-    }
-
-    bounded(operator: Operator<MutatorEvent<S>, MutatorEvent<S>>): StoreObserver<S> {
-        return new StoreObserver(this.mutatorEvents$, operator);
-    }
-
-    unbounded(): StoreObserver<S> {
-        return new StoreObserver(this.mutatorEvents$);
-    }
-
-    private processMutator(mutatorEvent: MutatorEvent<S>) {
-        this.setState(mutatorEvent.state);
-        this.mutatorEventsSubject.next(mutatorEvent);
-    }
-
-    private setState(state: S) {
-        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
-    }
-
-    private mutateState(fn: (state: S, isRootCall: boolean) => MutatorEvent<S>): void {
-        let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
-
-        const isRoot = this.mutatorCallStackCount === 0;
-        this.mutatorCallStackCount++;
-
-        let mutatorEvent: MutatorEvent<S>;
-        try {
-            const stateProxy = createProxy(this.state);
-
-            const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
-            mutatorEvent = fn(stateProxy, isRoot);
-            if (tyduxDevelopmentModeEnabled) {
-                mutatorEvent.duration = Date.now() - start;
-            }
-        } finally {
-            this.mutatorCallStackCount--;
-        }
-
-        if (isRoot) {
-            this.processMutator(mutatorEvent);
-        }
-    }
-
-    private createMutatorsProxy(mutatorsInstance: any): M {
-        const proxyObj = {} as any;
-        const proxyProto = {} as any;
-        Object.setPrototypeOf(proxyObj, proxyProto);
-
-        for (let mutatorName of _.functionsIn(mutatorsInstance)) {
-            const mutatorFn = mutatorsInstance[mutatorName];
-            const self = this;
-
-            proxyProto[mutatorName] = function () {
-                Object.setPrototypeOf(proxyProto, {});
-
-                const args = arguments;
-                let result: any = undefined;
-
-                self.mutateState((oldState, isRootCall) => {
-                    // call mutator
-                    let thisObj = this;
-                    if (isRootCall) {
-                        proxyObj.state = oldState;
-                        const tempThisObj = {};
-                        Object.setPrototypeOf(tempThisObj, proxyObj);
-                        thisObj = tempThisObj;
-                    }
-
-                    result = mutatorFn.apply(thisObj, args);
-                    failIfNotUndefined(result);
-                    failIfInstanceMembersExistExceptState(thisObj);
-                    proxyObj.state = thisObj.state;
-
-                    const mutatorEvent = new MutatorEvent(
-                        self.storeId,
-                        createActionFromArguments(mutatorName, mutatorFn, args),
-                        proxyObj.state
-                    );
-
-                    if (isRootCall) {
-                        Object.setPrototypeOf(thisObj, createFailingProxy());
-                    }
-
-                    return mutatorEvent;
-                });
-
-                return result;
-            };
-        }
-
-        return proxyObj;
-    }
-
-}
-*/
-
