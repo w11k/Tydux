@@ -1,7 +1,8 @@
 import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateMutators, Store} from "./Store";
+import {StateMutators} from "./mutators";
+import {Store} from "./Store";
 
 
 describe("Angular integration", function () {

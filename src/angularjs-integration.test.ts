@@ -1,7 +1,8 @@
 import {assert} from "chai";
 import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateMutators, Store} from "./Store";
+import {StateMutators} from "./mutators";
+import {Store} from "./Store";
 
 
 describe("AngularJS integration", function () {

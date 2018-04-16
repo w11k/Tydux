@@ -1,7 +1,8 @@
 import {assert} from "chai";
 import {map} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateMutators, Store} from "./Store";
+import {StateMutators} from "./mutators";
+import {Store} from "./Store";
 import {collect} from "./test-utils";
 
 

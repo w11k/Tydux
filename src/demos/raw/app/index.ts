@@ -1,3 +1,4 @@
+/*
 import "rxjs/add/operator/first";
 import {enableDevToolsForStore} from "../../../dev-tools";
 import {enableTyduxDevelopmentMode} from "../../../development";
@@ -100,3 +101,4 @@ store.unbounded().select()
     .subscribe(() => {
         renderApp();
     });
+*/

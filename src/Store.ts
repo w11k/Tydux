@@ -3,24 +3,39 @@ import {Observable} from "rxjs/Observable";
 import {Operator} from "rxjs/Operator";
 import {filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
-import {isTyduxDevelopmentModeEnabled} from "./development";
+import {DeferredStateMutators} from "./DeferredStateMutators";
+import {isLogMutatorDurationEnabled, isTyduxDevelopmentModeEnabled} from "./development";
+import {MutatorState, StateMutators} from "./mutators";
 import {StoreObserver} from "./StoreObserver";
 import {createActionFromArguments, createProxy} from "./utils";
 
-export class StateMutators<S> {
 
-    protected state!: S;
+export type MountedDeferredMutatorState<M> = M extends MountedDeferredStateMutators<infer S> ? MutatorState<S> : never;
 
-    // noinspection JSUnusedLocalSymbols: accessed during Store initialization
-    constructor(private initialState: S) {
-    }
-}
-
-export type MutatorsState<G> = G extends StateMutators<infer S> ? Readonly<S> : never;
-
-export type State<S> = {
-    [K in keyof S]: S[K] extends StateMutators<any> ? MutatorsState<S[K]> : State<S[K]>;
+export type State<R> = {
+    [K in keyof R]
+    : R[K] extends StateMutators<any> ? MutatorState<R[K]>
+        : R[K] extends MountedDeferredStateMutators<any> ? MountedDeferredMutatorState<R[K]>
+        : State<R[K]>;
 };
+
+export type MountedDeferredStateMutators<S> = {
+    resolve(): void;
+    get(): Promise<S>;
+};
+
+export type MountedDeferredStateMutatorsType<D> = D extends DeferredStateMutators<infer M> ? MountedDeferredStateMutators<M> : never;
+
+
+export type MutatorsTree<R> = {
+    [K in keyof R]
+    : R[K] extends DeferredStateMutators<any> ? MountedDeferredStateMutatorsType<R[K]>
+        : R[K] extends StateMutators<any> ? R[K]
+        : R[K] extends object ? MutatorsTree<R[K]>
+        : R[K];
+};
+
+//////////////////////////////////////////
 
 type MergeStateFn = (action: Action,
                      currentState: any,
@@ -74,18 +89,22 @@ function mergeState(action: Action,
         stateSetter);
 }
 
-function instrumentStructure(mergeState: MergeStateFn,
-                             stateSetter: (event: StateChangeEvent<any>) => void,
-                             stateGetter: () => any,
-                             rootMutatorsStructure: any,
-                             path: string[],
-                             structureToMerge: any) {
+function instrumentTree(mergeState: MergeStateFn,
+                        stateSetter: (event: StateChangeEvent<any>) => void,
+                        stateGetter: () => any,
+                        rootMutatorsStructure: any,
+                        path: string[],
+                        structureToMerge: any) {
 
     _.forIn(structureToMerge, (child, key) => {
         const localPath = _.cloneDeep(path);
         localPath.push(key);
 
-        if (child instanceof StateMutators) {
+        if (child instanceof DeferredStateMutators) {
+            _.set(stateGetter(), localPath, undefined);
+            _.set(rootMutatorsStructure, localPath, child.mount(m =>
+                instrumentMutators(mergeState, stateSetter, stateGetter, localPath, m)));
+        } else if (child instanceof StateMutators) {
             _.set(stateGetter(), localPath, (child as any).initialState);
             delete (child as any).initialState;
             instrumentMutators(mergeState, stateSetter, stateGetter, localPath, child);
@@ -95,7 +114,7 @@ function instrumentStructure(mergeState: MergeStateFn,
         }
 
         if (_.isPlainObject(child)) {
-            instrumentStructure(
+            instrumentTree(
                 mergeState,
                 stateSetter,
                 stateGetter,
@@ -123,7 +142,7 @@ function instrumentStructure(mergeState: MergeStateFn,
 
     Object.defineProperty(currentMutatorsLevel, mutatorsLevelPathSymbol, {
         configurable: false,
-        enumerable: true,
+        enumerable: false,
         value: path.join(".")
     });
 
@@ -139,7 +158,7 @@ function instrumentMutators(mergeState: MergeStateFn,
         const mutatorFn = mutators[mutatorName];
 
         mutators[mutatorName] = function () {
-            const tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
+            const logMutatorDuration = isTyduxDevelopmentModeEnabled() && isLogMutatorDurationEnabled();
 
             const args = arguments;
             const tempThis: any = {};
@@ -150,11 +169,11 @@ function instrumentMutators(mergeState: MergeStateFn,
 
             Object.setPrototypeOf(tempThis, mutators);
 
-            const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
+            const start = logMutatorDuration ? Date.now() : 0;
             const result = mutatorFn.apply(tempThis, args);
             let actionName = path.join(".") + "." + mutatorName;
 
-            if (tyduxDevelopmentModeEnabled) {
+            if (logMutatorDuration) {
                 const duration = Date.now() - start;
                 actionName += ` (${duration}ms)`;
             }
@@ -173,36 +192,36 @@ function instrumentMutators(mergeState: MergeStateFn,
     }
 }
 
-export class Store<S> {
+export class Store<M> {
 
-    static create<S>(structure: S): Store<S> {
+    static create<P>(tree: P): Store<MutatorsTree<P>> {
         const stateContainer = {
-            state: {} as State<S>
+            state: {} as State<MutatorsTree<P>>
         };
 
-        const stateChangesSubject = new ReplaySubject<StateChangeEvent<State<S>>>(1);
+        const stateChangesSubject = new ReplaySubject<StateChangeEvent<State<MutatorsTree<P>>>>(1);
 
         const stateGetter = () => stateContainer.state;
-        const stateSetter = (event: StateChangeEvent<State<S>>) => {
+        const stateSetter = (event: StateChangeEvent<State<MutatorsTree<P>>>) => {
             stateContainer.state = event.state;
             stateChangesSubject.next(event);
         };
 
         const mutatorsStructure: any = {};
 
-        const store = new Store<S>(
+        const store = new Store<MutatorsTree<P>>(
             mutatorsStructure,
             stateChangesSubject.asObservable(),
             stateGetter
         );
 
-        instrumentStructure(
+        instrumentTree(
             mergeState,
             stateSetter,
             stateGetter,
             store.mutate,
             [],
-            structure);
+            tree);
 
         mergeState(
             {type: "@@INIT"},
@@ -215,30 +234,30 @@ export class Store<S> {
         return store;
     }
 
-    get state(): Readonly<State<S>> {
+    get state(): Readonly<State<M>> {
         return this.stateGetter();
     }
 
-    private constructor(readonly mutate: S,
-                        readonly stateChanges: Observable<StateChangeEvent<State<S>>>,
-                        private readonly stateGetter: () => State<S>) {
+    private constructor(readonly mutate: M,
+                        readonly stateChanges: Observable<StateChangeEvent<State<M>>>,
+                        private readonly stateGetter: () => State<M>) {
     }
 
-    bounded(operator: Operator<StateChangeEvent<State<S>>, StateChangeEvent<State<S>>>): StoreObserver<State<S>> {
+    bounded(operator: Operator<StateChangeEvent<State<M>>, StateChangeEvent<State<M>>>): StoreObserver<State<M>> {
         return new StoreObserver(this.stateChanges, operator);
     }
 
-    unbounded(): StoreObserver<State<S>> {
+    unbounded(): StoreObserver<State<M>> {
         return new StoreObserver(this.stateChanges);
     }
 
-    getView<C>(fn: (store: S) => C): Store<C> {
+    getView<V>(fn: (store: M) => V): Store<V> {
         let viewMutators = fn(this.mutate);
 
         const viewStateFn = (viewMutators as any)[mutatorsToStateSymbol];
         const viewPath = (viewMutators as any)[mutatorsLevelPathSymbol];
 
-        return new Store<C>(
+        return new Store<V>(
             viewMutators,
             this.stateChanges.pipe(
                 filter(event => {

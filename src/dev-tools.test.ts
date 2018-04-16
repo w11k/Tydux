@@ -1,10 +1,14 @@
 import {assert} from "chai";
-import {enableTyduxDevelopmentMode} from "./development";
-import {StateMutators, Store} from "./Store";
+import {enableLogMutatorDuration, enableTyduxDevelopmentMode} from "./development";
+import {StateMutators} from "./mutators";
+import {Store} from "./Store";
 
 describe("DevTools", function () {
 
-    beforeEach(() => enableTyduxDevelopmentMode());
+    beforeEach(() => {
+        enableTyduxDevelopmentMode();
+        enableLogMutatorDuration(false);
+    });
 
     it("events contain the store and mutators name", function (done) {
         const eventActionTypes: string[] = [];

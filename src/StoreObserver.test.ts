@@ -5,7 +5,8 @@ import {takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs/Subject";
 import {Subscriber} from "rxjs/Subscriber";
 import {enableTyduxDevelopmentMode} from "./development";
-import {State, StateChangeEvent, StateMutators, Store} from "./Store";
+import {StateMutators} from "./mutators";
+import {State, StateChangeEvent, Store} from "./Store";
 import {collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
