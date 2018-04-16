@@ -5,17 +5,17 @@ import {filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {DeferredStateMutators} from "./DeferredStateMutators";
 import {isLogMutatorDurationEnabled, isTyduxDevelopmentModeEnabled} from "./development";
-import {MutatorState, StateMutators} from "./mutators";
+import {MutatorStateTypeCheck, StateMutators} from "./mutators";
 import {StoreObserver} from "./StoreObserver";
 import {createActionFromArguments, createProxy} from "./utils";
 
 
-export type MountedDeferredMutatorState<M> = M extends MountedDeferredStateMutators<infer S> ? MutatorState<S> : never;
+export type MountedDeferredMutatorStateTypeCheck<M> = M extends MountedDeferredStateMutators<infer S> ? MutatorStateTypeCheck<S> : never;
 
 export type State<R> = {
     [K in keyof R]
-    : R[K] extends StateMutators<any> ? MutatorState<R[K]>
-        : R[K] extends MountedDeferredStateMutators<any> ? MountedDeferredMutatorState<R[K]>
+    : R[K] extends StateMutators<any> ? MutatorStateTypeCheck<R[K]>
+        : R[K] extends MountedDeferredStateMutators<any> ? MountedDeferredMutatorStateTypeCheck<R[K]>
         : State<R[K]>;
 };
 
@@ -24,12 +24,12 @@ export type MountedDeferredStateMutators<S> = {
     get(): Promise<S>;
 };
 
-export type MountedDeferredStateMutatorsType<D> = D extends DeferredStateMutators<infer M> ? MountedDeferredStateMutators<M> : never;
+export type MountedDeferredStateMutatorsTypeCheck<D> = D extends DeferredStateMutators<infer M> ? MountedDeferredStateMutators<M> : never;
 
 
 export type MutatorsTree<R> = {
     [K in keyof R]
-    : R[K] extends DeferredStateMutators<any> ? MountedDeferredStateMutatorsType<R[K]>
+    : R[K] extends DeferredStateMutators<any> ? MountedDeferredStateMutatorsTypeCheck<R[K]>
         : R[K] extends StateMutators<any> ? R[K]
         : R[K] extends object ? MutatorsTree<R[K]>
         : R[K];

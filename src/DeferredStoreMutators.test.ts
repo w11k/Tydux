@@ -51,9 +51,11 @@ describe("DeferredStateMutators", function () {
 
         console.log("store.state", store.state);
         console.log("store.state.child3.child4.count", store.state.child3.child4.count);
-        console.log("store.state.child1.child2!.count", store.state.child1.child2.count);
 
         setTimeout(() => {
+
+            console.log("store.state.child1.child2!.count", store.state.child1.child2.count);
+
             done();
         }, 1000);
 

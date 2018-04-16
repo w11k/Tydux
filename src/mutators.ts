@@ -6,4 +6,4 @@ export class StateMutators<S> {
     constructor(private initialState: S) {
     }
 }
-export type MutatorState<G> = G extends StateMutators<infer S> ? Readonly<S> : never;
+export type MutatorStateTypeCheck<G> = G extends StateMutators<infer S> ? Readonly<S> : never;
