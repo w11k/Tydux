@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import {enableLogMutatorDuration, enableTyduxDevelopmentMode} from "./development";
-import {StateMutators} from "./mutators";
+import {Mutator} from "./mutators";
 import {Store} from "./Store";
 
 describe("DevTools", function () {
@@ -17,7 +17,7 @@ describe("DevTools", function () {
             count = 0;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             increment() {
                 this.state.count++;
             }

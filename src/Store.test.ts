@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {map} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateMutators} from "./mutators";
+import {Mutator} from "./mutators";
 import {Store} from "./Store";
 import {collect} from "./test-utils";
 
@@ -15,7 +15,7 @@ describe("Store", function () {
             count = 1;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
@@ -35,7 +35,7 @@ describe("Store", function () {
             count = 0;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
@@ -63,7 +63,7 @@ describe("Store", function () {
             count = 0;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
@@ -98,7 +98,7 @@ describe("Store", function () {
             count = 0;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }

@@ -5,8 +5,8 @@ import {takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs/Subject";
 import {Subscriber} from "rxjs/Subscriber";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateMutators} from "./mutators";
-import {State, StateChangeEvent, Store} from "./Store";
+import {Mutator} from "./mutators";
+import {StateTree, StateChangeEvent, Store} from "./Store";
 import {collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
@@ -20,7 +20,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateMutators<typeof state> {
+        class CounterStateGroup extends Mutator<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -47,7 +47,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateMutators<typeof state> {
+        class CounterStateGroup extends Mutator<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -71,7 +71,7 @@ describe("StoreObserver", function () {
             count?: number;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             increment() {
                 this.state.count = !_.isNil(this.state.count) ? this.state.count + 1 : 1;
             }
@@ -107,7 +107,7 @@ describe("StoreObserver", function () {
             c = 100;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             incrementAB() {
                 this.state.a++;
                 this.state.b++;
@@ -142,7 +142,7 @@ describe("StoreObserver", function () {
             c = 100;
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             incrementAB() {
                 this.state.a++;
                 this.state.b++;
@@ -191,7 +191,7 @@ describe("StoreObserver", function () {
             };
         }
 
-        class CounterStateGroup extends StateMutators<MyState> {
+        class CounterStateGroup extends Mutator<MyState> {
             increment1() {
                 this.state.root = {
                     child1: {
@@ -235,7 +235,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateMutators<typeof state> {
+        class CounterStateGroup extends Mutator<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -249,8 +249,8 @@ describe("StoreObserver", function () {
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
-            (subscriber: Subscriber<StateChangeEvent<State<typeof rootStateGroup>>>,
-             source: Observable<StateChangeEvent<State<typeof rootStateGroup>>>) => {
+            (subscriber: Subscriber<StateChangeEvent<StateTree<typeof rootStateGroup>>>,
+             source: Observable<StateChangeEvent<StateTree<typeof rootStateGroup>>>) => {
                 const sub = source
                     .pipe(
                         takeUntil(stopTrigger)
@@ -283,7 +283,7 @@ describe("StoreObserver", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateMutators<typeof state> {
+        class CounterStateGroup extends Mutator<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -298,8 +298,8 @@ describe("StoreObserver", function () {
         const events: any[] = [];
 
         const operator = operatorFactory(
-            (subscriber: Subscriber<StateChangeEvent<State<typeof rootStateGroup>>>,
-             source: Observable<StateChangeEvent<State<typeof rootStateGroup>>>) => {
+            (subscriber: Subscriber<StateChangeEvent<StateTree<typeof rootStateGroup>>>,
+             source: Observable<StateChangeEvent<StateTree<typeof rootStateGroup>>>) => {
                 const subscription = source.subscribe(
                     val => {
                         events.push("pre-" + val.state.counter.count);

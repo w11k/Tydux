@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {StateMutators} from "./mutators";
+import {Mutator} from "./mutators";
 import {Store} from "./Store";
 
 
@@ -15,7 +15,7 @@ describe("AngularJS integration", function () {
             count: 0
         };
 
-        class CounterStateGroup extends StateMutators<typeof state> {
+        class CounterStateGroup extends Mutator<typeof state> {
             increment() {
                 this.state.count++;
             }

@@ -3,36 +3,38 @@ import {Observable} from "rxjs/Observable";
 import {Operator} from "rxjs/Operator";
 import {filter, map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
-import {DeferredStateMutators} from "./DeferredStateMutators";
+import {DeferredMutator} from "./DeferredMutator";
 import {isLogMutatorDurationEnabled, isTyduxDevelopmentModeEnabled} from "./development";
-import {MutatorStateTypeCheck, StateMutators} from "./mutators";
+import {Mutator, MutatorState} from "./mutators";
 import {StoreObserver} from "./StoreObserver";
 import {createActionFromArguments, createProxy} from "./utils";
 
 
-export type MountedDeferredMutatorStateTypeCheck<M> = M extends MountedDeferredStateMutators<infer S> ? MutatorStateTypeCheck<S> : never;
+export type MountedDeferredMutatorState<M> =
+    M extends MountedDeferredMutator<infer S> ? MutatorState<S> : never;
 
-export type State<R> = {
-    [K in keyof R]
-    : R[K] extends StateMutators<any> ? MutatorStateTypeCheck<R[K]>
-        : R[K] extends MountedDeferredStateMutators<any> ? MountedDeferredMutatorStateTypeCheck<R[K]>
-        : State<R[K]>;
-};
-
-export type MountedDeferredStateMutators<S> = {
-    resolve(): void;
+export type MountedDeferredMutator<S> = {
+    resolve(): Promise<S>;
     get(): Promise<S>;
 };
 
-export type MountedDeferredStateMutatorsTypeCheck<D> = D extends DeferredStateMutators<infer M> ? MountedDeferredStateMutators<M> : never;
+export type DeferredMutatorToMountedDeferredMutator<D> =
+    D extends DeferredMutator<infer M> ? MountedDeferredMutator<M> : never;
 
 
-export type MutatorsTree<R> = {
+export type MutatorTree<R> = {
     [K in keyof R]
-    : R[K] extends DeferredStateMutators<any> ? MountedDeferredStateMutatorsTypeCheck<R[K]>
-        : R[K] extends StateMutators<any> ? R[K]
-        : R[K] extends object ? MutatorsTree<R[K]>
-        : R[K];
+    : R[K] extends DeferredMutator<any> ? DeferredMutatorToMountedDeferredMutator<R[K]>
+        : R[K] extends Mutator<any> ? R[K]
+        : R[K] extends object ? MutatorTree<R[K]>
+        : never;
+};
+
+export type StateTree<R> = {
+    [K in keyof R]
+    : R[K] extends MountedDeferredMutator<any> ? MountedDeferredMutatorState<R[K]>
+        : R[K] extends Mutator<any> ? MutatorState<R[K]>
+        : StateTree<R[K]>;
 };
 
 //////////////////////////////////////////
@@ -100,11 +102,14 @@ function instrumentTree(mergeState: MergeStateFn,
         const localPath = _.cloneDeep(path);
         localPath.push(key);
 
-        if (child instanceof DeferredStateMutators) {
+        if (child instanceof DeferredMutator) {
             _.set(stateGetter(), localPath, undefined);
-            _.set(rootMutatorsStructure, localPath, child.mount(m =>
-                instrumentMutators(mergeState, stateSetter, stateGetter, localPath, m)));
-        } else if (child instanceof StateMutators) {
+            _.set(rootMutatorsStructure, localPath, child.mount(m => {
+                _.set(stateGetter(), localPath, (m as any).initialState);
+                delete (child as any).initialState;
+                instrumentMutators(mergeState, stateSetter, stateGetter, localPath, m);
+            }));
+        } else if (child instanceof Mutator) {
             _.set(stateGetter(), localPath, (child as any).initialState);
             delete (child as any).initialState;
             instrumentMutators(mergeState, stateSetter, stateGetter, localPath, child);
@@ -149,8 +154,8 @@ function instrumentTree(mergeState: MergeStateFn,
 }
 
 function instrumentMutators(mergeState: MergeStateFn,
-                            stateSetter: (event: StateChangeEvent<State<any>>) => void,
-                            stateGetter: () => State<any>,
+                            stateSetter: (event: StateChangeEvent<StateTree<any>>) => void,
+                            stateGetter: () => StateTree<any>,
                             path: string[],
                             mutators: any) {
 
@@ -194,22 +199,22 @@ function instrumentMutators(mergeState: MergeStateFn,
 
 export class Store<M> {
 
-    static create<P>(tree: P): Store<MutatorsTree<P>> {
+    static create<P>(tree: P): Store<MutatorTree<P>> {
         const stateContainer = {
-            state: {} as State<MutatorsTree<P>>
+            state: {} as StateTree<MutatorTree<P>>
         };
 
-        const stateChangesSubject = new ReplaySubject<StateChangeEvent<State<MutatorsTree<P>>>>(1);
+        const stateChangesSubject = new ReplaySubject<StateChangeEvent<StateTree<MutatorTree<P>>>>(1);
 
         const stateGetter = () => stateContainer.state;
-        const stateSetter = (event: StateChangeEvent<State<MutatorsTree<P>>>) => {
+        const stateSetter = (event: StateChangeEvent<StateTree<MutatorTree<P>>>) => {
             stateContainer.state = event.state;
             stateChangesSubject.next(event);
         };
 
         const mutatorsStructure: any = {};
 
-        const store = new Store<MutatorsTree<P>>(
+        const store = new Store<MutatorTree<P>>(
             mutatorsStructure,
             stateChangesSubject.asObservable(),
             stateGetter
@@ -234,20 +239,20 @@ export class Store<M> {
         return store;
     }
 
-    get state(): Readonly<State<M>> {
+    get state(): Readonly<StateTree<M>> {
         return this.stateGetter();
     }
 
     private constructor(readonly mutate: M,
-                        readonly stateChanges: Observable<StateChangeEvent<State<M>>>,
-                        private readonly stateGetter: () => State<M>) {
+                        readonly stateChanges: Observable<StateChangeEvent<StateTree<M>>>,
+                        private readonly stateGetter: () => StateTree<M>) {
     }
 
-    bounded(operator: Operator<StateChangeEvent<State<M>>, StateChangeEvent<State<M>>>): StoreObserver<State<M>> {
+    bounded(operator: Operator<StateChangeEvent<StateTree<M>>, StateChangeEvent<StateTree<M>>>): StoreObserver<StateTree<M>> {
         return new StoreObserver(this.stateChanges, operator);
     }
 
-    unbounded(): StoreObserver<State<M>> {
+    unbounded(): StoreObserver<StateTree<M>> {
         return new StoreObserver(this.stateChanges);
     }
 
