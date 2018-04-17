@@ -1,20 +1,35 @@
+import {assert} from "chai";
 import {defer} from "./DeferredMutator";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutator} from "./mutators";
 import {Store} from "./Store";
-import {assert} from "chai";
 
 
-describe("DeferredStateMutators", function () {
+describe("DeferredMutator", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    it("defer()", function (done) {
-        class MyState {
-            count = 1;
+    it("defer() starts with an undefined state", function () {
+        class CounterMutator extends Mutator<{ count: number }> {
         }
 
-        class CounterStateGroup extends Mutator<MyState> {
+        const store = Store.create({
+            child1: {
+                child2: defer(() => {
+                    return new Promise<CounterMutator>(resolve => {
+                        setTimeout(() => {
+                            resolve(new CounterMutator({count: 1}));
+                        }, 0);
+                    });
+                })
+            },
+        });
+
+        assert.isUndefined(store.state.child1.child2);
+    });
+
+    it("must be resolved", function (done) {
+        class CounterMutator extends Mutator<{ count: number }> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
@@ -22,10 +37,10 @@ describe("DeferredStateMutators", function () {
 
         const store = Store.create({
             child1: {
-                child2: defer<CounterStateGroup>(() => {
-                    return new Promise<CounterStateGroup>(resolve => {
+                child2: defer(() => {
+                    return new Promise<CounterMutator>(resolve => {
                         setTimeout(() => {
-                            resolve(new CounterStateGroup(new MyState()));
+                            resolve(new CounterMutator({count: 1}));
                         }, 0);
                     });
                 })
@@ -35,9 +50,41 @@ describe("DeferredStateMutators", function () {
         store.mutate.child1.child2.get().then(m => m.setCounter(12));
 
         store.mutate.child1.child2.resolve().then(() => {
-            assert.equal(store.state.child1.child2.count.toExponential(), "12");
+            assert.equal(store.state.child1.child2!.count.toString(), "12");
             done();
         });
     });
+
+    // it("Store#getView()", function (done) {
+    //     class CounterMutator extends Mutator<{ count: number }> {
+    //         setCounter(counter: number) {
+    //             this.state.count = counter;
+    //         }
+    //     }
+    //
+    //     const store = Store.create({
+    //         child1: {
+    //             child2: defer(() => {
+    //                 return new Promise<CounterMutator>(resolve => {
+    //                     setTimeout(() => {
+    //                         resolve(new CounterMutator({count: 1}));
+    //                     }, 0);
+    //                 });
+    //             })
+    //         }
+    //     });
+    //
+    //     let child2 = store.getView(s => s.child1.child2);
+    //     // child2.mutate.resolve();
+    //     // child2.state.count;
+    //
+    //
+    //     store.mutate.child1.child2.get().then(m => m.setCounter(12));
+    //
+    //     store.mutate.child1.child2.resolve().then(() => {
+    //         assert.equal(store.state.child1.child2!.count.toString(), "12");
+    //         done();
+    //     });
+    // });
 
 });

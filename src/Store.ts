@@ -9,9 +9,11 @@ import {Mutator, MutatorState} from "./mutators";
 import {StoreObserver} from "./StoreObserver";
 import {createActionFromArguments, createProxy} from "./utils";
 
+export type MutatorStateOrUndefined<G> =
+    G extends Mutator<infer S> ? Readonly<S | undefined> : never;
 
-export type MountedDeferredMutatorState<M> =
-    M extends MountedDeferredMutator<infer S> ? MutatorState<S> : never;
+export type MountedDeferredMutatorState<D> =
+    D extends MountedDeferredMutator<infer S> ? MutatorStateOrUndefined<S> : never;
 
 export type MountedDeferredMutator<S> = {
     resolve(): Promise<S>;
@@ -36,6 +38,9 @@ export type StateTree<R> = {
         : R[K] extends Mutator<any> ? MutatorState<R[K]>
         : StateTree<R[K]>;
 };
+
+export type MutatorStateOrStateTree<T> =
+    T extends Mutator<infer M> ? StateTree<M> : StateTree<T>;
 
 //////////////////////////////////////////
 
@@ -137,7 +142,7 @@ function instrumentTree(mergeState: MergeStateFn,
 
     Object.defineProperty(currentMutatorsLevel, mutatorsToStateSymbol, {
         configurable: false,
-        enumerable: false,
+        enumerable: true,
         get: () => {
             return () => path.length > 0
                 ? _.get(stateGetter(), path)
@@ -239,13 +244,13 @@ export class Store<M> {
         return store;
     }
 
-    get state(): Readonly<StateTree<M>> {
+    get state(): Readonly<MutatorStateOrStateTree<M>> {
         return this.stateGetter();
     }
 
     private constructor(readonly mutate: M,
                         readonly stateChanges: Observable<StateChangeEvent<StateTree<M>>>,
-                        private readonly stateGetter: () => StateTree<M>) {
+                        private readonly stateGetter: () => MutatorStateOrStateTree<M>) {
     }
 
     bounded(operator: Operator<StateChangeEvent<StateTree<M>>, StateChangeEvent<StateTree<M>>>): StoreObserver<StateTree<M>> {
@@ -275,7 +280,7 @@ export class Store<M> {
                         event.changeOriginPath);
                 })
             ) as any,
-            viewStateFn);
+            viewStateFn) as any;
     }
 
 }

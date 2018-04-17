@@ -18,7 +18,7 @@ describe("Documentation", function () {
             count: 0
         };
 
-        class CounterStateGroup extends Mutator<typeof state> {
+        class CounterMutator extends Mutator<typeof state> {
             increment() {
                 this.state.count++;
             }
@@ -29,7 +29,7 @@ describe("Documentation", function () {
         }
 
         const rootStateGroup = {
-            counter: new CounterStateGroup(state)
+            counter: new CounterMutator(state)
         };
 
         const store = Store.create(rootStateGroup);

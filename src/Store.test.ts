@@ -15,14 +15,14 @@ describe("Store", function () {
             count = 1;
         }
 
-        class CounterStateGroup extends Mutator<MyState> {
+        class CounterMutator extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
         }
 
         const store = Store.create({
-            counter1: new CounterStateGroup(new MyState()),
+            counter1: new CounterMutator(new MyState()),
         });
 
         store.mutate.counter1.setCounter(10);
@@ -35,18 +35,18 @@ describe("Store", function () {
             count = 0;
         }
 
-        class CounterStateGroup extends Mutator<MyState> {
+        class CounterMutator extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
         }
 
         const store = Store.create({
-            counter1: new CounterStateGroup(new MyState()),
+            counter1: new CounterMutator(new MyState()),
             child1: {
                 child2: {
                     child3: {
-                        counter2: new CounterStateGroup(new MyState())
+                        counter2: new CounterMutator(new MyState())
                     }
                 }
             }
@@ -63,18 +63,18 @@ describe("Store", function () {
             count = 0;
         }
 
-        class CounterStateGroup extends Mutator<MyState> {
+        class CounterMutator extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
         }
 
         const store = Store.create({
-            counter1: new CounterStateGroup(new MyState()),
+            counter1: new CounterMutator(new MyState()),
             child1: {
                 child2: {
                     child3: {
-                        counter2: new CounterStateGroup(new MyState())
+                        counter2: new CounterMutator(new MyState())
                     }
                 }
             }
@@ -98,16 +98,16 @@ describe("Store", function () {
             count = 0;
         }
 
-        class CounterStateGroup extends Mutator<MyState> {
+        class CounterMutator extends Mutator<MyState> {
             setCounter(counter: number) {
                 this.state.count = counter;
             }
         }
 
         const store = Store.create({
-            counter1: new CounterStateGroup(new MyState()),
+            counter1: new CounterMutator(new MyState()),
             child1: {
-                counter2: new CounterStateGroup(new MyState())
+                counter2: new CounterMutator(new MyState())
             }
         });
 
@@ -125,6 +125,32 @@ describe("Store", function () {
             {counter2: {count: 100}},
             {counter2: {count: 200}}
         );
+    });
+
+    it("getView(mutator)", function () {
+        class MyState {
+            count = 0;
+        }
+
+        class CounterMutator extends Mutator<MyState> {
+            setCounter(counter: number) {
+                this.state.count = counter;
+            }
+        }
+
+        const store = Store.create({
+            counter: new CounterMutator(new MyState())
+        });
+
+        let view = store.getView(s => s.counter);
+        view.mutate.setCounter(1);
+
+        console.log(store.mutate);
+        console.log(view.mutate);
+
+        console.log(view.state);
+        console.log(view.state.count);
+
     });
 
 });
