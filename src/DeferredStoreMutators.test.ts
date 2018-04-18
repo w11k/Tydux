@@ -73,17 +73,11 @@ describe("DeferredMutator", function () {
         });
 
         let view = store.getView(s => s.counter);
-
-        console.log(view.state);
-
-        done();
-
-        // store.mutate.child1.child2.get().then(m => m.setCounter(12));
-        //
-        // store.mutate.child1.child2.resolve().then(() => {
-        //     assert.equal(store.state.child1.child2!.count.toString(), "12");
-        //     done();
-        // });
+        view.mutate.resolve().then(m => {
+            m.setCounter(10);
+            // console.log("view.state", view.state);
+            done();
+        });
     });
 
 });

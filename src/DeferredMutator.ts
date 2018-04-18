@@ -2,7 +2,7 @@ import {take} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {Subject} from "rxjs/Subject";
 import {Mutator} from "./mutators";
-import {MountedDeferredMutator} from "./Store";
+import {MountedDeferredMutator, Store} from "./Store";
 
 
 export class DeferredMutator<M extends Mutator<any>> {
@@ -27,7 +27,10 @@ export class DeferredMutator<M extends Mutator<any>> {
             },
             get: () => {
                 return this.mutatorHolder.pipe(take(1)).toPromise();
-            }
+            },
+            // getView: () => {
+            //     const view = new Store();
+            // }
         };
     }
 }

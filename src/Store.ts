@@ -102,7 +102,7 @@ function addMetaDataToStoreElement(storeElement: any,
 
     Object.defineProperty(storeElement, mutatorsToStateSymbol, {
         configurable: false,
-        enumerable: true,
+        enumerable: isTyduxDevelopmentModeEnabled(),
         get: () => {
             return () => path.length > 0
                 ? _.get(stateGetter(), path)
@@ -112,7 +112,7 @@ function addMetaDataToStoreElement(storeElement: any,
 
     Object.defineProperty(storeElement, mutatorsLevelPathSymbol, {
         configurable: false,
-        enumerable: true,
+        enumerable: isTyduxDevelopmentModeEnabled(),
         value: path.join(".")
     });
 
@@ -131,11 +131,13 @@ function instrumentTree(mergeState: MergeStateFn,
 
         if (child instanceof DeferredMutator) {
             _.set(stateGetter(), localPath, undefined);
-            _.set(rootMutatorsStructure, localPath, child.mount(m => {
+            let mountedDeferredMutator = child.mount(m => {
                 _.set(stateGetter(), localPath, (m as any).initialState);
                 delete (child as any).initialState;
                 instrumentMutator(mergeState, stateSetter, stateGetter, localPath, m);
-            }));
+            });
+            _.set(rootMutatorsStructure, localPath, mountedDeferredMutator);
+            addMetaDataToStoreElement(mountedDeferredMutator, localPath, stateGetter);
         } else if (child instanceof Mutator) {
             _.set(stateGetter(), localPath, (child as any).initialState);
             delete (child as any).initialState;
@@ -271,17 +273,13 @@ export class Store<M> {
     }
 
     getView<V>(fn: (store: M) => V): Store<V> {
-        let viewMutators = fn(this.mutate);
+        let viewMutator = fn(this.mutate);
 
-        const viewStateFn = (viewMutators as any)[mutatorsToStateSymbol];
-        const viewPath = (viewMutators as any)[mutatorsLevelPathSymbol];
-
-        // console.log("viewPath", viewPath);
-        // console.log("viewStateFn", viewStateFn);
-        // console.log("viewStateFn()", viewStateFn());
+        const viewStateFn = (viewMutator as any)[mutatorsToStateSymbol];
+        const viewPath = (viewMutator as any)[mutatorsLevelPathSymbol];
 
         return new Store<V>(
-            viewMutators,
+            viewMutator,
             this.stateChanges.pipe(
                 filter(event => {
                     return _.startsWith(event.changeOriginPath, viewPath);
