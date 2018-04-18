@@ -144,13 +144,7 @@ describe("Store", function () {
 
         let view = store.getView(s => s.counter);
         view.mutate.setCounter(1);
-
-        console.log(store.mutate);
-        console.log(view.mutate);
-
-        console.log(view.state);
-        console.log(view.state.count);
-
+        assert.equal(view.state.count, 1);
     });
 
 });

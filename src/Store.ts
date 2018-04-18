@@ -96,6 +96,28 @@ function mergeState(action: Action,
         stateSetter);
 }
 
+function addMetaDataToStoreElement(storeElement: any,
+                                   path: string[],
+                                   stateGetter: () => any) {
+
+    Object.defineProperty(storeElement, mutatorsToStateSymbol, {
+        configurable: false,
+        enumerable: true,
+        get: () => {
+            return () => path.length > 0
+                ? _.get(stateGetter(), path)
+                : stateGetter();
+        }
+    });
+
+    Object.defineProperty(storeElement, mutatorsLevelPathSymbol, {
+        configurable: false,
+        enumerable: true,
+        value: path.join(".")
+    });
+
+}
+
 function instrumentTree(mergeState: MergeStateFn,
                         stateSetter: (event: StateChangeEvent<any>) => void,
                         stateGetter: () => any,
@@ -112,13 +134,14 @@ function instrumentTree(mergeState: MergeStateFn,
             _.set(rootMutatorsStructure, localPath, child.mount(m => {
                 _.set(stateGetter(), localPath, (m as any).initialState);
                 delete (child as any).initialState;
-                instrumentMutators(mergeState, stateSetter, stateGetter, localPath, m);
+                instrumentMutator(mergeState, stateSetter, stateGetter, localPath, m);
             }));
         } else if (child instanceof Mutator) {
             _.set(stateGetter(), localPath, (child as any).initialState);
             delete (child as any).initialState;
-            instrumentMutators(mergeState, stateSetter, stateGetter, localPath, child);
+            instrumentMutator(mergeState, stateSetter, stateGetter, localPath, child);
             _.set(rootMutatorsStructure, localPath, child);
+            addMetaDataToStoreElement(child, localPath, stateGetter);
         } else {
             _.set(stateGetter(), localPath, child);
         }
@@ -140,29 +163,15 @@ function instrumentTree(mergeState: MergeStateFn,
         ? _.get(rootMutatorsStructure, path)
         : rootMutatorsStructure;
 
-    Object.defineProperty(currentMutatorsLevel, mutatorsToStateSymbol, {
-        configurable: false,
-        enumerable: true,
-        get: () => {
-            return () => path.length > 0
-                ? _.get(stateGetter(), path)
-                : stateGetter();
-        }
-    });
-
-    Object.defineProperty(currentMutatorsLevel, mutatorsLevelPathSymbol, {
-        configurable: false,
-        enumerable: false,
-        value: path.join(".")
-    });
+    addMetaDataToStoreElement(currentMutatorsLevel, path, stateGetter);
 
 }
 
-function instrumentMutators(mergeState: MergeStateFn,
-                            stateSetter: (event: StateChangeEvent<StateTree<any>>) => void,
-                            stateGetter: () => StateTree<any>,
-                            path: string[],
-                            mutators: any) {
+function instrumentMutator(mergeState: MergeStateFn,
+                           stateSetter: (event: StateChangeEvent<StateTree<any>>) => void,
+                           stateGetter: () => StateTree<any>,
+                           path: string[],
+                           mutators: any) {
 
     for (let mutatorName of _.functionsIn(mutators)) {
         const mutatorFn = mutators[mutatorName];
@@ -266,6 +275,10 @@ export class Store<M> {
 
         const viewStateFn = (viewMutators as any)[mutatorsToStateSymbol];
         const viewPath = (viewMutators as any)[mutatorsLevelPathSymbol];
+
+        // console.log("viewPath", viewPath);
+        // console.log("viewStateFn", viewStateFn);
+        // console.log("viewStateFn()", viewStateFn());
 
         return new Store<V>(
             viewMutators,
