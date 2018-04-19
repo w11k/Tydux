@@ -1,4 +1,13 @@
 
+# Version 5.0.0
+
+- new feature: View
+- removed: selectMany()
+
+# Version 4.0.0-alpha
+
+- alpha release: development version, changes discarded
+
 # Version 3.0.0
 
 - removed `UnboundedObservable`
