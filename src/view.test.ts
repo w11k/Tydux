@@ -1,8 +1,7 @@
-import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Mutators} from "./mutators";
-import {selectMany} from "./selectMany";
 import {Store} from "./Store";
+import {createView} from "./view";
 
 // Store 1
 class State1 {
@@ -29,19 +28,11 @@ class Store1 extends Store<Mutators1, State1> {
 // Store 2
 class State2 {
     value2 = 0;
-    value3 = 0;
-    value4 = 0;
-    value5 = 0;
-    value6 = 0;
 }
 
 class Mutators2 extends Mutators<State2> {
     mut2() {
         this.state.value2 = 2;
-        this.state.value3 = 20;
-        this.state.value4 = 200;
-        this.state.value5 = 2000;
-        this.state.value6 = 20000;
     }
 }
 
@@ -56,30 +47,35 @@ class Store2 extends Store<Mutators2, State2> {
     }
 }
 
-describe("selectMany()", function () {
+describe("createView()", function () {
 
     beforeEach(function () {
         enableTyduxDevelopmentMode();
     });
 
-    it("will buffer values and call the mapper function asynchronously", function (done) {
+    it("TBD", function (done) {
         const store1 = new Store1();
         const store2 = new Store2();
 
-        // combine
-        const selected = selectMany(
-            store1.unbounded().select(s => s.value1),
-            store2.unbounded().select(s => s.value2),
-            (v1, v2) => {
-                assert.equal(v1, 1);
-                assert.equal(v2, 2);
-                done();
-            });
+        let view = createView({
+            store1,
+            store2,
+            child1: {
+                child2: {
+                    store1,
+                    store2
+                }
+            }
+        });
 
-        selected.subscribe();
+        view.state.store1.value1.toFixed();
+        view.state.child1.child2.store1.value1.toExponential();
 
-        store1.action1();
-        store2.action2();
+        // view.unbounded().select()
+        //     .subscribe((s) => {
+        //         s.child1.child2.store1.value1.toPrecision();
+        //     });
+
     });
 
 });

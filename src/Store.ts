@@ -1,13 +1,15 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Operator} from "rxjs/Operator";
+import {map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
 import {Mutators} from "./mutators";
-import {StoreObserver} from "./StoreObserver";
+import {StateObserver} from "./StateObserver";
+import {StateObserverProvider} from "./StateObserverProvider";
 import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
 
 export interface Action {
@@ -50,7 +52,7 @@ export function createActionFromArguments(actionTypeName: string, fn: any, args:
     return action;
 }
 
-export abstract class Store<M extends Mutators<S>, S> {
+export abstract class Store<M extends Mutators<S>, S> implements StateObserverProvider<S> {
 
     private _state: S = undefined as any;
 
@@ -84,12 +86,12 @@ export abstract class Store<M extends Mutators<S>, S> {
         return this._state;
     }
 
-    bounded(operator: Operator<MutatorEvent<S>, MutatorEvent<S>>): StoreObserver<S> {
-        return new StoreObserver(this.mutatorEvents$, operator);
+    bounded(operator: Operator<S, S>): StateObserver<S> {
+        return new StateObserver(this.mutatorEvents$.pipe(map(e => e.state)), operator);
     }
 
-    unbounded(): StoreObserver<S> {
-        return new StoreObserver(this.mutatorEvents$);
+    unbounded(): StateObserver<S> {
+        return new StateObserver(this.mutatorEvents$.pipe(map(e => e.state)));
     }
 
     private processMutator(mutatorEvent: MutatorEvent<S>) {

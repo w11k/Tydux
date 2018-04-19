@@ -1,13 +1,12 @@
 import {assert} from "chai";
 import {Observable} from "rxjs/Observable";
 import {takeUntil} from "rxjs/operators";
-import {ReplaySubject} from "rxjs/ReplaySubject";
 import {Subject} from "rxjs/Subject";
 import {Subscriber} from "rxjs/Subscriber";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
-import {MutatorEvent, Store} from "./Store";
+import {Store} from "./Store";
 import {collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
@@ -38,7 +37,7 @@ describe("StoreObserver", function () {
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
-            (subscriber: Subscriber<MutatorEvent<State>>, source: Observable<MutatorEvent<State>>) => {
+            (subscriber: Subscriber<State>, source: Observable<State>) => {
                 const sub = source
                     .pipe(
                         takeUntil(stopTrigger)
@@ -86,12 +85,12 @@ describe("StoreObserver", function () {
         const events: any[] = [];
 
         const operator = operatorFactory(
-            (subscriber: Subscriber<MutatorEvent<State>>, source: Observable<MutatorEvent<State>>) => {
+            (subscriber: Subscriber<State>, source: Observable<State>) => {
                 const subscription = source.subscribe(
                     val => {
-                        events.push("pre-" + val.state.a);
+                        events.push("pre-" + val.a);
                         subscriber.next(val);
-                        events.push("post-" + val.state.a);
+                        events.push("post-" + val.a);
                     },
                     exception => subscriber.error(exception),
                     () => subscriber.complete()

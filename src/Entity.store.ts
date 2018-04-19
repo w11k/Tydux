@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import {OperatorFunction} from "rxjs/interfaces";
+import {map} from "rxjs/operators";
 import {EntityStoreObserver} from "./EntityStoreObserver";
 import {Mutators} from "./mutators";
 import {MutatorEvent, Store} from "./Store";
@@ -117,11 +118,11 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
     }
 
 
-    bounded(operator: OperatorFunction<MutatorEvent<EntityState<T>>, MutatorEvent<EntityState<T>>>) {
-        return new EntityStoreObserver(this.mutatorEvents$, operator);
+    bounded(operator: OperatorFunction<EntityState<T>, EntityState<T>>) {
+        return new EntityStoreObserver(this.mutatorEvents$.pipe(map(e => e.state)), operator);
     }
 
     unbounded() {
-        return new EntityStoreObserver(this.mutatorEvents$);
+        return new EntityStoreObserver(this.mutatorEvents$.pipe(map(e => e.state)));
     }
 }
