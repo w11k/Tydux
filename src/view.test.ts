@@ -65,7 +65,7 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        let view = createView({
+        const view = createView({
             store1,
             store2,
             child1: {
@@ -82,14 +82,14 @@ describe("View", function () {
         assert.equal(view.state.child1.child2.store2.value2, 21);
     });
 
-    it("StateObserver start with the current values", function () {
+    it("StateObserver starts with the current values", function () {
         const store1 = new Store1();
         const store2 = new Store2();
 
         store1.action1();
         store2.action2();
 
-        let view = createView({
+        const view = createView({
             store1,
             child1: {
                 child2: {
@@ -112,7 +112,7 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        let view = createView({
+        const view = createView({
             child1: {
                 child2: {
                     store1,
@@ -135,10 +135,10 @@ describe("View", function () {
         );
     });
 
-    it("StateObserver always freezes the state", function () {
+    it("StateObserver always freezes the state", function (done) {
         const store1 = new Store1();
         store1.action1();
-        let view = createView({
+        const view = createView({
             child1: {
                 child2: {
                     store1
@@ -153,6 +153,7 @@ describe("View", function () {
             assert.throws(() => {
                 s.child1.child2.store1.value1 = 10;
             });
+            done();
         });
     });
 
