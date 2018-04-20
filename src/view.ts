@@ -5,14 +5,12 @@ import {StateObserver} from "./StateObserver";
 import {StateObserverProvider} from "./StateObserverProvider";
 import {Store} from "./Store";
 
-
 export type ViewTreeState<T> = {
     [K in keyof T]
     : T[K] extends Store<any, infer S> ? S
         : T[K] extends object ? ViewTreeState<T[K]>
         : never;
 };
-
 
 export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>> {
 
@@ -66,8 +64,3 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
     }
 
 }
-
-export function createView<T extends object>(tree: T): View<T> {
-    return new View(tree);
-}
-

@@ -1,4 +1,9 @@
 
+# Version 5.0.1
+
+- removed `createView` function in favour of `new View(...)`
+
+
 # Version 5.0.0
 
 - new feature: View

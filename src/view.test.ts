@@ -4,7 +4,7 @@ import {resetTydux} from "./global-state";
 import {Mutators} from "./mutators";
 import {Store} from "./Store";
 import {collect} from "./test-utils";
-import {createView} from "./view";
+import {View} from "./view";
 
 // Store 1
 class State1 {
@@ -65,7 +65,7 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        const view = createView({
+        const view = new View({
             store1,
             store2,
             child1: {
@@ -89,7 +89,7 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        const view = createView({
+        const view = new View({
             store1,
             child1: {
                 child2: {
@@ -112,7 +112,7 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        const view = createView({
+        const view = new View({
             child1: {
                 child2: {
                     store1,
@@ -138,7 +138,7 @@ describe("View", function () {
     it("StateObserver always freezes the state", function (done) {
         const store1 = new Store1();
         store1.action1();
-        const view = createView({
+        const view = new View({
             child1: {
                 child2: {
                     store1
