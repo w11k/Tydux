@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";
 
@@ -13,7 +13,7 @@ describe("Mutators - sanity tests", function () {
     afterEach(() => resetTydux());
 
     it("can not access the state asynchronously", function (done) {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             mut() {
                 setTimeout(() => {
                     assert.throws(() => this.state, /Illegal access.*this/);
@@ -33,7 +33,7 @@ describe("Mutators - sanity tests", function () {
     });
 
     it("can not modify the state asynchronously by keeping a reference to a nested state property", function (done) {
-        class TestMutator extends Mutators<{ root: { child: number[] } }> {
+        class TestMutator extends Mutator<{ root: { child: number[] } }> {
             mut() {
                 const child = this.state.root.child;
                 setTimeout(() => {
@@ -55,7 +55,7 @@ describe("Mutators - sanity tests", function () {
     });
 
     it("can not replace the state asynchronously", function (done) {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             mut() {
                 setTimeout(() => {
                     assert.throws(() => this.state = {n1: 99}, /Illegal access.*this/);
@@ -75,7 +75,7 @@ describe("Mutators - sanity tests", function () {
     });
 
     it("can not change the state in asynchronous promise callbacks", function (done) {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             mut1() {
                 createAsyncPromise(1).then(val => {
                     assert.throws(() => this.state.n1 = val);
@@ -95,7 +95,7 @@ describe("Mutators - sanity tests", function () {
     });
 
     it("can not access other members asynchronously", function (done) {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             mut1() {
                 setTimeout(() => {
                     assert.throws(() => this.mut2(), /Illegal access.*this/);
@@ -119,7 +119,7 @@ describe("Mutators - sanity tests", function () {
     });
 
     it("can not access other members in an asynchronous promise resolve", function (done) {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             mut1() {
                 createAsyncPromise(1)
                     .then(() => {
@@ -147,7 +147,7 @@ describe("Mutators - sanity tests", function () {
     });
 
     it("must not return a value", function () {
-        class TestMutator extends Mutators<any> {
+        class TestMutator extends Mutator<any> {
             mod1() {
                 return 1;
             }

@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {globalStateChanges$} from "./global-state";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {MutatorEvent, Store} from "./Store";
 
 
@@ -14,7 +14,7 @@ describe("global state", function () {
     it("collects MutatorEvents", function () {
         const events: MutatorEvent<any>[] = [];
 
-        class MyMutators extends Mutators<{ count: number }> {
+        class MyMutators extends Mutator<{ count: number }> {
             mut1() {
                 this.state.count = 1;
             }
@@ -47,7 +47,7 @@ describe("global state", function () {
     });
 
     it("replay MutatorEvents", function () {
-        class MyMutators extends Mutators<{ count: number }> {
+        class MyMutators extends Mutator<{ count: number }> {
             mut(count: number) {
                 this.state.count = count;
             }

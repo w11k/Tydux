@@ -3,7 +3,7 @@ import {OnDestroyLike, toAngularComponent} from "./angular-integration";
 import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {Store} from "./Store";
 
 
@@ -17,7 +17,7 @@ describe("Angular integration", function () {
 
         type State = { a: number };
 
-        class TestMutator extends Mutators<State> {
+        class TestMutator extends Mutator<State> {
             inc() {
                 this.state.a++;
             }

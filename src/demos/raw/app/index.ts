@@ -1,6 +1,6 @@
 import "rxjs/add/operator/first";
 import {enableTyduxDevelopmentMode} from "../../../development";
-import {Mutators} from "../../../mutators";
+import {Mutator} from "../../../mutator";
 import {Store} from "../../../Store";
 import "./index.html";
 
@@ -21,7 +21,7 @@ class TodoState {
 }
 
 
-class TodoMutators extends Mutators<TodoState> {
+class TodoMutators extends Mutator<TodoState> {
 
     clearTodos() {
         this.state.todos = [];

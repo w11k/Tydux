@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {Store} from "./Store";
 import {collect} from "./test-utils";
 import {View} from "./view";
@@ -11,7 +11,7 @@ class State1 {
     value1 = 10;
 }
 
-class Mutators1 extends Mutators<State1> {
+class Mutators1 extends Mutator<State1> {
     mut1() {
         this.state.value1++;
     }
@@ -33,7 +33,7 @@ class State2 {
     value2 = 20;
 }
 
-class Mutators2 extends Mutators<State2> {
+class Mutators2 extends Mutator<State2> {
     mut2() {
         this.state.value2++;
     }

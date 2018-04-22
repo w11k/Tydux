@@ -2,8 +2,8 @@ import {assert} from "chai";
 import * as _ from "lodash";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
-import {EmptyMutators} from "./mutators.test";
+import {Mutator} from "./mutator";
+import {EmptyMutators} from "./mutator.test";
 import {Store} from "./Store";
 import {collect, createAsyncPromise} from "./test-utils";
 
@@ -23,7 +23,7 @@ describe("Store", function () {
             count = 0;
         }
 
-        class MyMutators extends Mutators<MyState> {
+        class MyMutators extends Mutator<MyState> {
             increment() {
                 this.state.count++;
             }
@@ -76,7 +76,7 @@ describe("Store", function () {
     });
 
     it("select()", function () {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             inc() {
                 this.state.n1++;
             }
@@ -96,7 +96,7 @@ describe("Store", function () {
     });
 
     it("select(with selector)", function () {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             inc() {
                 this.state.n1++;
             }
@@ -116,7 +116,7 @@ describe("Store", function () {
     });
 
     it("selectNonNil(with selector)", function () {
-        class TestMutator extends Mutators<{ n1?: number }> {
+        class TestMutator extends Mutator<{ n1?: number }> {
             inc() {
                 this.state.n1 = !_.isNil(this.state.n1) ? this.state.n1 + 1 : 1;
             }
@@ -148,7 +148,7 @@ describe("Store", function () {
     });
 
     it("select(with selector return an Arrays) only emits values when the content of the array changes", function () {
-        class TestMutator extends Mutators<{ a: number; b: number; c: number }> {
+        class TestMutator extends Mutator<{ a: number; b: number; c: number }> {
             incAB() {
                 this.state.a++;
                 this.state.b++;
@@ -179,7 +179,7 @@ describe("Store", function () {
     });
 
     it("select(with selector return an object) only emits values when the content of the object changes", function () {
-        class TestMutator extends Mutators<{ a: number; b: number; c: number }> {
+        class TestMutator extends Mutator<{ a: number; b: number; c: number }> {
             incAB() {
                 this.state.a++;
                 this.state.b++;
@@ -220,7 +220,7 @@ describe("Store", function () {
 
     it("select() only triggers when the selected value deeply changed" +
         "", function () {
-        class TestMutator extends Mutators<{ root: { child: { val1: number } } }> {
+        class TestMutator extends Mutator<{ root: { child: { val1: number } } }> {
             dummy() {
             }
         }
@@ -247,7 +247,7 @@ describe("Store", function () {
             count = 0;
         }
 
-        class MyMutators extends Mutators<MyState> {
+        class MyMutators extends Mutator<MyState> {
             increment() {
                 this.state.count++;
             }
@@ -277,7 +277,7 @@ describe("Store", function () {
             value?: number;
         }
 
-        class MyMutators extends Mutators<MyState> {
+        class MyMutators extends Mutator<MyState> {
             setList(list: number[]) {
                 this.state.list = list;
             }
@@ -311,7 +311,7 @@ describe("Store", function () {
             value?: number;
         }
 
-        class MyMutators extends Mutators<MyState> {
+        class MyMutators extends Mutator<MyState> {
             setList(list: number[]) {
                 this.state.list = list;
             }

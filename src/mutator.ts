@@ -1,4 +1,4 @@
-export abstract class Mutators<S> {
+export abstract class Mutator<S> {
 
     protected state: S = undefined as any;
 

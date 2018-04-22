@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import {OperatorFunction} from "rxjs/interfaces";
 import {map} from "rxjs/operators";
 import {EntityStoreObserver} from "./EntityStoreObserver";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {MutatorEvent, Store} from "./Store";
 
 export interface EntityMap<T> {
@@ -14,7 +14,7 @@ export interface EntityState<T> {
     entities: EntityMap<T>;
 }
 
-export class EntityMutators<T> extends Mutators<EntityState<T>> {
+export class EntityMutators<T> extends Mutator<EntityState<T>> {
 
     clear() {
         this.state.ids = [];

@@ -1,8 +1,8 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
-import {EmptyMutators} from "./mutators.test";
+import {Mutator} from "./mutator";
+import {EmptyMutators} from "./mutator.test";
 import {Store} from "./Store";
 import {collect, createAsyncPromise} from "./test-utils";
 
@@ -44,7 +44,7 @@ describe("Store - sanity tests", function () {
             count = 0;
         }
 
-        class MyMutators extends Mutators<MyState> {
+        class MyMutators extends Mutator<MyState> {
             incrementBy(by: number) {
                 this.state.count += by;
             }

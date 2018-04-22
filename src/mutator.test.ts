@@ -1,12 +1,12 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {Store} from "./Store";
 import {collect} from "./test-utils";
 
 
-export class EmptyMutators extends Mutators<any> {
+export class EmptyMutators extends Mutator<any> {
 }
 
 describe("Mutators", function () {
@@ -16,7 +16,7 @@ describe("Mutators", function () {
     afterEach(() => resetTydux());
 
     it("methods can assign state properties", function () {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             mut1() {
                 this.state.n1 = 1;
             }
@@ -39,7 +39,7 @@ describe("Mutators", function () {
             list2: number[] = [];
         }
 
-        class TestMutator extends Mutators<State> {
+        class TestMutator extends Mutator<State> {
             mut1() {
                 this.state.list1 = [1];
             }
@@ -73,7 +73,7 @@ describe("Mutators", function () {
     });
 
     it("methods can assign a new state", function () {
-        class TestMutator extends Mutators<{ n1: number }> {
+        class TestMutator extends Mutator<{ n1: number }> {
             mut1() {
                 this.state = {
                     n1: 1
@@ -93,7 +93,7 @@ describe("Mutators", function () {
     });
 
     it("can not change the state deeply", function () {
-        class TestMutator extends Mutators<{ n1: number[] }> {
+        class TestMutator extends Mutator<{ n1: number[] }> {
             mut1() {
                 assert.throws(() => this.state.n1.push(3), "not extensible");
             }
@@ -110,7 +110,7 @@ describe("Mutators", function () {
     });
 
     it("nested methods are merged", function () {
-        class TestMutator extends Mutators<{ n1: string }> {
+        class TestMutator extends Mutator<{ n1: string }> {
             mod1() {
                 this.state.n1 += "1";
                 this.mod2();
@@ -139,7 +139,7 @@ describe("Mutators", function () {
     });
 
     it("state changes are only persistent if the mutator did not throw an exception", function () {
-        class TestMutator extends Mutators<any> {
+        class TestMutator extends Mutator<any> {
             mut1() {
                 this.state.a = 1;
                 if (this.state.a > 0) {
@@ -161,7 +161,7 @@ describe("Mutators", function () {
     });
 
     it("mutators must not have instance members", function () {
-        class MyMutators extends Mutators<any> {
+        class MyMutators extends Mutator<any> {
             // noinspection JSUnusedGlobalSymbols
             abc = 1;
         }
@@ -176,7 +176,7 @@ describe("Mutators", function () {
     });
 
     it("mutators must not create instance members", function () {
-        class MyMutators extends Mutators<any> {
+        class MyMutators extends Mutator<any> {
 
             mut() {
                 (this as any).abc = 1;

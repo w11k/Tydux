@@ -7,7 +7,7 @@ import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {StateObserver} from "./StateObserver";
 import {StateObserverProvider} from "./StateObserverProvider";
 import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
@@ -52,7 +52,7 @@ export function createActionFromArguments(actionTypeName: string, fn: any, args:
     return action;
 }
 
-export abstract class Store<M extends Mutators<S>, S> implements StateObserverProvider<S> {
+export abstract class Store<M extends Mutator<S>, S> implements StateObserverProvider<S> {
 
     private _state: S = undefined as any;
 
@@ -65,7 +65,7 @@ export abstract class Store<M extends Mutators<S>, S> implements StateObserverPr
     readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject;
 
     constructor(readonly storeId: string,
-                mutatorInstance: Mutators<S>,
+                mutatorInstance: Mutator<S>,
                 state: S) {
 
         this.processMutator(new MutatorEvent(

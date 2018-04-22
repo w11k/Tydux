@@ -1,4 +1,9 @@
 
+# Version 5.1.0
+
+- renamed `Mutators` to `Mutator`
+
+
 # Version 5.0.1
 
 - removed `createView` function in favour of `new View(...)`

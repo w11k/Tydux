@@ -5,7 +5,7 @@ import {Subject} from "rxjs/Subject";
 import {Subscriber} from "rxjs/Subscriber";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutators} from "./mutators";
+import {Mutator} from "./mutator";
 import {Store} from "./Store";
 import {collect} from "./test-utils";
 import {operatorFactory} from "./utils";
@@ -21,7 +21,7 @@ describe("StoreObserver", function () {
 
         type State = { a: number };
 
-        class TestMutator extends Mutators<State> {
+        class TestMutator extends Mutator<State> {
             inc() {
                 this.state.a++;
             }
@@ -68,7 +68,7 @@ describe("StoreObserver", function () {
 
         type State = { a: number };
 
-        class TestMutator extends Mutators<State> {
+        class TestMutator extends Mutator<State> {
             inc() {
                 this.state.a++;
             }
