@@ -95,6 +95,7 @@ export abstract class Store<M extends Mutator<S>, S> implements StateObserverPro
     }
 
     private processMutator(mutatorEvent: MutatorEvent<S>) {
+        console.log("processMutator", mutatorEvent.action.type, mutatorEvent.state);
         this.setState(mutatorEvent.state);
         this.mutatorEventsSubject.next(mutatorEvent);
     }

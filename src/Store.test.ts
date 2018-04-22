@@ -1,5 +1,6 @@
 import {assert} from "chai";
 import * as _ from "lodash";
+import {map} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
@@ -340,6 +341,95 @@ describe("Store", function () {
 
         assert.deepEqual(store.state.list, [1, 2, 3]);
         assert.equal(store.state.value, 99);
+    });
+
+    it("correctly emits MutatorEvents with async code involved", function (done) {
+        class TestMutator extends Mutator<{ list1: Date[], list2: number[] }> {
+            setList1(list: Date[]) {
+                this.state.list1 = list;
+            }
+
+            setList2(list: number[]) {
+                this.state.list2 = list;
+            }
+        }
+
+        class TestStore extends Store<TestMutator, { list1: Date[], list2: number[] }> {
+
+            constructor() {
+                super("", new TestMutator(), {list1: [], list2: []});
+
+                this.unbounded().select(s => s.list1)
+                    .subscribe(list1 => {
+                        this.mutate.setList2([...this.state.list2, list1.length]);
+                    });
+            }
+
+            action() {
+                setTimeout(() => {
+                    this.mutate.setList1([
+                        new Date(),
+                    ]);
+
+                    setTimeout(() => {
+                        // collected.assert([0], [0, 1]);
+                        console.log("collected.getValues()", collected.getValues());
+                        done();
+                    }, 0);
+                }, 0);
+            }
+        }
+
+        const store = new TestStore();
+
+        const collected = collect(store.mutatorEvents$.pipe(
+            map(event => event.state)
+        ));
+
+        store.action();
+
+    });
+
+    it("TODO: BUG", function (done) {
+        class TestMutator extends Mutator<{ list1: Date[], list2: number[] }> {
+            setList1(list: Date[]) {
+                this.state.list1 = list;
+            }
+
+            setList2(list: number[]) {
+                this.state.list2 = list;
+            }
+        }
+
+        class TestStore extends Store<TestMutator, { list1: Date[], list2: number[] }> {
+
+            constructor() {
+                super("", new TestMutator(), {list1: [], list2: []});
+
+                this.unbounded().select(s => s.list1)
+                    .subscribe(list1 => {
+                        this.mutate.setList2([...this.state.list2, list1.length]);
+                    });
+            }
+
+            action() {
+                setTimeout(() => {
+                    this.mutate.setList1([
+                        new Date(),
+                    ]);
+
+                    setTimeout(() => {
+                        collected.assert([0], [0, 1]);
+                        done();
+                    }, 0);
+                }, 0);
+            }
+        }
+
+        const store = new TestStore();
+        store.action();
+        const collected = collect(store.unbounded()
+            .select(s => s.list2));
     });
 
 });
