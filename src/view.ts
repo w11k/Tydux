@@ -1,3 +1,4 @@
+/*
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Observer} from "rxjs/Observer";
@@ -71,3 +72,4 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
     }
 
 }
+*/
