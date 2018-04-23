@@ -145,4 +145,19 @@ describe("View", function () {
         assert.isTrue(called);
     });
 
+    it("StateObserver#select()", function (done) {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+
+        view.unbounded()
+            .select(s => {
+                assert.equal(s.store1.value1, 10);
+                assert.equal(s.store2.value2, 20);
+                done();
+            })
+            .subscribe();
+    });
+
 });
