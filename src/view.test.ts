@@ -3,7 +3,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
 import {Store} from "./Store";
-import {collect} from "./test-utils";
+import {afterAllStoreEvents, collect} from "./test-utils";
 import {View} from "./view";
 
 // Store 1
@@ -58,36 +58,15 @@ describe("View", function () {
 
     afterEach(() => resetTydux());
 
-    it("creates a combined state", function () {
+    it("StateObserver starts with the current values", async function () {
         const store1 = new Store1();
         const store2 = new Store2();
 
         store1.action1();
+        await afterAllStoreEvents(store1);
+
         store2.action2();
-
-        const view = new View({
-            store1,
-            store2,
-            child1: {
-                child2: {
-                    store1,
-                    store2
-                }
-            }
-        });
-
-        assert.equal(view.state.store1.value1, 11);
-        assert.equal(view.state.store2.value2, 21);
-        assert.equal(view.state.child1.child2.store1.value1, 11);
-        assert.equal(view.state.child1.child2.store2.value2, 21);
-    });
-
-    it("StateObserver starts with the current values", function () {
-        const store1 = new Store1();
-        const store2 = new Store2();
-
-        store1.action1();
-        store2.action2();
+        await afterAllStoreEvents(store2);
 
         const view = new View({
             store1,
@@ -99,18 +78,20 @@ describe("View", function () {
         });
 
         let collected = collect(view.unbounded().select());
-
         collected.assert(
             {store1: {value1: 11}, child1: {child2: {store1: {value1: 11}}}}
         );
     });
 
-    it("StateObserver emits changes", function () {
+    it("StateObserver emits changes", async function () {
         const store1 = new Store1();
         const store2 = new Store2();
 
         store1.action1();
+        await afterAllStoreEvents(store1);
+
         store2.action2();
+        await afterAllStoreEvents(store2);
 
         const view = new View({
             child1: {
@@ -126,6 +107,9 @@ describe("View", function () {
         store1.action1();
         store1.action1();
         store2.action2();
+
+        await afterAllStoreEvents(store1);
+        await afterAllStoreEvents(store2);
 
         collected.assert(
             {child1: {child2: {store1: {value1: 11}, store2: {value2: 21}}}},
@@ -135,9 +119,11 @@ describe("View", function () {
         );
     });
 
-    it("StateObserver always freezes the state", function (done) {
+    it("StateObserver always freezes the state", async function () {
         const store1 = new Store1();
         store1.action1();
+        await afterAllStoreEvents(store1);
+
         const view = new View({
             child1: {
                 child2: {
@@ -146,6 +132,7 @@ describe("View", function () {
             }
         });
 
+        let called = false;
         view.unbounded().select().subscribe(s => {
             assert.throws(() => {
                 (s.child1 as any)["a"] = "a";
@@ -153,8 +140,9 @@ describe("View", function () {
             assert.throws(() => {
                 s.child1.child2.store1.value1 = 10;
             });
-            done();
+            called = true;
         });
+        assert.isTrue(called);
     });
 
 });

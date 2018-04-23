@@ -60,6 +60,8 @@ export abstract class Store<M extends Mutator<S>, S> implements StateObserverPro
 
     private readonly mutatorEventsSubject = new ReplaySubject<MutatorEvent<S>>(1);
 
+    private _undispatchedMutatorEventsCount = 0;
+
     protected readonly mutate: M;
 
     readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject;
@@ -86,6 +88,10 @@ export abstract class Store<M extends Mutator<S>, S> implements StateObserverPro
         return this._state;
     }
 
+    hasUndispatchedMutatorEvents() {
+        return this._undispatchedMutatorEventsCount !== 0;
+    }
+
     bounded(operator: Operator<S, S>): StateObserver<S> {
         return new StateObserver(this.mutatorEvents$.pipe(map(e => e.state)), operator);
     }
@@ -95,9 +101,15 @@ export abstract class Store<M extends Mutator<S>, S> implements StateObserverPro
     }
 
     private processMutator(mutatorEvent: MutatorEvent<S>) {
-        console.log("processMutator", mutatorEvent.action.type, mutatorEvent.state);
         this.setState(mutatorEvent.state);
-        this.mutatorEventsSubject.next(mutatorEvent);
+
+        // async delivery to avoid re-entrant problems
+        // https://github.com/ReactiveX/rxjs/issues/2155
+        this._undispatchedMutatorEventsCount++;
+        setTimeout(() => {
+            this._undispatchedMutatorEventsCount--;
+            this.mutatorEventsSubject.next(mutatorEvent);
+        }, 0);
     }
 
     private setState(state: S) {
@@ -116,6 +128,7 @@ export abstract class Store<M extends Mutator<S>, S> implements StateObserverPro
 
             const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
             mutatorEvent = fn(stateProxy, isRoot);
+
             if (tyduxDevelopmentModeEnabled) {
                 mutatorEvent.duration = Date.now() - start;
             }

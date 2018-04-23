@@ -1,10 +1,10 @@
 import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
-import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
 import {Store} from "./Store";
+import {afterAllStoreEvents} from "./test-utils";
 
 
 describe("Angular integration", function () {
@@ -13,7 +13,7 @@ describe("Angular integration", function () {
 
     afterEach(() => resetTydux());
 
-    it("completes all subscriptions when the component gets destroyed", function () {
+    it("completes all subscriptions when the component gets destroyed", async function () {
 
         type State = { a: number };
 
@@ -46,8 +46,16 @@ describe("Angular integration", function () {
 
         store.action(); // 1
         store.action(); // 2
+
+        await afterAllStoreEvents(store);
+
         component.ngOnDestroy();
+
+        await afterAllStoreEvents(store);
+
         store.action(); // 3
+
+        await afterAllStoreEvents(store);
 
         assert.deepEqual(events, [
             0,

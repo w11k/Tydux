@@ -4,7 +4,7 @@ import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
 import {EmptyMutators} from "./mutator.test";
 import {Store} from "./Store";
-import {collect, createAsyncPromise} from "./test-utils";
+import {afterAllStoreEvents, collect, createAsyncPromise} from "./test-utils";
 
 
 describe("Store - sanity tests", function () {
@@ -39,7 +39,7 @@ describe("Store - sanity tests", function () {
         assert.throws(() => store.action());
     });
 
-    it("member method can use async/await", function (done) {
+    it("member method can use async/await", async function () {
         class MyState {
             count = 0;
         }
@@ -55,8 +55,10 @@ describe("Store - sanity tests", function () {
                 this.mutate.incrementBy(1);
                 const by = await createAsyncPromise(10);
                 this.mutate.incrementBy(by);
+
+                await afterAllStoreEvents(store);
+
                 collected.assert(0, 1, 11);
-                done();
             }
         }
 

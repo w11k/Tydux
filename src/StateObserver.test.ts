@@ -7,7 +7,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
 import {Store} from "./Store";
-import {collect} from "./test-utils";
+import {afterAllStoreEvents, collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
 
@@ -17,8 +17,7 @@ describe("StoreObserver", function () {
 
     afterEach(() => resetTydux());
 
-    it("bounded() can be used to complete the stream", function () {
-
+    it("bounded() can be used to complete the stream", async function () {
         type State = { a: number };
 
         class TestMutator extends Mutator<State> {
@@ -53,18 +52,22 @@ describe("StoreObserver", function () {
 
         store.action();
         store.action();
+
+        await afterAllStoreEvents(store);
+
         stopTrigger.next(true);
         store.action();
+
+        await afterAllStoreEvents(store);
 
         collected.assert(
             0,
             1,
             2,
         );
-
     });
 
-    it("bounded() can be used to wrap the stream", function () {
+    it("bounded() can be used to wrap the stream", async function () {
 
         type State = { a: number };
 
@@ -108,6 +111,8 @@ describe("StoreObserver", function () {
 
         store.action();
         store.action();
+
+        await afterAllStoreEvents(store);
 
         assert.deepEqual(events, [
             "pre-0",

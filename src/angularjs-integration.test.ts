@@ -4,6 +4,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
 import {Store} from "./Store";
+import {afterAllStoreEvents} from "./test-utils";
 
 
 describe("AngularJS integration", function () {
@@ -12,7 +13,7 @@ describe("AngularJS integration", function () {
 
     afterEach(() => resetTydux());
 
-    it("wraps the delivery of events in scope.$apply()", function () {
+    it("wraps the delivery of events in scope.$apply()", async function () {
 
         type State = { a: number };
 
@@ -58,6 +59,8 @@ describe("AngularJS integration", function () {
             .subscribe(a => events.push(a));
 
         store.action();
+
+        await afterAllStoreEvents(store);
 
         assert.deepEqual(events, [
             "pre",

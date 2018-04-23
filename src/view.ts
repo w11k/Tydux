@@ -1,6 +1,9 @@
 import * as _ from "lodash";
+import {Observable} from "rxjs/Observable";
+import {Observer} from "rxjs/Observer";
 import {Operator} from "rxjs/Operator";
-import {ReplaySubject} from "rxjs/ReplaySubject";
+import {shareReplay} from "rxjs/operators";
+import {Subscription} from "rxjs/Subscription";
 import {StateObserver} from "./StateObserver";
 import {StateObserverProvider} from "./StateObserverProvider";
 import {Store} from "./Store";
@@ -14,45 +17,49 @@ export type ViewTreeState<T> = {
 
 export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>> {
 
-    state: ViewTreeState<Readonly<T>> = {} as any;
+    private readonly stateChanges$ = Observable.create((observer: Observer<ViewTreeState<Readonly<T>>>) => {
+        const subscriptions: Subscription[] = [];
+        this.parseTree([{} as any], observer, [], this.tree, subscriptions);
+        return () => {
+            subscriptions.forEach(s => s.unsubscribe());
+        };
+    }).pipe(shareReplay(1));
 
-    private readonly stateChanges$ = new ReplaySubject<ViewTreeState<Readonly<T>>>(1);
-
-    constructor(tree: T) {
-        this.parseTree([], tree);
+    constructor(private readonly tree: T) {
     }
 
-    private parseTree(path: string[], tree: any) {
+    private parseTree(stateCell: [ViewTreeState<Readonly<T>>], observer: Observer<ViewTreeState<Readonly<T>>>, path: string[], tree: any, subscriptions: Subscription[]) {
         _.forIn(tree, (child, key) => {
             const localPath = _.cloneDeep(path);
             localPath.push(key);
 
             if (_.isPlainObject(child)) {
-                this.parseTree(localPath, child);
+                this.parseTree(stateCell, observer, localPath, child, subscriptions);
             } else if (child instanceof Store) {
-                child.unbounded().select()
+                const sub = child.unbounded().select()
                     .subscribe(state => {
-                        this.mergeState(localPath, state);
-                        this.stateChanges$.next(this.state);
+                        this.mergeState(stateCell, localPath, state);
+                        observer.next(stateCell[0]);
                     });
+                subscriptions.push(sub);
             }
         });
     }
 
-    private mergeState(path: string[], stateChange: any): void {
+    private mergeState(stateCell: [ViewTreeState<Readonly<T>>], path: string[], stateChange: any): void {
         if (path.length === 0) {
-            this.state = stateChange;
+            stateCell[0] = stateChange;
             return;
         }
 
         const newParentState: any = {};
         let parentPath = path.slice(0, path.length - 1);
-        let currentParentState = parentPath.length > 0 ? _.get(this.state, parentPath) : this.state;
+        let currentParentState = parentPath.length > 0 ? _.get(stateCell[0], parentPath) : stateCell[0];
         Object.assign(newParentState, currentParentState);
         newParentState[_.last(path)!] = stateChange;
         Object.freeze(newParentState);
 
-        return this.mergeState(parentPath, newParentState);
+        return this.mergeState(stateCell, parentPath, newParentState);
     }
 
     bounded(operator: Operator<ViewTreeState<Readonly<T>>, ViewTreeState<Readonly<T>>>): StateObserver<ViewTreeState<Readonly<T>>> {

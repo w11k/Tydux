@@ -3,7 +3,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
 import {Store} from "./Store";
-import {collect} from "./test-utils";
+import {afterAllStoreEvents, collect} from "./test-utils";
 
 
 export class EmptyMutators extends Mutator<any> {
@@ -33,7 +33,7 @@ describe("Mutators", function () {
         assert.deepEqual(store.state, {n1: 1});
     });
 
-    it("methods can assign state properties successively", function () {
+    it("methods can assign state properties successively", async function () {
         class State {
             list1?: number[];
             list2: number[] = [];
@@ -67,6 +67,8 @@ describe("Mutators", function () {
             });
 
         store.action1();
+
+        await afterAllStoreEvents(store);
 
         assert.deepEqual(store.state.list1, [1]);
         assert.deepEqual(store.state.list2, [2]);
@@ -109,7 +111,7 @@ describe("Mutators", function () {
         store.action();
     });
 
-    it("nested methods are merged", function () {
+    it("nested methods are merged", async function () {
         class TestMutator extends Mutator<{ n1: string }> {
             mod1() {
                 this.state.n1 += "1";
@@ -135,6 +137,7 @@ describe("Mutators", function () {
         const store = new TestStore("TestStore", new TestMutator(), {n1: ""});
         let collected = collect(store.unbounded().select(s => s.n1));
         store.action1();
+        await afterAllStoreEvents(store);
         collected.assert("", "123");
     });
 

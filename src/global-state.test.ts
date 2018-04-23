@@ -3,6 +3,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {globalStateChanges$} from "./global-state";
 import {Mutator} from "./mutator";
 import {MutatorEvent, Store} from "./Store";
+import {afterAllStoreEvents} from "./test-utils";
 
 
 describe("global state", function () {
@@ -11,7 +12,7 @@ describe("global state", function () {
         enableTyduxDevelopmentMode();
     });
 
-    it("collects MutatorEvents", function () {
+    it("collects MutatorEvents", async function () {
         const events: MutatorEvent<any>[] = [];
 
         class MyMutators extends Mutator<{ count: number }> {
@@ -37,6 +38,8 @@ describe("global state", function () {
 
         const store = new MyStore("store", new MyMutators(), {count: 0});
         store.action1();
+
+        await afterAllStoreEvents(store);
 
         assert.equal(events[0].action.type, "@@INIT");
 
