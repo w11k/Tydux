@@ -11,9 +11,11 @@
   "dependencies": {
     "@types/es6-shim": "0.31.35",
     "es6-shim": "0.35.3",
-    "immer": "1.2.0",
     "lodash": "4.17.4",
     "rxjs": "5.5.10"
+  },
+  "peerDependencies": {
+    "rxjs": ">= 5.5"
   },
   "devDependencies": {
     "@types/chai": "4.1.2",
