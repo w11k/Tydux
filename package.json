@@ -1,6 +1,6 @@
 {
   "name": "@w11k/tydux",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "license": "Apache-2.0",
