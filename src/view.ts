@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Observer} from "rxjs/Observer";
 import {Operator} from "rxjs/Operator";
-import {share, skip} from "rxjs/operators";
+import {share, shareReplay, skip} from "rxjs/operators";
 import {Subscriber} from "rxjs/Subscriber";
 import {Subscription} from "rxjs/Subscription";
 import {StateObserver} from "./StateObserver";
@@ -37,7 +37,7 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
     }).pipe(
         // publish(),
         // refCount(),
-        share(),
+        // share(),
         // shareReplay(1)
     );
 
@@ -47,6 +47,9 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
         this.findStoresInTree(tree, [], this.stores);
     }
 
+    /**
+     * Internal API. Do not use!
+     */
     get internalSubscriptionCount() {
         return this._internalSubscriptionCount;
     }
