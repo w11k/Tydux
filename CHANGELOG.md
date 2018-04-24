@@ -1,4 +1,9 @@
 
+# Version 6.0.2
+
+- fixed memory leak in View
+
+
 # Version 6.0.0
 
 - added View feature
