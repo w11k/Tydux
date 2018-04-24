@@ -1,4 +1,6 @@
 import {assert} from "chai";
+import * as _ from "lodash";
+import {tap} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
@@ -145,19 +147,111 @@ describe("View", function () {
         assert.isTrue(called);
     });
 
-    it("StateObserver#select()", function (done) {
+    it("StateObserver#select() directly provides the structure to select from (1 observer)", function (done) {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+        view.unbounded()
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+                done();
+            })
+            .subscribe();
+    });
+
+    it("StateObserver#select() directly provides the structure to select from (2 observers)", function (done) {
         const store1 = new Store1();
         const store2 = new Store2();
 
         const view = new View({store1, store2});
 
         view.unbounded()
-            .select(s => {
-                assert.equal(s.store1.value1, 10);
-                assert.equal(s.store2.value2, 20);
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .subscribe();
+
+        view.unbounded()
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
                 done();
             })
             .subscribe();
+    });
+
+    it("correctly unsubscribes with 1 observer", function () {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        // add spies to stores
+        (store1 as any).mutatorEvents$ = store1.mutatorEvents$.pipe(
+            tap(_.noop, undefined, () => console.log("complete1"))
+        );
+
+        const view = new View({store1, store2});
+
+        assert.equal(view.internalSubscriptionCount, 0);
+
+        let sub1 = view.unbounded()
+            .select(vs => {
+                console.log("sub", vs);
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .subscribe();
+
+        assert.equal(view.internalSubscriptionCount, 2);
+        sub1.unsubscribe();
+        assert.equal(view.internalSubscriptionCount, 0);
+    });
+
+    it("StateObserver handle subscriptions", function (done) {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        // add spies to stores
+        let store1Unsubcalled = false;
+        (store1 as any).mutatorEvents$ = store1.mutatorEvents$.pipe(
+            tap(_.noop, undefined, () => store1Unsubcalled = true)
+        );
+        let store2Unsubcalled = false;
+        (store2 as any).mutatorEvents$ = store2.mutatorEvents$.pipe(
+            tap(_.noop, undefined, () => store2Unsubcalled = true)
+        );
+
+        const view = new View({store1, store2});
+
+        let sub1 = view.unbounded()
+            .select(vs => {
+                console.log("sub1", vs);
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .subscribe();
+
+        let sub2 = view.unbounded()
+            .select(vs => {
+                console.log("sub2", vs);
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .subscribe();
+
+
+        setTimeout(() => {
+            console.log("timeout1");
+            sub1.unsubscribe();
+        }, 500);
+
+        setTimeout(() => {
+            console.log("timeout2");
+            sub2.unsubscribe();
+        }, 500);
+
     });
 
 });

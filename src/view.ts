@@ -1,10 +1,9 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
-import {zip} from "rxjs/observable/zip";
 import {Observer} from "rxjs/Observer";
 import {Operator} from "rxjs/Operator";
-import {shareReplay} from "rxjs/operators";
-import {ReplaySubject} from "rxjs/ReplaySubject";
+import {share, skip} from "rxjs/operators";
+import {Subscriber} from "rxjs/Subscriber";
 import {Subscription} from "rxjs/Subscription";
 import {StateObserver} from "./StateObserver";
 import {StateObserverProvider} from "./StateObserverProvider";
@@ -21,34 +20,35 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
 
     private readonly stores: [string[], Store<any, any>][] = [];
 
-    private readonly stateChanges$ = Observable.create((observer: Observer<ViewTreeState<Readonly<T>>>) => {
+    private readonly stateChanges$ = Observable.create((subscriber: Subscriber<ViewTreeState<Readonly<T>>>) => {
         let stateCell: [ViewTreeState<Readonly<T>>] = [{} as any];
         const subscriptions: Subscription[] = [];
 
-        // we need to buffer all inner Store mutator events while building the tree
-        const buffer = new ReplaySubject<ViewTreeState<Readonly<T>>>(1);
-        this.subscribeStores(stateCell, buffer, this.stores, subscriptions);
+        for (const [path, store] of this.stores) {
+            this.mergeState(stateCell, path, store.state);
+        }
 
-        // wait for all stores
-        let allMutatorEvents = zip(...this.stores.map(([, store]) => store.mutatorEvents$));
-        let bufferSub: Subscription;
-        allMutatorEvents.subscribe(() => {
-            let allHasUndispatched = this.stores.map(([, store]) => store.hasUndispatchedMutatorEvents());
-            if (!_.every(allHasUndispatched)) {
-                bufferSub = buffer.subscribe(observer);
-            }
-        });
+        this.subscribeStores(stateCell, subscriber, this.stores, subscriptions);
+        subscriber.next(stateCell[0]);
 
         return () => {
-            bufferSub.unsubscribe();
             subscriptions.forEach(s => s.unsubscribe());
         };
     }).pipe(
-        shareReplay(1)
+        // publish(),
+        // refCount(),
+        share(),
+        // shareReplay(1)
     );
+
+    private _internalSubscriptionCount = 0;
 
     constructor(private readonly tree: T) {
         this.findStoresInTree(tree, [], this.stores);
+    }
+
+    get internalSubscriptionCount() {
+        return this._internalSubscriptionCount;
     }
 
     private findStoresInTree(tree: any, path: string[], foundStores: [string[], Store<any, any>][]): void {
@@ -70,10 +70,19 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
                             subscriptions: Subscription[]) {
 
         for (const [path, child] of foundStores) {
+            this._internalSubscriptionCount++;
             const sub = child.unbounded().select()
+                .pipe(
+                    // skip the first state value because the initial view state
+                    // gets created manually
+                    skip(1),
+                )
                 .subscribe(state => {
                     this.mergeState(stateCell, path, state);
                     observer.next(stateCell[0]);
+                })
+                .add(() => {
+                    this._internalSubscriptionCount--;
                 });
             subscriptions.push(sub);
         }
