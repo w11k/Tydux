@@ -1,4 +1,10 @@
 
+
+# Version 5.1.1
+
+- fixed devtools support
+
+
 # Version 5.1.0
 
 - renamed `Mutators` to `Mutator`

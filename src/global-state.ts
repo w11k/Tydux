@@ -28,7 +28,7 @@ export function addStoreToGlobalState(store: Store<any, any>) {
     stores[store.storeId] = store;
     store.mutatorEvents$
         .subscribe((event: MutatorEvent<any>) => {
-            globalState[event.storeId] = store.state;
+            globalState[event.storeId] = event.state;
             globalStateChangesSubject.next(event);
         });
 }
