@@ -40,8 +40,9 @@ describe("Angular integration", function () {
 
         const component = new DummyComponent();
 
-        store.bounded(toAngularComponent(component))
+        store
             .select(s => s.a)
+            .bounded(toAngularComponent(component))
             .subscribe(a => events.push(a));
 
         store.action(); // 1

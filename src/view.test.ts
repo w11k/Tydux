@@ -1,4 +1,3 @@
-/*
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
@@ -78,7 +77,7 @@ describe("View", function () {
             }
         });
 
-        let collected = collect(view.unbounded().select());
+        let collected = collect(view.select().unbounded());
         collected.assert(
             {store1: {value1: 11}, child1: {child2: {store1: {value1: 11}}}}
         );
@@ -103,7 +102,7 @@ describe("View", function () {
             }
         });
 
-        let collected = collect(view.unbounded().select());
+        let collected = collect(view.select().unbounded());
 
         store1.action1();
         store1.action1();
@@ -134,7 +133,7 @@ describe("View", function () {
         });
 
         let called = false;
-        view.unbounded().select().subscribe(s => {
+        view.select().unbounded().subscribe(s => {
             assert.throws(() => {
                 (s.child1 as any)["a"] = "a";
             });
@@ -146,5 +145,95 @@ describe("View", function () {
         assert.isTrue(called);
     });
 
+    it("StateObserver#select() directly provides the structure to select from (1 observer)", function (done) {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+        view
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+                done();
+            })
+            .unbounded()
+            .subscribe();
+    });
+
+    it("StateObserver#select() directly provides the structure to select from (2 observers)", function (done) {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+
+        view
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .unbounded()
+            .subscribe();
+
+        view
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+                done();
+            })
+            .unbounded()
+            .subscribe();
+    });
+
+    it("correctly unsubscribes with 1 observer", function () {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+
+        assert.equal(view.internalSubscriptionCount, 0);
+
+        let sub1 = view
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .unbounded()
+            .subscribe();
+
+        assert.equal(view.internalSubscriptionCount, 2);
+        sub1.unsubscribe();
+        assert.equal(view.internalSubscriptionCount, 0);
+    });
+
+    it("correctly unsubscribes with 2 observers", function () {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+
+        assert.equal(view.internalSubscriptionCount, 0);
+
+        let sub1 = view
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .unbounded()
+            .subscribe();
+
+        let sub2 = view
+            .select(vs => {
+                assert.equal(vs.store1.value1, 10);
+                assert.equal(vs.store2.value2, 20);
+            })
+            .unbounded()
+            .subscribe();
+
+        assert.equal(view.internalSubscriptionCount, 4);
+        sub1.unsubscribe();
+        assert.equal(view.internalSubscriptionCount, 2);
+        sub2.unsubscribe();
+        assert.equal(view.internalSubscriptionCount, 0);
+    });
+
 });
-*/

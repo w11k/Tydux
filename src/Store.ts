@@ -1,16 +1,25 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
-import {Operator} from "rxjs/Operator";
-import {map} from "rxjs/operators";
+import {filter, map} from "rxjs/operators";
+import {distinctUntilChanged} from "rxjs/operators/distinctUntilChanged";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
 import {Mutator} from "./mutator";
-import {StateObserver} from "./StateObserver";
-import {StateObserverProvider} from "./StateObserverProvider";
-import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
+import {
+    ObservableSelection,
+    selectNonNilToObervableSelection,
+    selectToObservableSelection
+} from "./ObservableSelection";
+import {
+    areArraysShallowEquals,
+    arePlainObjectsShallowEquals,
+    createFailingProxy,
+    createProxy,
+    failIfNotUndefined
+} from "./utils";
 
 export interface Action {
     [param: string]: any;
@@ -52,7 +61,7 @@ export function createActionFromArguments(actionTypeName: string, fn: any, args:
     return action;
 }
 
-export abstract class Store<M extends Mutator<S>, S> implements StateObserverProvider<S> {
+export abstract class Store<M extends Mutator<S>, S> {
 
     private _state: S = undefined as any;
 
@@ -92,12 +101,16 @@ export abstract class Store<M extends Mutator<S>, S> implements StateObserverPro
         return this._undispatchedMutatorEventsCount !== 0;
     }
 
-    bounded(operator: Operator<S, S>): StateObserver<S> {
-        return new StateObserver(this.mutatorEvents$.pipe(map(e => e.state)), operator);
+    select(): ObservableSelection<Readonly<S>>;
+
+    select<R>(selector: (state: Readonly<S>) => R): ObservableSelection<R>;
+
+    select<R>(selector?: (state: Readonly<S>) => R): ObservableSelection<R> {
+        return selectToObservableSelection(this.mutatorEvents$.pipe(map(e => e.state)), selector);
     }
 
-    unbounded(): StateObserver<S> {
-        return new StateObserver(this.mutatorEvents$.pipe(map(e => e.state)));
+    selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
+        return selectNonNilToObervableSelection(this.mutatorEvents$.pipe(map(e => e.state)), selector);
     }
 
     private processMutator(mutatorEvent: MutatorEvent<S>) {

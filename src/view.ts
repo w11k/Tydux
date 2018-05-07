@@ -1,12 +1,15 @@
-/*
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Observer} from "rxjs/Observer";
 import {Operator} from "rxjs/Operator";
-import {shareReplay} from "rxjs/operators";
+import {map, share, shareReplay, skip} from "rxjs/operators";
+import {Subscriber} from "rxjs/Subscriber";
 import {Subscription} from "rxjs/Subscription";
-import {StateObserver} from "./StateObserver";
-import {StateObserverProvider} from "./StateObserverProvider";
+import {
+    ObservableSelection,
+    selectNonNilToObervableSelection,
+    selectToObservableSelection
+} from "./ObservableSelection";
 import {Store} from "./Store";
 
 export type ViewTreeState<T> = {
@@ -16,35 +19,81 @@ export type ViewTreeState<T> = {
         : never;
 };
 
-export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>> {
+export class View<T> {
 
-    private readonly stateChanges$ = Observable.create((observer: Observer<ViewTreeState<Readonly<T>>>) => {
+    private readonly stores: [string[], Store<any, any>][] = [];
+
+    private readonly stateChanges$ = Observable.create((subscriber: Subscriber<ViewTreeState<Readonly<T>>>) => {
+        let stateCell: [ViewTreeState<Readonly<T>>] = [{} as any];
         const subscriptions: Subscription[] = [];
-        this.parseTree([{} as any], observer, [], this.tree, subscriptions);
+
+        for (const [path, store] of this.stores) {
+            this.mergeState(stateCell, path, store.state);
+        }
+
+        this.subscribeStores(stateCell, subscriber, this.stores, subscriptions);
+        subscriber.next(stateCell[0]);
+
         return () => {
             subscriptions.forEach(s => s.unsubscribe());
         };
-    }).pipe(shareReplay(1));
+    }).pipe(
+        // publish(),
+        // refCount(),
+        // share(),
+        // shareReplay(1)
+    );
+
+    private _internalSubscriptionCount = 0;
 
     constructor(private readonly tree: T) {
+        this.findStoresInTree(tree, [], this.stores);
     }
 
-    private parseTree(stateCell: [ViewTreeState<Readonly<T>>], observer: Observer<ViewTreeState<Readonly<T>>>, path: string[], tree: any, subscriptions: Subscription[]) {
+    /**
+     * Internal API. Do not use!
+     */
+    get internalSubscriptionCount() {
+        return this._internalSubscriptionCount;
+    }
+
+    private findStoresInTree(tree: any, path: string[], foundStores: [string[], Store<any, any>][]): void {
         _.forIn(tree, (child, key) => {
             const localPath = _.cloneDeep(path);
             localPath.push(key);
 
             if (_.isPlainObject(child)) {
-                this.parseTree(stateCell, observer, localPath, child, subscriptions);
+                this.findStoresInTree(child, localPath, foundStores);
             } else if (child instanceof Store) {
-                const sub = child.unbounded().select()
-                    .subscribe(state => {
-                        this.mergeState(stateCell, localPath, state);
-                        observer.next(stateCell[0]);
-                    });
-                subscriptions.push(sub);
+                foundStores.push([localPath, child]);
             }
         });
+    }
+
+    private subscribeStores(stateCell: [ViewTreeState<Readonly<T>>],
+                            observer: Observer<ViewTreeState<Readonly<T>>>,
+                            foundStores: [string[], Store<any, any>][],
+                            subscriptions: Subscription[]) {
+
+        for (const [path, child] of foundStores) {
+            this._internalSubscriptionCount++;
+            const sub = child
+                .select()
+                .unbounded()
+                .pipe(
+                    // skip the first state value because the initial view state
+                    // gets created manually
+                    skip(1),
+                )
+                .subscribe(state => {
+                    this.mergeState(stateCell, path, state);
+                    observer.next(stateCell[0]);
+                })
+                .add(() => {
+                    this._internalSubscriptionCount--;
+                });
+            subscriptions.push(sub);
+        }
     }
 
     private mergeState(stateCell: [ViewTreeState<Readonly<T>>], path: string[], stateChange: any): void {
@@ -63,13 +112,16 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
         return this.mergeState(stateCell, parentPath, newParentState);
     }
 
-    bounded(operator: Operator<ViewTreeState<Readonly<T>>, ViewTreeState<Readonly<T>>>): StateObserver<ViewTreeState<Readonly<T>>> {
-        return new StateObserver(this.stateChanges$, operator);
+    select(): ObservableSelection<ViewTreeState<Readonly<T>>>;
+
+    select<R>(selector: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R>;
+
+    select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R> {
+        return selectToObservableSelection(this.stateChanges$.pipe(map(e => e)), selector);
     }
 
-    unbounded(): StateObserver<ViewTreeState<Readonly<T>>> {
-        return new StateObserver(this.stateChanges$);
+    selectNonNil<R>(selector: (state: ViewTreeState<Readonly<T>>) => R | null | undefined): ObservableSelection<R> {
+        return selectNonNilToObervableSelection(this.stateChanges$.pipe(map(e => e)), selector);
     }
 
 }
-*/

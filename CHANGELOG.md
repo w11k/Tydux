@@ -1,8 +1,29 @@
 
+# Version 5.3.0
+
+- Removed StateObserver in favour of ObservableSelection. This API change makes it much easier for stores to return a selection.
+
+
 
 # Version 5.2.3
 
 - fixed devtools support
+
+
+# Version 6.0.2
+
+- fixed memory leak in View
+
+
+# Version 6.0.0
+
+- added View feature
+
+
+# Forked Development: Version 5.x
+
+- Version 5 will stay on TypeScript 2.7.x
+- Removed View feature
 
 
 # Version 5.1.0
