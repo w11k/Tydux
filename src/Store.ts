@@ -1,7 +1,6 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
-import {filter, map} from "rxjs/operators";
-import {distinctUntilChanged} from "rxjs/operators/distinctUntilChanged";
+import {map} from "rxjs/operators";
 import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
@@ -13,13 +12,7 @@ import {
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
-import {
-    areArraysShallowEquals,
-    arePlainObjectsShallowEquals,
-    createFailingProxy,
-    createProxy,
-    failIfNotUndefined
-} from "./utils";
+import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
 
 export interface Action {
     [param: string]: any;
