@@ -1,8 +1,7 @@
 import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Observer} from "rxjs/Observer";
-import {Operator} from "rxjs/Operator";
-import {map, share, shareReplay, skip} from "rxjs/operators";
+import {skip} from "rxjs/operators";
 import {Subscriber} from "rxjs/Subscriber";
 import {Subscription} from "rxjs/Subscription";
 import {
@@ -23,26 +22,22 @@ export class View<T> {
 
     private readonly stores: [string[], Store<any, any>][] = [];
 
-    private readonly stateChanges$ = Observable.create((subscriber: Subscriber<ViewTreeState<Readonly<T>>>) => {
-        let stateCell: [ViewTreeState<Readonly<T>>] = [{} as any];
-        const subscriptions: Subscription[] = [];
+    private readonly stateChanges$: Observable<ViewTreeState<Readonly<T>>> =
+        Observable.create((subscriber: Subscriber<ViewTreeState<Readonly<T>>>) => {
+            let stateCell: [ViewTreeState<Readonly<T>>] = [{} as any];
+            const subscriptions: Subscription[] = [];
 
-        for (const [path, store] of this.stores) {
-            this.mergeState(stateCell, path, store.state);
-        }
+            for (const [path, store] of this.stores) {
+                this.mergeState(stateCell, path, store.state);
+            }
 
-        this.subscribeStores(stateCell, subscriber, this.stores, subscriptions);
-        subscriber.next(stateCell[0]);
+            this.subscribeStores(stateCell, subscriber, this.stores, subscriptions);
+            subscriber.next(stateCell[0]);
 
-        return () => {
-            subscriptions.forEach(s => s.unsubscribe());
-        };
-    }).pipe(
-        // publish(),
-        // refCount(),
-        // share(),
-        // shareReplay(1)
-    );
+            return () => {
+                subscriptions.forEach(s => s.unsubscribe());
+            };
+        });
 
     private _internalSubscriptionCount = 0;
 
@@ -117,11 +112,11 @@ export class View<T> {
     select<R>(selector: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R>;
 
     select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R> {
-        return selectToObservableSelection(this.stateChanges$.pipe(map(e => e)), selector);
+        return selectToObservableSelection(this.stateChanges$, selector);
     }
 
     selectNonNil<R>(selector: (state: ViewTreeState<Readonly<T>>) => R | null | undefined): ObservableSelection<R> {
-        return selectNonNilToObervableSelection(this.stateChanges$.pipe(map(e => e)), selector);
+        return selectNonNilToObervableSelection(this.stateChanges$, selector);
     }
 
 }
