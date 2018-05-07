@@ -1,6 +1,4 @@
 import {assert} from "chai";
-import * as _ from "lodash";
-import {tap} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
@@ -79,7 +77,7 @@ describe("View", function () {
             }
         });
 
-        let collected = collect(view.unbounded().select());
+        let collected = collect(view.select().unbounded());
         collected.assert(
             {store1: {value1: 11}, child1: {child2: {store1: {value1: 11}}}}
         );
@@ -104,7 +102,7 @@ describe("View", function () {
             }
         });
 
-        let collected = collect(view.unbounded().select());
+        let collected = collect(view.select().unbounded());
 
         store1.action1();
         store1.action1();
@@ -135,7 +133,7 @@ describe("View", function () {
         });
 
         let called = false;
-        view.unbounded().select().subscribe(s => {
+        view.select().unbounded().subscribe(s => {
             assert.throws(() => {
                 (s.child1 as any)["a"] = "a";
             });
@@ -152,12 +150,13 @@ describe("View", function () {
         const store2 = new Store2();
 
         const view = new View({store1, store2});
-        view.unbounded()
+        view
             .select(vs => {
                 assert.equal(vs.store1.value1, 10);
                 assert.equal(vs.store2.value2, 20);
                 done();
             })
+            .unbounded()
             .subscribe();
     });
 
@@ -167,19 +166,21 @@ describe("View", function () {
 
         const view = new View({store1, store2});
 
-        view.unbounded()
+        view
             .select(vs => {
                 assert.equal(vs.store1.value1, 10);
                 assert.equal(vs.store2.value2, 20);
             })
+            .unbounded()
             .subscribe();
 
-        view.unbounded()
+        view
             .select(vs => {
                 assert.equal(vs.store1.value1, 10);
                 assert.equal(vs.store2.value2, 20);
                 done();
             })
+            .unbounded()
             .subscribe();
     });
 
@@ -191,11 +192,12 @@ describe("View", function () {
 
         assert.equal(view.internalSubscriptionCount, 0);
 
-        let sub1 = view.unbounded()
+        let sub1 = view
             .select(vs => {
                 assert.equal(vs.store1.value1, 10);
                 assert.equal(vs.store2.value2, 20);
             })
+            .unbounded()
             .subscribe();
 
         assert.equal(view.internalSubscriptionCount, 2);
@@ -211,18 +213,20 @@ describe("View", function () {
 
         assert.equal(view.internalSubscriptionCount, 0);
 
-        let sub1 = view.unbounded()
+        let sub1 = view
             .select(vs => {
                 assert.equal(vs.store1.value1, 10);
                 assert.equal(vs.store2.value2, 20);
             })
+            .unbounded()
             .subscribe();
 
-        let sub2 = view.unbounded()
+        let sub2 = view
             .select(vs => {
                 assert.equal(vs.store1.value1, 10);
                 assert.equal(vs.store2.value2, 20);
             })
+            .unbounded()
             .subscribe();
 
         assert.equal(view.internalSubscriptionCount, 4);

@@ -54,8 +54,9 @@ describe("AngularJS integration", function () {
         const rootScope = new DummyScope();
         const scope = new DummyScope(rootScope);
 
-        store.bounded(toAngularJSScope(scope))
+        store
             .select(s => s.a)
+            .bounded(toAngularJSScope(scope))
             .subscribe(a => events.push(a));
 
         store.action();

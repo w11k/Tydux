@@ -61,7 +61,8 @@ describe("Mutators", function () {
 
         const store = new MyStore("", new TestMutator(), new State());
 
-        store.unbounded().selectNonNil(s => s.list1)
+        store.selectNonNil(s => s.list1)
+            .unbounded()
             .subscribe(() => {
                 store.action2();
             });
@@ -135,7 +136,7 @@ describe("Mutators", function () {
         }
 
         const store = new TestStore("TestStore", new TestMutator(), {n1: ""});
-        let collected = collect(store.unbounded().select(s => s.n1));
+        let collected = collect(store.select(s => s.n1).unbounded());
         store.action1();
         await afterAllStoreEvents(store);
         collected.assert("", "123");

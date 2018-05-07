@@ -1,9 +1,8 @@
 import * as _ from "lodash";
-import {OperatorFunction} from "rxjs/interfaces";
 import {map} from "rxjs/operators";
-import {EntityStoreObserver} from "./EntityStoreObserver";
 import {Mutator} from "./mutator";
-import {MutatorEvent, Store} from "./Store";
+import {ObservableSelection} from "./ObservableSelection";
+import {Store} from "./Store";
 
 export interface EntityMap<T> {
     [id: string]: T;
@@ -117,12 +116,25 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
         });
     }
 
-
-    bounded(operator: OperatorFunction<EntityState<T>, EntityState<T>>) {
-        return new EntityStoreObserver(this.mutatorEvents$.pipe(map(e => e.state)), operator);
+    selectById(id: string) {
+        return this.select(s => s.entities[id]);
     }
 
-    unbounded() {
-        return new EntityStoreObserver(this.mutatorEvents$.pipe(map(e => e.state)));
+    selectAll() {
+        return new ObservableSelection(this.select()
+            .unbounded()
+            .pipe(
+                map(state => {
+                    return state.ids.map((id) => state.entities[id]);
+                })
+            ));
     }
+
+    // bounded(operator: OperatorFunction<EntityState<T>, EntityState<T>>) {
+    //     return new ObservableSelection(this.mutatorEvents$.pipe(map(e => e.state)), operator);
+    // }
+
+    // unbounded() {
+    //     return new EntityStoreObserver(this.mutatorEvents$.pipe(map(e => e.state)));
+    // }
 }

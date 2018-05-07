@@ -6,12 +6,13 @@ import {Subscriber} from "rxjs/Subscriber";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
+import {ObservableSelection} from "./ObservableSelection";
 import {Store} from "./Store";
 import {afterAllStoreEvents, collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
 
-describe("StoreObserver", function () {
+describe("ObservableSelection", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
@@ -36,7 +37,7 @@ describe("StoreObserver", function () {
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
-            (subscriber: Subscriber<State>, source: Observable<State>) => {
+            (subscriber: Subscriber<any>, source: Observable<any>) => {
                 const sub = source
                     .pipe(
                         takeUntil(stopTrigger)
@@ -48,7 +49,7 @@ describe("StoreObserver", function () {
                 };
             });
 
-        let collected = collect(store.bounded(operator).select(s => s.a));
+        let collected = collect(store.select(s => s.a).bounded(operator));
 
         store.action();
         store.action();
@@ -88,12 +89,12 @@ describe("StoreObserver", function () {
         const events: any[] = [];
 
         const operator = operatorFactory(
-            (subscriber: Subscriber<State>, source: Observable<State>) => {
+            (subscriber: Subscriber<any>, source: Observable<any>) => {
                 const subscription = source.subscribe(
                     val => {
-                        events.push("pre-" + val.a);
+                        events.push("pre-" + val);
                         subscriber.next(val);
-                        events.push("post-" + val.a);
+                        events.push("post-" + val);
                     },
                     exception => subscriber.error(exception),
                     () => subscriber.complete()
@@ -105,8 +106,9 @@ describe("StoreObserver", function () {
                 };
             });
 
-        store.bounded(operator)
+        store
             .select(s => s.a)
+            .bounded(operator)
             .subscribe(s => events.push(s));
 
         store.action();

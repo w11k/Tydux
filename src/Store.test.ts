@@ -50,7 +50,7 @@ describe("Store", function () {
         log("query", store.state.count);
 
         // observe the state
-        store.unbounded().select(s => s.count).subscribe(count => {
+        store.select(s => s.count).unbounded().subscribe(count => {
             log("observe", count);
         });
 
@@ -92,7 +92,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.unbounded().select());
+        let collected = collect(store.select().unbounded());
         store.actionInc();
         store.actionInc();
 
@@ -114,7 +114,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: 0});
-        let collected = collect(store.unbounded().select(s => s.n1));
+        let collected = collect(store.select(s => s.n1).unbounded());
         store.actionInc();
         store.actionInc();
 
@@ -145,7 +145,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {n1: undefined});
-        let collected = collect(store.unbounded().selectNonNil(s => s.n1));
+        let collected = collect(store.selectNonNil(s => s.n1).unbounded());
         store.actionInc(); // 1
         store.actionClear();
         store.actionInc(); // 1
@@ -181,7 +181,7 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {a: 0, b: 10, c: 100});
-        let collected = collect(store.unbounded().select(s => [s.a, s.b]));
+        let collected = collect(store.select(s => [s.a, s.b]).unbounded());
         store.actionIncAB();
         store.actionIncC();
         store.actionIncAB();
@@ -215,12 +215,12 @@ describe("Store", function () {
         }
 
         const store = new TestStore("", new TestMutator(), {a: 0, b: 10, c: 100});
-        let collected = collect(store.unbounded().select(s => {
+        let collected = collect(store.select(s => {
             return {
                 a: s.a,
                 b: s.b
             };
-        }));
+        }).unbounded());
         store.actionIncAB();
         store.actionIncC(); // should not trigger select()
         store.actionIncAB();
@@ -250,7 +250,7 @@ describe("Store", function () {
 
         const state = {root: {child: {val1: 1}}};
         const store = new TestStore("", new TestMutator(), state);
-        let collected = collect(store.unbounded().select(s => s.root));
+        let collected = collect(store.select(s => s.root).unbounded());
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
@@ -286,7 +286,7 @@ describe("Store", function () {
         }
 
         const store = new MyStore("myStore", new MyMutators(), new MyState());
-        let collected = collect(store.unbounded().select(s => s.count));
+        let collected = collect(store.select(s => s.count).unbounded());
         store.action();
 
         await afterAllStoreEvents(store);

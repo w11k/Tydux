@@ -2,11 +2,14 @@ import * as _ from "lodash";
 import {Observable} from "rxjs/Observable";
 import {Observer} from "rxjs/Observer";
 import {Operator} from "rxjs/Operator";
-import {share, shareReplay, skip} from "rxjs/operators";
+import {map, share, shareReplay, skip} from "rxjs/operators";
 import {Subscriber} from "rxjs/Subscriber";
 import {Subscription} from "rxjs/Subscription";
-import {StateObserver} from "./StateObserver";
-import {StateObserverProvider} from "./StateObserverProvider";
+import {
+    ObservableSelection,
+    selectNonNilToObervableSelection,
+    selectToObservableSelection
+} from "./ObservableSelection";
 import {Store} from "./Store";
 
 export type ViewTreeState<T> = {
@@ -16,7 +19,7 @@ export type ViewTreeState<T> = {
         : never;
 };
 
-export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>> {
+export class View<T> {
 
     private readonly stores: [string[], Store<any, any>][] = [];
 
@@ -74,7 +77,9 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
 
         for (const [path, child] of foundStores) {
             this._internalSubscriptionCount++;
-            const sub = child.unbounded().select()
+            const sub = child
+                .select()
+                .unbounded()
                 .pipe(
                     // skip the first state value because the initial view state
                     // gets created manually
@@ -107,12 +112,16 @@ export class View<T> implements StateObserverProvider<ViewTreeState<Readonly<T>>
         return this.mergeState(stateCell, parentPath, newParentState);
     }
 
-    bounded(operator: Operator<ViewTreeState<Readonly<T>>, ViewTreeState<Readonly<T>>>): StateObserver<ViewTreeState<Readonly<T>>> {
-        return new StateObserver(this.stateChanges$, operator);
+    select(): ObservableSelection<ViewTreeState<Readonly<T>>>;
+
+    select<R>(selector: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R>;
+
+    select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R> {
+        return selectToObservableSelection(this.stateChanges$.pipe(map(e => e)), selector);
     }
 
-    unbounded(): StateObserver<ViewTreeState<Readonly<T>>> {
-        return new StateObserver(this.stateChanges$);
+    selectNonNil<R>(selector: (state: ViewTreeState<Readonly<T>>) => R | null | undefined): ObservableSelection<R> {
+        return selectNonNilToObervableSelection(this.stateChanges$.pipe(map(e => e)), selector);
     }
 
 }
