@@ -97,7 +97,8 @@ const renderApp = () => {
         `;
 };
 
-store.unbounded().select()
+store.select()
+    .unbounded()
     .subscribe(() => {
         renderApp();
     });
