@@ -1,10 +1,9 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="All Tests" type="mocha-javascript-test-runner" factoryName="Mocha">
     <node-interpreter>project</node-interpreter>
-    <node-options />
+    <node-options>--inspect</node-options>
     <working-directory>$PROJECT_DIR$</working-directory>
     <pass-parent-env>true</pass-parent-env>
-    <envs />
     <ui>bdd</ui>
     <extra-mocha-options>--opts spec/mocha.opts</extra-mocha-options>
     <test-kind>PATTERN</test-kind>
