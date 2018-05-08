@@ -1,8 +1,7 @@
 
-# Version 5.3.0
+# Version 5.3.1 **Breaking Change**
 
 - Removed StateObserver in favour of ObservableSelection. This API change makes it much easier for stores to return a selection.
-
 
 
 # Version 5.2.3
