@@ -11,8 +11,7 @@
   "dependencies": {
     "@types/es6-shim": "0.31.35",
     "es6-shim": "0.35.3",
-    "lodash": "4.17.4",
-    "rxjs": "5.5.10"
+    "lodash": "4.17.4"
   },
   "peerDependencies": {
     "rxjs": ">= 5.5"
@@ -22,6 +21,7 @@
     "@types/lodash": "4.14.100",
     "@types/mocha": "2.2.48",
     "awesome-typescript-loader": "3.4.1",
+    "rxjs": "5.5.10",
     "chai": "4.1.2",
     "del-cli": "1.1.0",
     "extract-loader": "1.0.2",

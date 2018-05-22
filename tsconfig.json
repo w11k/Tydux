@@ -18,11 +18,17 @@
     ],
     "lib": [
       "es5",
+      "es2015.core",
       "es2015.proxy",
+      "es2015.promise",
       "dom"
     ],
     "rootDir": "src",
     "target": "es5",
     "outDir": "dist"
   }
+//,
+//  "include": [
+//    "src/**/*"
+//  ]
 }

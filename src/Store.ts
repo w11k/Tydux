@@ -1,7 +1,6 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
+import {Observable, ReplaySubject} from "rxjs";
 import {map} from "rxjs/operators";
-import {ReplaySubject} from "rxjs/ReplaySubject";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
