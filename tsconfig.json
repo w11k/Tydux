@@ -31,6 +31,6 @@
     "src/**/*"
   ],
   "exclude": [
-//    "src/types27.d.ts"
+    "src/types27.d.ts"
   ]
 }

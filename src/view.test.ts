@@ -145,6 +145,66 @@ describe("View", function () {
         assert.isTrue(called);
     });
 
+    it("StateObserver#select() maps the event stream", async function () {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+
+        const values: any[] = [];
+        view
+            .select(s => {
+                return {
+                    v1: s.store1.value1,
+                    v2: s.store2.value2
+                };
+            })
+            .unbounded()
+            .subscribe(v => {
+                values.push([v.v1, v.v2]);
+            });
+
+        store1.action1();
+        store2.action2();
+
+        await afterAllStoreEvents(store1);
+        await afterAllStoreEvents(store2);
+
+        assert.deepEqual(values, [
+           [10, 20],
+           [11, 20],
+           [11, 21],
+        ]);
+    });
+
+    it("StateObserver#select() filters the event stream", async function () {
+        const store1 = new Store1();
+        const store2 = new Store2();
+
+        const view = new View({store1, store2});
+
+        const values: any[] = [];
+        view
+            .select(s => {
+                return {
+                    v1: s.store1.value1
+                };
+            })
+            .unbounded()
+            .subscribe(v => {
+                values.push([v.v1]);
+            });
+
+        store2.action2();
+
+        await afterAllStoreEvents(store1);
+        await afterAllStoreEvents(store2);
+
+        assert.deepEqual(values, [
+           [10],
+        ]);
+    });
+
     it("StateObserver#select() directly provides the structure to select from (1 observer)", function (done) {
         const store1 = new Store1();
         const store2 = new Store2();
