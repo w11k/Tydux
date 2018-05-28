@@ -1,7 +1,7 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
-import {Operator} from "rxjs/Operator";
-import {Subscriber} from "rxjs/Subscriber";
+import {Observable} from "rxjs";
+import {Operator} from "rxjs";
+import {Subscriber} from "rxjs";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
 
 export function areArraysShallowEquals(array1: any[], array2: any[]): boolean {

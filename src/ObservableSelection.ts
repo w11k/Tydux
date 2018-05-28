@@ -1,8 +1,6 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
-import {Operator} from "rxjs/Operator";
-import {filter, map} from "rxjs/operators";
-import {distinctUntilChanged} from "rxjs/operators/distinctUntilChanged";
+import {Observable, Operator} from "rxjs";
+import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {areArraysShallowEquals, arePlainObjectsShallowEquals} from "./utils";
 
 

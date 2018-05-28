@@ -1,8 +1,5 @@
-import {Observable} from "rxjs/Observable";
-import {Operator} from "rxjs/Operator";
+import {Observable, Operator, Subject, Subscriber} from "rxjs";
 import {takeUntil} from "rxjs/operators";
-import {Subject} from "rxjs/Subject";
-import {Subscriber} from "rxjs/Subscriber";
 import {operatorFactory} from "./utils";
 
 export type OnDestroyLike = {

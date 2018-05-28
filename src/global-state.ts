@@ -1,6 +1,6 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
-import {Subject} from "rxjs/Subject";
+import {Observable} from "rxjs";
+import {Subject} from "rxjs";
 import {MutatorEvent, Store} from "./Store";
 
 const stores: { [name: string]: Store<any, any> } = {};

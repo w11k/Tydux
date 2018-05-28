@@ -1,4 +1,14 @@
 
+# Version 8.0.0
+
+- Requires RxJS >= 6
+- Can be used with TypeScript <= 2.7 and >= 2.8 projects:
+	- add a file e.g. `tydux.d.ts` to your project src folder and make sure that it gets included in the compilation process
+	- add the line (change the path to `node_modules` according to your project):
+		- TypeScript <= 2.7 projects: `/// <reference path="../node_modules/@w11k/tydux/dist/types27.d.ts" />`
+		- TypeScript >= 2.8 projects: `/// <reference path="../node_modules/@w11k/tydux/dist/types28.d.ts" />`
+
+
 # Version 7.0.0
 
 - Removed StateObserver in favour of ObservableSelection. This API change makes it much easier for stores to return a selection.

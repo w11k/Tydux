@@ -1,7 +1,7 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
-import {Operator} from "rxjs/Operator";
-import {Subscriber} from "rxjs/Subscriber";
+import {Observable} from "rxjs";
+import {Operator} from "rxjs";
+import {Subscriber} from "rxjs";
 
 
 function runInScopeDigest(scope: AngularJS1ScopeLike, fn: () => void) {

@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {Observable} from "rxjs/Observable";
+import {Observable} from "rxjs";
 import {filter, take} from "rxjs/operators";
 import {MutatorEvent, Store} from "./Store";
 

@@ -3,7 +3,7 @@
 Tydux consists of three building blocks:
 
 - State class (one per store): represents the state
-- Mutators class (one per store): modify the state
+- Mutator class (one per store): modify the state
 - Store class (unlimited): combines one state class and one mutator class 
 
 The following example shows a simple "TODO app".
@@ -23,12 +23,12 @@ export class TodoState {
 }
 ```
 
-# Mutators
+# Mutator
 
-Only mutators are able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state. The following mutator class contains two methods to alter the state:
+Only the mutator is able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state. The following mutator class contains two methods to alter the state:
 
 ```
-export class TodoMutators extends Mutators<TodoState> {
+export class TodoMutator extends Mutator<TodoState> {
 
     clearTodos() {
         this.state.todos = [];
@@ -59,8 +59,8 @@ this.state.todos.push(...);
 **Rules:**
 
 - If a mutator throws an exception, all changes to the state will be discarded.
-- Mutators can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
-- Mutators must not return a value. 
+- A mutator method can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
+- Mutator methods must not return a value. 
 
 
 # Store
@@ -68,7 +68,7 @@ this.state.todos.push(...);
 The store class encapsulates the state and the mutator class:
 
 ```
-export class TodoStore extends Store<TodoMutators, TodoState> {
+export class TodoStore extends Store<TodoMutator, TodoState> {
 
     constructor() {
         super("todo", new TodoMutators(), new TodoState());
@@ -79,7 +79,7 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
             throw new Error("TODO must not be empty");
         }
 
-        this.dispatch.addTodo(todo); // access the mutator
+        this.mutate.addTodo(todo); // access the mutator
     }
 
     clearTodos = this.dispatch.clearTodos; // simple delegate to the mutator
@@ -89,15 +89,15 @@ export class TodoStore extends Store<TodoMutators, TodoState> {
 
 ## Constructor 
 
-The `super()` call registers the store globally and the first parameter (here `"todo"`) must be unique. The second parameter is the mutators instance. The third parameter provides the initial state.
+The `super()` call registers the store globally and the first parameter (here `"todo"`) must be unique. The second parameter is the mutator instance. The third parameter provides the initial state.
 
 
 ## Modify the state
 
-Because the store encapsulates the mutator class, you must provide methods that provide an API and wrap or use the mutator methods. The mutator instance is available via the protected member variable `this.dispatch`. To modify the state, you simply invoke its methods:
+Because the store encapsulates the mutator class, you must provide methods that provide an API and wrap or use the mutator methods. The mutator instance is available via the protected member variable `this.mutate`. To modify the state, you simply invoke its methods:
 
 ```
-this.dispatch.addTodo("new todo");
+this.mutate.addTodo("new todo");
 ```
 
 **Guidelines:**
@@ -107,7 +107,7 @@ this.dispatch.addTodo("new todo");
 - Use the store's method to provide a *coarse-grained* API
     - use cases, UI actions, etc.
     - asynchronous code (see below)
-- Use the mutators's method to provide a *fine-grained* API
+- Use the mutator's method to provide a *fine-grained* API
     - reusable logic to modify the state
   
 
