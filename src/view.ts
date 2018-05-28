@@ -1,9 +1,9 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs/Observable";
-import {Observer} from "rxjs/Observer";
+import {Observable} from "rxjs";
+import {Observer} from "rxjs";
 import {skip} from "rxjs/operators";
-import {Subscriber} from "rxjs/Subscriber";
-import {Subscription} from "rxjs/Subscription";
+import {Subscriber} from "rxjs";
+import {Subscription} from "rxjs";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
@@ -11,12 +11,7 @@ import {
 } from "./ObservableSelection";
 import {Store} from "./Store";
 
-// export type ViewTreeState<T> = {
-//     [K in keyof T]
-//     : T[K] extends Store<any, infer S> ? S
-//         : T[K] extends object ? ViewTreeState<T[K]>
-//         : never;
-// };
+export type ViewTreeState<T> = tydux_types.ViewTreeState<T>;
 
 export class View<T> {
 

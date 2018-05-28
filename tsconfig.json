@@ -26,9 +26,11 @@
     "rootDir": "src",
     "target": "es5",
     "outDir": "dist"
-  }
-//,
-//  "include": [
-//    "src/**/*"
-//  ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+//    "src/types27.d.ts"
+  ]
 }
