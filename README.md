@@ -62,6 +62,5 @@ Tydux is a TypeScript library for predictable state management. It follows the [
 ### [Installation](https://github.com/Tydux/Tydux/tree/master/doc/installation.md)
 ### [Tutorial](https://github.com/Tydux/Tydux/tree/master/doc/tutorial.md)
 ### [Redux Comparison](https://github.com/Tydux/Tydux/tree/master/doc/redux_comparison.md)
-### [Mutator Hooks](https://github.com/Tydux/Tydux/tree/master/doc/mutators-hooks.md)
 ### [Redux DevTools](https://github.com/Tydux/Tydux/tree/master/doc/redux-devtools.md)
 
