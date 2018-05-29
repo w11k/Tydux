@@ -166,9 +166,9 @@ This API inter layer was added to make the RxJS observable subscription manageme
 
 For Angular version >= 2 and AngularJS version 1, Tydux provides two utility methods that can be used as the operator parameter passed to `bounded(operator)`:
 
-- `toAngularComponent(this)`: 
-	-terminate the observable selection when the component's `onDestroy()` method gets called
-- `toAngularJSScope($scope)`: 
+- `toAngularComponent(this)` 
+	- terminate the observable selection when the component's `onDestroy()` method gets called
+- `toAngularJSScope($scope)` 
 	- terminate the observable selection when the scope gets destroyed
 	- call `$scope.$apply()` *after* the subscriber processed the event
 
