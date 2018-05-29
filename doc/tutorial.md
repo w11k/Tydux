@@ -151,13 +151,30 @@ store.select(s => s.todos)
     });
 ```
 
-**Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. If your selector returns an array or an object, Tydux checks if the entries in the array or the values of the object changed. This way you can easily select multiple values.  
+**Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. If your selector returns an array or an object, Tydux checks if the entries in the array or the values of the object changed. This way you can easily select multiple values. 
+
+## unbounded()/bounded()
+
+The `select()` method return an instance of `ObservableSelection` which provides 2 methods:
+
+- `unbounded()`: returns an observable that emits values whenever the selected value changes
+- `bounded(operator)`: Shorthand for `.unbounded().pipe(lift(operator))`. The operator can be used to e.g.
+	- terminate the observable on certain conditions
+	- post-process the event delivery for e.g. change detection 
+
+This API inter layer was added to make the RxJS observable subscription management more explicit. We believe that frameworks returning observables via their API should assist the consumers in this regard. Forgetting to unsubscribe from observables in e.g. Angular components creates very hard to debug memory leaks. Additionally, frameworks like AngularJS version 1 require to trigger a change detection after an event was dispatched so that the UI can update accordingly. 
+
+For Angular version >= 2 and AngularJS version 1, Tydux provides two utility methods that can be used as the operator parameter passed to `bounded(operator)`:
+
+- `toAngularComponent(this)`: terminate the observable selection when the component's `onDestroy()` method gets called
+- `toAngularJSScope($scope)`: 
+	- terminate the observable selection when the scope gets destroyed
+	- call `$scope.$apply()` *after* the subscriber processed the event
 
 
 # Asynchronous code
 
 Almost all applications have asynchronous code to handle e.g. server responses. The store methods are a perfect fit to model the asynchronous logic while the mutator methods are used to synchronize the state accordingly:
-
 
 
 ```
