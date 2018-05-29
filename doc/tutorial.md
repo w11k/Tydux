@@ -10,7 +10,7 @@ The following example shows a simple "TODO app".
 
 # State 
 
-Normal classes are used to represent the state of the application. To implement the state in our app, we need a `TodoState` class. The `TodoState` class contains all the state, modelled as normal class properties, that we want to manage with Tydux.
+Normal classes are used to represent the state of the application. To implement the state in our app, we need a `TodoState` class. The `TodoState` class contains all the state information as fields that we want to manage with Tydux.
 
 ```
 export class TodoState {
@@ -25,7 +25,7 @@ export class TodoState {
 
 # Mutator
 
-Only the mutator is able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state. The following mutator class contains two methods to alter the state:
+Only the mutator is able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state properties. The following mutator class contains two methods to alter the state:
 
 ```
 export class TodoMutator extends Mutator<TodoState> {
@@ -59,8 +59,9 @@ this.state.todos.push(...);
 **Rules:**
 
 - If a mutator throws an exception, all changes to the state will be discarded.
-- A mutator method can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
-- Mutator methods must not return a value. 
+- A mutator method can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called. The Redux DevTool will only show the root mutator method as an event.
+- Mutator methods must not return a value.
+- Mutator methods must not access the state asynchronously (once a mutator method completes, any attempt to access the state will result in an exception)
 
 
 # Store
@@ -82,7 +83,7 @@ export class TodoStore extends Store<TodoMutator, TodoState> {
         this.mutate.addTodo(todo); // access the mutator
     }
 
-    clearTodos = this.dispatch.clearTodos; // simple delegate to the mutator
+    clearTodos = this.mutate.clearTodos; // simple delegate to the mutator
 
 }
 ```
@@ -105,10 +106,12 @@ this.mutate.addTodo("new todo");
 - Provide the store's API via the store's public methods
 - Distinguish between public and private by adding the modifier accordingly
 - Use the store's method to provide a *coarse-grained* API
-    - use cases, UI actions, etc.
+    - service layer, UI actions, etc.
     - asynchronous code (see below)
 - Use the mutator's method to provide a *fine-grained* API
     - reusable logic to modify the state
+    - their design should be based on the domain operations
+    - avoid exposing too simple data manipulation method  
   
 
 ## Create the store
@@ -148,42 +151,25 @@ store.select(s => s.todos)
     });
 ```
 
-**Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. 
+**Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. If your selector returns an array or an object, Tydux checks if the entries in the array or the values of the object changed. This way you can easily select multiple values.  
 
 
 # Asynchronous code
 
-TODO WIP
+Almost all applications have asynchronous code to handle e.g. server responses. The store methods are a perfect fit to model the asynchronous logic while the mutator methods are used to synchronize the state accordingly:
 
-Almost all applications have asynchronous code to handle e.g. server responses. While mutators can *initiate* async operations, they are not allowed to access the state (via `this.state`) in an async callback. 
 
-**Important:** Once the mutator method completes, any attempt to access the state will result in an exception!
-
- The solution is to delegate the processing of the async result in *another mutator method*. The following mutator class contains two methods. `loadFromServer()` initiates an async operation und uses `assignTodos()` to handle the response:
 
 ```
-export class TodoMutators extends Mutators<TodoState> {
+export class TodoStore extends Store<TodoMutator, TodoState> {
 
-    async loadFromServer() {
-        this.state.timestampLoadRequested = Date.now();     // valid state access
-        const result = await fetch("/todos");               // async starts here...
+    async loadTodosFromServer() {
+        this.mutate.clearTodos();
+        const todosPromise = await fetch("/todos");
         const todos = await result.json();
-        this.assignTodos(todos);                            // ... delegate to other mutator
+        this.mutate.assignTodosLoadedFromServer(todos);
     }
-
-    assignTodos(todos: Todo[]) {
-        this.state.todos = todos;                           // valid state access
-    }
-
+    
 }
 ```
-
-
-# Angular Integration
-
-TODO WIP
-
-If you use e.g. [Angular](https://angular.io) or any other framework with dependency injection, it usually makes sense to provide/configure the store and mutator classes with the injector.
-
-
 

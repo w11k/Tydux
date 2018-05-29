@@ -1,12 +1,14 @@
 # Installation
 
+## Step 1/2: install NPM package
+
 Tydux is available as [NPM package](https://www.npmjs.com/package/@w11k/tydux):
 
 ```
 npm install @w11k/tydux
 ```
 
-# Choose typings depending on your TypeScript version
+## Step 2/2: choose typings depending on your TypeScript version
 
 Tydux can be used with TypeScript <= 2.7 and >= 2.8 projects. However, since Tydux uses the TypeScript feature 'conditional types' added in TypeScript 2.8, you need to configure the compilation process:
 
