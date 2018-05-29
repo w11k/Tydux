@@ -155,7 +155,7 @@ store.select(s => s.todos)
 
 ## unbounded()/bounded()
 
-The `select()` method return an instance of `ObservableSelection` which provides 2 methods:
+The `select()` method returns an instance of `ObservableSelection` which provides 2 methods:
 
 - `unbounded()`: returns an observable that emits values whenever the selected value changes
 - `bounded(operator)`: Shorthand for `.unbounded().pipe(lift(operator))`. The operator can be used to e.g.
@@ -166,7 +166,8 @@ This API inter layer was added to make the RxJS observable subscription manageme
 
 For Angular version >= 2 and AngularJS version 1, Tydux provides two utility methods that can be used as the operator parameter passed to `bounded(operator)`:
 
-- `toAngularComponent(this)`: terminate the observable selection when the component's `onDestroy()` method gets called
+- `toAngularComponent(this)`: 
+	-terminate the observable selection when the component's `onDestroy()` method gets called
 - `toAngularJSScope($scope)`: 
 	- terminate the observable selection when the scope gets destroyed
 	- call `$scope.$apply()` *after* the subscriber processed the event
