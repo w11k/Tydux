@@ -2,9 +2,9 @@
 
 Tydux consists of three building blocks:
 
-- State class (one per store): represents the state
-- Mutator class (one per store): modify the state
-- Store class (unlimited): combines one state class and one mutator class 
+- State class: represents the state
+- Mutator class: modifies the state
+- Store class: combines one state class and one mutator class
 
 The following example shows a simple "TODO app".
 
@@ -87,6 +87,8 @@ export class TodoStore extends Store<TodoMutator, TodoState> {
 
 }
 ```
+
+Tydux supports multiple stores, each with one state and one mutator class. Therefore a state should only contain fields/information belonging to the same topic. If you want to store more data consider to split your state and mutators and create another store.
 
 ## Constructor 
 
