@@ -5,6 +5,9 @@ cd ..
 
 PACKAGE_VERSION=v$(cat package.json  | grep version  | head -1  | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 
+git checkout master && \
+git fetch && \
+git merge origin/master && \
 npm run dist && \
 npm run test && \
 git tag ${PACKAGE_VERSION} && \
