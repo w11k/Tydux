@@ -2,15 +2,15 @@
 
 Tydux consists of three building blocks:
 
-- State class (one per store): represents the state
-- Mutator class (one per store): modify the state
-- Store class (unlimited): combines one state class and one mutator class 
+- State class: represents the state
+- Mutator class: modifies the state
+- Store class: combines one state class and one mutator class
 
 The following example shows a simple "TODO app".
 
 # State 
 
-Normal classes are used to represent the state of the application. To implement the state in our app, we need a `TodoState` class. The `TodoState` class contains all the state, modelled as normal class properties, that we want to manage with Tydux.
+Normal classes are used to represent the state of the application. To implement the state in our app, we need a `TodoState` class. The `TodoState` class contains all the state information as fields that we want to manage with Tydux.
 
 ```
 export class TodoState {
@@ -25,7 +25,7 @@ export class TodoState {
 
 # Mutator
 
-Only the mutator is able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state. The following mutator class contains two methods to alter the state:
+Only the mutator is able to modify the state. Tydux enforces this by deeply freezing (`Object.freeze`) the state properties. The following mutator class contains two methods to alter the state:
 
 ```
 export class TodoMutator extends Mutator<TodoState> {
@@ -59,8 +59,9 @@ this.state.todos.push(...);
 **Rules:**
 
 - If a mutator throws an exception, all changes to the state will be discarded.
-- A mutator method can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called.
-- Mutator methods must not return a value. 
+- A mutator method can invoke other mutator methods. Their executions are merged and get treated as if only one mutator method was called. The Redux DevTool will only show the root mutator method as an event.
+- Mutator methods must not return a value.
+- Mutator methods must not access the state asynchronously (once a mutator method completes, any attempt to access the state will result in an exception)
 
 
 # Store
@@ -82,10 +83,12 @@ export class TodoStore extends Store<TodoMutator, TodoState> {
         this.mutate.addTodo(todo); // access the mutator
     }
 
-    clearTodos = this.dispatch.clearTodos; // simple delegate to the mutator
+    clearTodos = this.mutate.clearTodos; // simple delegate to the mutator
 
 }
 ```
+
+Tydux supports multiple stores, each with one state and one mutator class. Therefore a state should only contain fields/information belonging to the same topic. If you want to store more data consider to split your state and mutators and create another store.
 
 ## Constructor 
 
@@ -105,10 +108,12 @@ this.mutate.addTodo("new todo");
 - Provide the store's API via the store's public methods
 - Distinguish between public and private by adding the modifier accordingly
 - Use the store's method to provide a *coarse-grained* API
-    - use cases, UI actions, etc.
+    - service layer, UI actions, etc.
     - asynchronous code (see below)
 - Use the mutator's method to provide a *fine-grained* API
     - reusable logic to modify the state
+    - their design should be based on the domain operations
+    - avoid exposing too simple data manipulation method  
   
 
 ## Create the store
@@ -148,42 +153,43 @@ store.select(s => s.todos)
     });
 ```
 
-**Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. 
+**Important:** If you pass a selector, the `Observable` will only emit new values if the selected value (here `s.todos`) changes. Since Tydux enforces immutability, this will automatically always be the case if a mutator changes the relevant part of the state. If your selector returns an array or an object, Tydux checks if the entries in the array or the values of the object changed. This way you can easily select multiple values. 
+
+## unbounded()/bounded()
+
+The `select()` method returns an instance of `ObservableSelection` which provides 2 methods:
+
+- `unbounded()`: returns an observable that emits values whenever the selected value changes
+- `bounded(operator)`: Shorthand for `.unbounded().pipe(lift(operator))`. The operator can be used to e.g.
+	- terminate the observable on certain conditions
+	- post-process the event delivery for e.g. change detection 
+
+This API inter layer was added to make the RxJS observable subscription management more explicit. We believe that frameworks returning observables via their API should assist the consumers in this regard. Forgetting to unsubscribe from observables in e.g. Angular components creates very hard to debug memory leaks. Additionally, frameworks like AngularJS version 1 require to trigger a change detection after an event was dispatched so that the UI can update accordingly. 
+
+For Angular version >= 2 and AngularJS version 1, Tydux provides two utility methods that can be used as the operator parameter passed to `bounded(operator)`:
+
+- `toAngularComponent(this)` 
+	- terminate the observable selection when the component's `onDestroy()` method gets called
+- `toAngularJSScope($scope)` 
+	- terminate the observable selection when the scope gets destroyed
+	- call `$scope.$apply()` *after* the subscriber processed the event
 
 
 # Asynchronous code
 
-TODO WIP
+Almost all applications have asynchronous code to handle e.g. server responses. The store methods are a perfect fit to model the asynchronous logic while the mutator methods are used to synchronize the state accordingly:
 
-Almost all applications have asynchronous code to handle e.g. server responses. While mutators can *initiate* async operations, they are not allowed to access the state (via `this.state`) in an async callback. 
-
-**Important:** Once the mutator method completes, any attempt to access the state will result in an exception!
-
- The solution is to delegate the processing of the async result in *another mutator method*. The following mutator class contains two methods. `loadFromServer()` initiates an async operation und uses `assignTodos()` to handle the response:
 
 ```
-export class TodoMutators extends Mutators<TodoState> {
+export class TodoStore extends Store<TodoMutator, TodoState> {
 
-    async loadFromServer() {
-        this.state.timestampLoadRequested = Date.now();     // valid state access
-        const result = await fetch("/todos");               // async starts here...
+    async loadTodosFromServer() {
+        this.mutate.clearTodos();
+        const todosPromise = await fetch("/todos");
         const todos = await result.json();
-        this.assignTodos(todos);                            // ... delegate to other mutator
+        this.mutate.assignTodosLoadedFromServer(todos);
     }
-
-    assignTodos(todos: Todo[]) {
-        this.state.todos = todos;                           // valid state access
-    }
-
+    
 }
 ```
-
-
-# Angular Integration
-
-TODO WIP
-
-If you use e.g. [Angular](https://angular.io) or any other framework with dependency injection, it usually makes sense to provide/configure the store and mutator classes with the injector.
-
-
 
