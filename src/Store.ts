@@ -28,11 +28,7 @@ export class MutatorEvent<S> {
 }
 
 export function failIfInstanceMembersExistExceptState(obj: any) {
-    let members = _.keys(obj);
-    let idxOfState = members.indexOf("state");
-    if (idxOfState >= 0) {
-        members.splice(idxOfState, 1);
-    }
+    let members = _.difference(_.keys(obj), ["state"]);
     if (members.length > 0) {
         throw new Error(mutatorHasInstanceMembers + ": " + members.join(","));
     }
@@ -63,6 +59,8 @@ export abstract class Store<M extends Mutator<S>, S> {
 
     private _undispatchedMutatorEventsCount = 0;
 
+    private readonly memberMethodCallstack: string[] = [];
+
     protected readonly mutate: M;
 
     readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject;
@@ -81,6 +79,8 @@ export abstract class Store<M extends Mutator<S>, S> {
 
         this.mutate = this.createMutatorsProxy(mutatorInstance);
         delete (this.mutate as any).state;
+
+        this.enrichInstanceMethods();
 
         addStoreToGlobalState(this);
     }
@@ -103,6 +103,43 @@ export abstract class Store<M extends Mutator<S>, S> {
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
         return selectNonNilToObervableSelection(this.mutatorEvents$.pipe(map(e => e.state)), selector);
+    }
+
+    private enrichInstanceMethods() {
+
+        console.log(_.functionsIn(Store));
+        console.log("---------------");
+        console.log(_.functionsIn(this));
+        // console.log(_.functionsIn(Object.getPrototypeOf(this)));
+        console.log("---------------");
+
+        for (let fnMemberName of _.functions(Object.getPrototypeOf(this))) {
+            this.enrichInstanceMethod(fnMemberName);
+        }
+    }
+
+    private enrichInstanceMethod(name: string) {
+        const self = this;
+        let member = (this as any)[name];
+        Object.getPrototypeOf(this)[name] = function () {
+            self.memberMethodCallstack.push(name);
+            try {
+                const result = member.apply(this, arguments);
+                if (result instanceof Promise) {
+                    return new Promise(resolve => {
+                        self.memberMethodCallstack.push(name);
+                        resolve(result);
+                    }).then(value => {
+                        self.memberMethodCallstack.pop();
+                        return value;
+                    });
+                } else {
+                    return result;
+                }
+            } finally {
+                self.memberMethodCallstack.pop();
+            }
+        };
     }
 
     private processMutator(mutatorEvent: MutatorEvent<S>) {
@@ -176,9 +213,11 @@ export abstract class Store<M extends Mutator<S>, S> {
                     failIfInstanceMembersExistExceptState(thisObj);
                     proxyObj.state = thisObj.state;
 
+                    let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
+                    storeMethodName = _.isNil(storeMethodName) ? "(n/a)" : storeMethodName;
                     const mutatorEvent = new MutatorEvent(
                         self.storeId,
-                        createActionFromArguments(mutatorName, mutatorFn, args),
+                        createActionFromArguments(storeMethodName + " / " + mutatorName, mutatorFn, args),
                         proxyObj.state
                     );
 

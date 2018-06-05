@@ -1,13 +1,13 @@
-import "rxjs/add/operator/first";
 import {enableTyduxDevelopmentMode} from "../../../development";
 import {Mutator} from "../../../mutator";
 import {Store} from "../../../Store";
 import "./index.html";
+import {createTodoList} from "./mock";
 
 
 enableTyduxDevelopmentMode();
 
-interface Todo {
+export interface Todo {
     name: string;
 }
 
@@ -62,10 +62,10 @@ class TodoStore extends Store<TodoMutators, TodoState> {
 
     async loadTodos() {
         this.mutate.clearTodos();
-        const response = await fetch("/data.json");
-        let todos: Todo[] = await response.json();
+        const todos = await createTodoList();
         this.mutate.setTodos(todos);
     }
+
 }
 
 const store: TodoStore = new TodoStore();
