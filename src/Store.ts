@@ -106,14 +106,14 @@ export abstract class Store<M extends Mutator<S>, S> {
     }
 
     private enrichInstanceMethods() {
+        const methodNamesUntilStoreParent: string[] = [];
+        let level = this;
+        while (level instanceof Store) {
+            methodNamesUntilStoreParent.push(..._.functions(level));
+            level = Object.getPrototypeOf(level);
+        }
 
-        console.log(_.functionsIn(Store));
-        console.log("---------------");
-        console.log(_.functionsIn(this));
-        // console.log(_.functionsIn(Object.getPrototypeOf(this)));
-        console.log("---------------");
-
-        for (let fnMemberName of _.functions(Object.getPrototypeOf(this))) {
+        for (let fnMemberName of methodNamesUntilStoreParent) {
             this.enrichInstanceMethod(fnMemberName);
         }
     }
