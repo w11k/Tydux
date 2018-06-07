@@ -52,12 +52,12 @@ describe("DevTools", function () {
                 setTimeout(() => {
                     assert.deepEqual(eventActionTypes, [
                         "@@INIT",
-                        "mut1",
-                        "mut2",
-                        "mut1",
-                        "mut2",
-                        "mut1",
-                        "mut3",
+                        "myStore#action1 / mut1",
+                        "myStore#action1 / mut2",
+                        "myStore#action1 / mut1",
+                        "myStore#action1 / mut2",
+                        "myStore#action2 / mut1",
+                        "myStore#action2 / mut3",
                     ]);
                     done();
                 }, 0);
@@ -91,14 +91,14 @@ describe("DevTools", function () {
                 setTimeout(() => {
                     assert.deepEqual(eventActionTypes, [
                         "@@INIT",
-                        "mut1",
-                        "mut1",
-                        "mut2",
-                        "mut2",
-                        "mut1",
-                        "mut1",
-                        "mut2",
-                        "mut2",
+                        "myStore#action1 / mut1",
+                        "myStore#innerAction / mut1",
+                        "myStore#innerAction / mut2",
+                        "myStore#action1 / mut2",
+                        "myStore#action1 / mut1",
+                        "myStore#innerAction / mut1",
+                        "myStore#innerAction / mut2",
+                        "myStore#action1 / mut2",
                     ]);
                     done();
                 }, 0);

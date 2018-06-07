@@ -214,10 +214,12 @@ export abstract class Store<M extends Mutator<S>, S> {
                     proxyObj.state = thisObj.state;
 
                     let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
-                    storeMethodName = _.isNil(storeMethodName) ? "(n/a)" : storeMethodName;
+                    storeMethodName = _.isNil(storeMethodName) ? "" : "#" + storeMethodName;
+                    const actionType = self.storeId + storeMethodName + " / " + mutatorName;
+
                     const mutatorEvent = new MutatorEvent(
                         self.storeId,
-                        createActionFromArguments(storeMethodName + " / " + mutatorName, mutatorFn, args),
+                        createActionFromArguments(actionType, mutatorFn, args),
                         proxyObj.state
                     );
 
