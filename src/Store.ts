@@ -77,7 +77,7 @@ export abstract class Store<M extends Mutator<S>, S> {
 
         failIfInstanceMembersExistExceptState(mutatorInstance);
 
-        this.mutate = this.createMutatorsProxy(mutatorInstance);
+        this.mutate = this.createMutatorProxy(mutatorInstance);
         delete (this.mutate as any).state;
 
         this.enrichInstanceMethods();
@@ -183,7 +183,7 @@ export abstract class Store<M extends Mutator<S>, S> {
         }
     }
 
-    private createMutatorsProxy(mutatorsInstance: any): M {
+    private createMutatorProxy(mutatorsInstance: any): M {
         const proxyObj = {} as any;
         const proxyProto = {} as any;
         Object.setPrototypeOf(proxyObj, proxyProto);
