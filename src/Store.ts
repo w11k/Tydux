@@ -5,7 +5,7 @@ import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {addStoreToGlobalState} from "./global-state";
-import {Mutator} from "./mutator";
+import {createReducerFromMutator, Mutator} from "./mutator";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
@@ -183,54 +183,90 @@ export abstract class Store<M extends Mutator<S>, S> {
         }
     }
 
-    private createMutatorProxy(mutatorsInstance: any): M {
-        const proxyObj = {} as any;
-        const proxyProto = {} as any;
-        Object.setPrototypeOf(proxyObj, proxyProto);
+    // private createMutatorProxy(mutatorsInstance: any): M {
+    //     const proxyObj = {} as any;
+    //     const proxyProto = {} as any;
+    //     Object.setPrototypeOf(proxyObj, proxyProto);
+    //
+    //     for (let mutatorName of _.functionsIn(mutatorsInstance)) {
+    //         const mutatorFn = mutatorsInstance[mutatorName];
+    //         const self = this;
+    //
+    //         proxyProto[mutatorName] = function () {
+    //             Object.setPrototypeOf(proxyProto, {});
+    //
+    //             const args = arguments;
+    //             let result: any = undefined;
+    //
+    //             self.mutateState((oldState, isRootCall) => {
+    //                 // call mutator
+    //                 let thisObj = this;
+    //                 if (isRootCall) {
+    //                     proxyObj.state = oldState;
+    //                     const tempThisObj = {};
+    //                     Object.setPrototypeOf(tempThisObj, proxyObj);
+    //                     thisObj = tempThisObj;
+    //                 }
+    //
+    //                 result = mutatorFn.apply(thisObj, args);
+    //                 failIfNotUndefined(result);
+    //                 failIfInstanceMembersExistExceptState(thisObj);
+    //                 proxyObj.state = thisObj.state;
+    //
+    //                 let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
+    //                 storeMethodName = _.isNil(storeMethodName) ? "" : "#" + storeMethodName;
+    //                 const actionType = self.storeId + storeMethodName + " / " + mutatorName;
+    //
+    //                 const mutatorEvent = new MutatorEvent(
+    //                     self.storeId,
+    //                     createActionFromArguments(actionType, mutatorFn, args),
+    //                     proxyObj.state
+    //                 );
+    //
+    //                 if (isRootCall) {
+    //                     Object.setPrototypeOf(thisObj, createFailingProxy());
+    //                 }
+    //
+    //                 return mutatorEvent;
+    //             });
+    //
+    //             return result;
+    //         };
+    //     }
+    //
+    //     return proxyObj;
+    // }
 
+    private createMutatorProxy(mutatorsInstance: any): M {
+        const reducer = createReducerFromMutator(mutatorsInstance);
+        const proxyObj = {} as any;
         for (let mutatorName of _.functionsIn(mutatorsInstance)) {
             const mutatorFn = mutatorsInstance[mutatorName];
             const self = this;
 
-            proxyProto[mutatorName] = function () {
-                Object.setPrototypeOf(proxyProto, {});
+            let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
+            proxyObj[mutatorName] = function () {
+                const args = arguments as any;
+                const stateProxy = createProxy(self.state);
 
-                const args = arguments;
-                let result: any = undefined;
+                const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
+                const newState = reducer(stateProxy, {type: mutatorName, payload: args});
 
-                self.mutateState((oldState, isRootCall) => {
-                    // call mutator
-                    let thisObj = this;
-                    if (isRootCall) {
-                        proxyObj.state = oldState;
-                        const tempThisObj = {};
-                        Object.setPrototypeOf(tempThisObj, proxyObj);
-                        thisObj = tempThisObj;
-                    }
+                let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
+                storeMethodName = _.isNil(storeMethodName) ? "" : "#" + storeMethodName;
+                const actionType = self.storeId + storeMethodName + " / " + mutatorName;
 
-                    result = mutatorFn.apply(thisObj, args);
-                    failIfNotUndefined(result);
-                    failIfInstanceMembersExistExceptState(thisObj);
-                    proxyObj.state = thisObj.state;
+                const mutatorEvent = new MutatorEvent(
+                    self.storeId,
+                    createActionFromArguments(actionType, mutatorFn, args),
+                    newState as S
+                );
 
-                    let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
-                    storeMethodName = _.isNil(storeMethodName) ? "" : "#" + storeMethodName;
-                    const actionType = self.storeId + storeMethodName + " / " + mutatorName;
+                if (tyduxDevelopmentModeEnabled) {
+                    mutatorEvent.duration = Date.now() - start;
+                }
 
-                    const mutatorEvent = new MutatorEvent(
-                        self.storeId,
-                        createActionFromArguments(actionType, mutatorFn, args),
-                        proxyObj.state
-                    );
-
-                    if (isRootCall) {
-                        Object.setPrototypeOf(thisObj, createFailingProxy());
-                    }
-
-                    return mutatorEvent;
-                });
-
-                return result;
+                self.processMutator(mutatorEvent);
             };
         }
 

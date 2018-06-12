@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutator} from "./mutator";
+import {createReducerFromMutator, Mutator} from "./mutator";
 import {Store} from "./Store";
 import {createAsyncPromise} from "./test-utils";
 
@@ -164,3 +164,4 @@ describe("Mutators - sanity tests", function () {
     });
 
 });
+
