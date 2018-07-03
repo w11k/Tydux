@@ -1,4 +1,3 @@
-import "rxjs/add/operator/first";
 import {enableTyduxDevelopmentMode} from "../../../development";
 import {Mutator} from "../../../mutator";
 import {Store} from "../../../Store";
