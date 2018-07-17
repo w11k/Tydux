@@ -27,7 +27,7 @@ By default, Tydux runs in **production mode**. This means that various checks ar
 It is highly recommended that you enable the **development mode** for development environments:
 
 ```
-import {enableTyduxDevelopmentMode} from "tydux";
+import {enableTyduxDevelopmentMode} from "@w11k/tydux";
 
 enableTyduxDevelopmentMode();
 ```
