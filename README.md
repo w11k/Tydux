@@ -32,7 +32,7 @@ Tydux is a TypeScript library for predictable state management. It follows the [
 
     class MyStore extends Store<MyMutator, MyState> {
         constructor() {
-            super("myStore", new MyMutators(), new MyState());
+            super("myStore", new MyMutator(), new MyState());
         }
         
         rollTheDice() {
