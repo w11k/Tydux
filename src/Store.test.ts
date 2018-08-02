@@ -381,7 +381,7 @@ describe("Store", function () {
             private counter = 0;
 
             constructor() {
-                super("", new TestMutator(), {list1: [], list2: []});
+                super("test", new TestMutator(), {list1: [], list2: []});
 
                 this.mutatorEvents$
                     .pipe(
@@ -413,9 +413,9 @@ describe("Store", function () {
 
         assert.deepEqual(events, [
             ["@@INIT", {list1: [], list2: []}],
-            ["setList1", {list1: [0], list2: []}],
-            ["setList2", {list1: [0], list2: [0]}],
-            ["setList2", {list1: [0], list2: [0, 1]}],
+            ["test#action / setList1", {list1: [0], list2: []}],
+            ["test / setList2", {list1: [0], list2: [0]}],
+            ["test / setList2", {list1: [0], list2: [0, 1]}],
         ]);
 
     });

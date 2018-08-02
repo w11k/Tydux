@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import {getGlobalTyduxState, globalStateChanges$} from "./global-state";
 
 interface DevToolsState {
@@ -22,8 +21,6 @@ export function enableDevTools() {
 
     const devTools = devToolsEnabled ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.connect() : undefined;
 
-    // const mutators: (() => void)[] = [];
-
     devTools.init(getGlobalTyduxState());
 
     devTools.subscribe((message: any) => {
@@ -45,12 +42,10 @@ export function enableDevTools() {
 
     globalStateChanges$
             .subscribe(event => {
-                // const mutator = !_.isNil(event.boundMutator) ? event.boundMutator : _.noop;
-                // mutators.push(mutator);
                 const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
                 const action = {
                     ...event.action,
-                    "type": "[" + event.storeId + " / " + event.action.type + "]" + meta
+                    "type": "[" + event.action.type + "]" + meta
                 };
 
                 devTools.send(action, getGlobalTyduxState());
