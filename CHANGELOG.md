@@ -1,4 +1,10 @@
 
+# Version 8.0.2
+
+- generate source maps for distribution build
+- various internal implementation changes
+
+
 # Version 8.0.0
 
 - Requires RxJS >= 6
