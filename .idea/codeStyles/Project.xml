@@ -13,13 +13,28 @@
       <option name="HTML_ELEMENTS_TO_INSERT_NEW_LINE_BEFORE" value="body" />
       <option name="HTML_KEEP_WHITESPACES_INSIDE" value="pre,textarea" />
     </HTMLCodeStyleSettings>
-    <SqlCodeStyleSettings>
+    <SqlCodeStyleSettings version="0">
+      <option name="myVersion" value="0" />
+      <option name="ALIAS_CASE" value="4" />
+      <option name="TYPE_CASE" value="3" />
+      <option name="SET_EL_WRAP" value="0" />
+      <option name="SET_EL_COMMA" value="0" />
+      <option name="WITH_EL_WRAP" value="0" />
+      <option name="WITH_EL_COMMA" value="0" />
+      <option name="SELECT_EL_WRAP" value="3" />
+      <option name="FROM_EL_WRAP" value="0" />
+      <option name="WHERE_EL_WRAP" value="0" />
+      <option name="WHERE_EL_BOUND" value="2" />
+      <option name="ORDER_EL_WRAP" value="0" />
+      <option name="CORTEGE_SPACE_BEFORE_L_PAREN" value="false" />
+      <option name="EXPR_CASE_WHEN_WRAP" value="false" />
+      <option name="EXPR_CASE_THEN_WRAP" value="true" />
+      <option name="PRIMARY_KEY_NAME_TEMPLATE" value="{table}_{columns}_pk" />
       <option name="WRAP_INSIDE_JOIN_EXPRESSION" value="0" />
       <option name="WRAP_INSIDE_GROUP_BY" value="0" />
       <option name="WRAP_INSIDE_WHERE" value="0" />
       <option name="WRAP_INSIDE_ORDER_BY" value="0" />
       <option name="WRAP_INSIDE_SET" value="0" />
-      <option name="WRAP_INSIDE_BINARY_EXPRESSION" value="0" />
       <option name="WRAP_INSIDE_ARGUMENT_DEFINITION" value="0" />
       <option name="WRAP_INSIDE_CALL_EXPRESSION" value="0" />
       <option name="WRAP_INSIDE_VALUES_EXPRESSION" value="0" />
