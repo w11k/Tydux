@@ -53,8 +53,6 @@ export abstract class Store<M extends Mutator<S>, S> {
 
     private _state: S = undefined as any;
 
-    private mutatorCallStackCount = 0;
-
     private readonly mutatorEventsSubject = new ReplaySubject<MutatorEvent<S>>(1);
 
     private _undispatchedMutatorEventsCount = 0;
@@ -156,31 +154,6 @@ export abstract class Store<M extends Mutator<S>, S> {
 
     private setState(state: S) {
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
-    }
-
-    private mutateState(fn: (state: S, isRootCall: boolean) => MutatorEvent<S>): void {
-        let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
-
-        const isRoot = this.mutatorCallStackCount === 0;
-        this.mutatorCallStackCount++;
-
-        let mutatorEvent: MutatorEvent<S>;
-        try {
-            const stateProxy = createProxy(this.state);
-
-            const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
-            mutatorEvent = fn(stateProxy, isRoot);
-
-            if (tyduxDevelopmentModeEnabled) {
-                mutatorEvent.duration = Date.now() - start;
-            }
-        } finally {
-            this.mutatorCallStackCount--;
-        }
-
-        if (isRoot) {
-            this.processMutator(mutatorEvent);
-        }
     }
 
     private createMutatorProxy(mutatorsInstance: any): M {
