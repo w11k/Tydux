@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import {Observable, Operator} from "rxjs";
+import {OperatorFunction} from "rxjs/internal/types";
 import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {areArraysShallowEquals, arePlainObjectsShallowEquals} from "./utils";
 
@@ -37,16 +38,31 @@ export function selectNonNilToObervableSelection<S, R>(input$: Observable<S>,
     return new ObservableSelection(output$);
 }
 
-export class ObservableSelection<S> {
+export class ObservableSelection<T> {
 
-    constructor(readonly input$: Observable<S>) {
+    constructor(readonly input$: Observable<T>) {
     }
 
-    bounded(operator: Operator<S, S>): Observable<S> {
+    pipe(): ObservableSelection<T>;
+    pipe<A>(op1: OperatorFunction<T, A>): ObservableSelection<A>;
+    pipe<A, B>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>): ObservableSelection<B>;
+    pipe<A, B, C>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>): ObservableSelection<C>;
+    pipe<A, B, C, D>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>, op4: OperatorFunction<C, D>): ObservableSelection<D>;
+    pipe<A, B, C, D, E>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>, op4: OperatorFunction<C, D>, op5: OperatorFunction<D, E>): ObservableSelection<E>;
+    pipe<A, B, C, D, E, F>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>, op4: OperatorFunction<C, D>, op5: OperatorFunction<D, E>, op6: OperatorFunction<E, F>): ObservableSelection<F>;
+    pipe<A, B, C, D, E, F, G>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>, op4: OperatorFunction<C, D>, op5: OperatorFunction<D, E>, op6: OperatorFunction<E, F>, op7: OperatorFunction<F, G>): ObservableSelection<G>;
+    pipe<A, B, C, D, E, F, G, H>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>, op4: OperatorFunction<C, D>, op5: OperatorFunction<D, E>, op6: OperatorFunction<E, F>, op7: OperatorFunction<F, G>, op8: OperatorFunction<G, H>): ObservableSelection<H>;
+    pipe<A, B, C, D, E, F, G, H, I>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>, op4: OperatorFunction<C, D>, op5: OperatorFunction<D, E>, op6: OperatorFunction<E, F>, op7: OperatorFunction<F, G>, op8: OperatorFunction<G, H>, op9: OperatorFunction<H, I>): ObservableSelection<I>;
+
+    pipe<R>(...operations: OperatorFunction<T, R>[]): ObservableSelection<R> {
+        return new ObservableSelection(this.input$.pipe(...operations));
+    }
+
+    bounded(operator: Operator<T, T>): Observable<T> {
         return this.input$.lift(operator);
     }
 
-    unbounded(): Observable<S> {
+    unbounded(): Observable<T> {
         return this.input$;
     }
 

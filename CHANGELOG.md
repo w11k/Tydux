@@ -1,4 +1,9 @@
 
+# Version 8.1.0
+
+- added `ObservableSelection.pipe()`
+
+
 # Version 8.0.2
 
 - generate source maps for distribution build

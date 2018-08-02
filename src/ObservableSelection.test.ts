@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import {Observable} from "rxjs";
-import {takeUntil} from "rxjs/operators";
+import {map, takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {Subscriber} from "rxjs";
 import {enableTyduxDevelopmentMode} from "./development";
@@ -126,6 +126,47 @@ describe("ObservableSelection", function () {
             "pre-2",
             2,
             "post-2",
+        ]);
+    });
+
+    it("pipe() can be used to modify the stream", async function () {
+
+        type State = { a: number };
+
+        class TestMutator extends Mutator<State> {
+            inc() {
+                this.state.a++;
+            }
+        }
+
+        class TestStore extends Store<TestMutator, State> {
+            action() {
+                this.mutate.inc();
+            }
+        }
+
+        const store = new TestStore("", new TestMutator(), {a: 0});
+
+        const events: any[] = [];
+
+        store
+            .select(s => s.a)
+            .pipe(
+                map(x => x + 100),
+                map(x => "a:" + x)
+            )
+            .unbounded()
+            .subscribe(s => events.push(s));
+
+        store.action();
+        store.action();
+
+        await afterAllStoreEvents(store);
+
+        assert.deepEqual(events, [
+            "a:100",
+            "a:101",
+            "a:102"
         ]);
     });
 
