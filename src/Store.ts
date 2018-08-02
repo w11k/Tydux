@@ -11,7 +11,7 @@ import {
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
-import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
+import {createProxy} from "./utils";
 
 export interface Action {
     [param: string]: any;
@@ -182,60 +182,6 @@ export abstract class Store<M extends Mutator<S>, S> {
             this.processMutator(mutatorEvent);
         }
     }
-
-    // private createMutatorProxy(mutatorsInstance: any): M {
-    //     const proxyObj = {} as any;
-    //     const proxyProto = {} as any;
-    //     Object.setPrototypeOf(proxyObj, proxyProto);
-    //
-    //     for (let mutatorName of _.functionsIn(mutatorsInstance)) {
-    //         const mutatorFn = mutatorsInstance[mutatorName];
-    //         const self = this;
-    //
-    //         proxyProto[mutatorName] = function () {
-    //             Object.setPrototypeOf(proxyProto, {});
-    //
-    //             const args = arguments;
-    //             let result: any = undefined;
-    //
-    //             self.mutateState((oldState, isRootCall) => {
-    //                 // call mutator
-    //                 let thisObj = this;
-    //                 if (isRootCall) {
-    //                     proxyObj.state = oldState;
-    //                     const tempThisObj = {};
-    //                     Object.setPrototypeOf(tempThisObj, proxyObj);
-    //                     thisObj = tempThisObj;
-    //                 }
-    //
-    //                 result = mutatorFn.apply(thisObj, args);
-    //                 failIfNotUndefined(result);
-    //                 failIfInstanceMembersExistExceptState(thisObj);
-    //                 proxyObj.state = thisObj.state;
-    //
-    //                 let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
-    //                 storeMethodName = _.isNil(storeMethodName) ? "" : "#" + storeMethodName;
-    //                 const actionType = self.storeId + storeMethodName + " / " + mutatorName;
-    //
-    //                 const mutatorEvent = new MutatorEvent(
-    //                     self.storeId,
-    //                     createActionFromArguments(actionType, mutatorFn, args),
-    //                     proxyObj.state
-    //                 );
-    //
-    //                 if (isRootCall) {
-    //                     Object.setPrototypeOf(thisObj, createFailingProxy());
-    //                 }
-    //
-    //                 return mutatorEvent;
-    //             });
-    //
-    //             return result;
-    //         };
-    //     }
-    //
-    //     return proxyObj;
-    // }
 
     private createMutatorProxy(mutatorsInstance: any): M {
         const reducer = createReducerFromMutator(mutatorsInstance);

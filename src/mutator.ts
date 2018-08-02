@@ -1,4 +1,5 @@
-import {createFailingProxy, createProxy, failIfNotUndefined} from "./utils";
+import {failIfInstanceMembersExistExceptState} from "./Store";
+import {createFailingProxy, failIfNotUndefined} from "./utils";
 
 export interface MutatorAction {
     type: string;
@@ -9,7 +10,7 @@ export interface MutatorAction {
 
 export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): (state: S, action: MutatorAction) => S {
     return (state: S, action: MutatorAction) => {
-        const mutatorThisProxy = {};
+        const mutatorThisProxy: {state: S} = {state};
         Object.setPrototypeOf(mutatorThisProxy, mutatorInstance);
         try {
             mutatorInstance.state = state;
@@ -18,8 +19,11 @@ export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): (state
                 return state;
             }
             const result = mutatorFn.apply(mutatorThisProxy, action.payload);
+            const stateAfterRun = mutatorThisProxy.state;
+            delete mutatorThisProxy.state;
             failIfNotUndefined(result);
-            return mutatorInstance.state;
+            failIfInstanceMembersExistExceptState(mutatorThisProxy);
+            return stateAfterRun;
         } finally {
             Object.setPrototypeOf(mutatorThisProxy, createFailingProxy());
         }
