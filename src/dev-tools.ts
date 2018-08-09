@@ -1,4 +1,10 @@
-import {getGlobalTyduxState, globalStateChanges$} from "./global-state";
+import {
+    clearAllStores,
+    getGlobalTyduxState,
+    globalStateChanges$,
+    setStateForAllStores,
+    setStoreState
+} from "./global-state";
 
 interface DevToolsState {
     actionsById: {
@@ -13,7 +19,7 @@ interface DevToolsState {
 
 export function enableDevTools() {
     const devToolsEnabled = typeof window !== "undefined"
-            && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
+        && (window as any).__REDUX_DEVTOOLS_EXTENSION__ !== undefined;
 
     if (!devToolsEnabled) {
         return;
@@ -24,37 +30,31 @@ export function enableDevTools() {
     devTools.init(getGlobalTyduxState());
 
     devTools.subscribe((message: any) => {
-        console.log(message);
-
-
         if (message.type === "DISPATCH" && message.state) {
-            const state: DevToolsState = JSON.parse(message.state);
-            const id = message.payload.id;
+            const state: any = JSON.parse(message.state);
 
             switch (message.payload.type) {
-
                 case "TOGGLE_ACTION":
-                    console.log("TOGGLE_ACTION");
                     devTools.send(null, state);
                     break;
                 case "JUMP_TO_ACTION":
-                    console.log("JUMP_TO_ACTION");
+                case "JUMP_TO_STATE":
                     devTools.send(null, state);
+                    setStateForAllStores(state);
                     break;
             }
-
         }
     });
 
     globalStateChanges$
-            .subscribe(event => {
-                const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
-                const action = {
-                    ...event.action,
-                    "type": "[" + event.action.type + "]" + meta
-                };
+        .subscribe(event => {
+            const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
+            const action = {
+                ...event.action,
+                "type": "[" + event.action.type + "]" + meta
+            };
 
-                devTools.send(action, getGlobalTyduxState());
-            });
+            devTools.send(action, getGlobalTyduxState());
+        });
 
 }

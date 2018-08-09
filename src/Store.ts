@@ -4,7 +4,7 @@ import {map} from "rxjs/operators";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
-import {addStoreToGlobalState} from "./global-state";
+import {registerStore} from "./global-state";
 import {createReducerFromMutator, Mutator} from "./mutator";
 import {
     ObservableSelection,
@@ -63,6 +63,8 @@ export abstract class Store<M extends Mutator<S>, S> {
 
     readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject;
 
+    readonly stateChangesSubject = new ReplaySubject<S>(1);
+
     constructor(readonly storeId: string,
                 mutatorInstance: Mutator<S>,
                 state: S) {
@@ -80,7 +82,15 @@ export abstract class Store<M extends Mutator<S>, S> {
 
         this.enrichInstanceMethods();
 
-        addStoreToGlobalState(this);
+        this.mutatorEvents$
+            .subscribe(event => {
+                this.stateChangesSubject.next(event.state);
+            });
+
+        registerStore(this, state => {
+            this.setState(state);
+            this.stateChangesSubject.next(state);
+        });
     }
 
     get state(): Readonly<S> {
@@ -96,11 +106,11 @@ export abstract class Store<M extends Mutator<S>, S> {
     select<R>(selector: (state: Readonly<S>) => R): ObservableSelection<R>;
 
     select<R>(selector?: (state: Readonly<S>) => R): ObservableSelection<R> {
-        return selectToObservableSelection(this.mutatorEvents$.pipe(map(e => e.state)), selector);
+        return selectToObservableSelection(this.stateChangesSubject, selector);
     }
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
-        return selectNonNilToObervableSelection(this.mutatorEvents$.pipe(map(e => e.state)), selector);
+        return selectNonNilToObervableSelection(this.stateChangesSubject, selector);
     }
 
     private enrichInstanceMethods() {
