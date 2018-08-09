@@ -67,12 +67,12 @@ export abstract class Store<M extends Mutator<S>, S> {
 
     constructor(readonly storeId: string,
                 mutatorInstance: Mutator<S>,
-                state: S) {
+                readonly initialState: S) {
 
         this.processMutator(new MutatorEvent(
             this.storeId,
             {type: "@@INIT"},
-            state
+            initialState
         ));
 
         failIfInstanceMembersExistExceptState(mutatorInstance);

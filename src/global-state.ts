@@ -2,6 +2,7 @@ import * as _ from "lodash";
 import {Observable, Subject} from "rxjs";
 import {MutatorEvent, Store} from "./Store";
 
+const storeMap: { [name: string]: Store<any, any> } = {};
 const storeSetStateMap: { [name: string]: (state: any) => void } = {};
 
 let globalState: any = {};
@@ -12,6 +13,7 @@ export const globalStateChanges$: Observable<MutatorEvent<any>> = globalStateCha
 
 export function resetTydux() {
     globalState = {};
+    _.forEach(storeMap, (val, key) => delete storeMap[key]);
     _.forEach(storeSetStateMap, (val, key) => delete storeSetStateMap[key]);
 }
 
@@ -20,10 +22,11 @@ export function getGlobalTyduxState() {
 }
 
 export function registerStore<S>(store: Store<any, S>, setStateFn: (state: S) => void) {
-    if (_.has(storeSetStateMap, store.storeId)) {
+    if (_.has(storeMap, store.storeId)) {
         throw new Error(`store ID '${store.storeId}' is not unique`);
     }
 
+    storeMap[store.storeId] = store;
     storeSetStateMap[store.storeId] = setStateFn;
     store.mutatorEvents$
         .subscribe((event: MutatorEvent<any>) => {
@@ -33,7 +36,6 @@ export function registerStore<S>(store: Store<any, S>, setStateFn: (state: S) =>
 }
 
 export function setStateForAllStores(globalState: any) {
-
     let storeIds = Object.keys(globalState);
     if (storeIds.length === 0) {
         clearAllStores();
@@ -43,15 +45,12 @@ export function setStateForAllStores(globalState: any) {
             setStoreState(key, storeState);
         });
     }
-
-
 }
 
 export function clearAllStores() {
-    _.forEach(storeSetStateMap, (val, key) => {
-        // console.log("key", key);
-        // console.log("val", val);
-        val({});
+    _.forEach(storeMap, (store, key) => {
+        const setStateFn = storeSetStateMap[key];
+        setStateFn(store.initialState);
     });
 }
 
