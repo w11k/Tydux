@@ -24,15 +24,21 @@ export function enableDevTools() {
     devTools.init(getGlobalTyduxState());
 
     devTools.subscribe((message: any) => {
-        // console.log(message);
+        console.log(message);
+
+
         if (message.type === "DISPATCH" && message.state) {
             const state: DevToolsState = JSON.parse(message.state);
-            // console.log(state);
-            switch (message.payload.type) {
-                case "TOGGLE_ACTION":
-                    const id = message.payload.id;
-                    console.log(state);
+            const id = message.payload.id;
 
+            switch (message.payload.type) {
+
+                case "TOGGLE_ACTION":
+                    console.log("TOGGLE_ACTION");
+                    devTools.send(null, state);
+                    break;
+                case "JUMP_TO_ACTION":
+                    console.log("JUMP_TO_ACTION");
                     devTools.send(null, state);
                     break;
             }
