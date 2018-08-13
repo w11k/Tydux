@@ -2,6 +2,7 @@
 # Version 8.1.0
 
 - added `ObservableSelection.pipe()`
+- improved DevTools support (jump to action)
 
 
 # Version 8.0.2
