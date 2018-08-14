@@ -1,10 +1,4 @@
-import {
-    clearAllStores,
-    getGlobalTyduxState,
-    globalStateChanges$,
-    setStateForAllStores,
-    setStoreState
-} from "./global-state";
+import {getGlobalTyduxState, globalStateChanges$, setStateForAllStores} from "./global-state";
 
 interface DevToolsState {
     actionsById: {
@@ -43,6 +37,9 @@ export function enableDevTools() {
                     setStateForAllStores(state);
                     break;
             }
+        }
+        if (message.type === "DISPATCH" && message.payload.type === "COMMIT") {
+            console.error("not yet supported (https://github.com/w11k/Tydux/blob/master/doc/redux-devtools.md)");
         }
     });
 
