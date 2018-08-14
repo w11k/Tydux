@@ -2,7 +2,7 @@ import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {globalStateChanges$} from "./global-state";
 import {Mutator} from "./mutator";
-import {MutatorEvent, Store} from "./Store";
+import {ProcessedAction, Store} from "./Store";
 import {afterAllStoreEvents} from "./test-utils";
 
 
@@ -13,7 +13,7 @@ describe("global state", function () {
     });
 
     it("collects MutatorEvents", async function () {
-        const events: MutatorEvent<any>[] = [];
+        const events: ProcessedAction<any>[] = [];
 
         class MyMutators extends Mutator<{ count: number }> {
             mut1() {

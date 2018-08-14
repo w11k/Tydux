@@ -7,6 +7,8 @@ export interface MutatorAction {
     payload?: any[];
 }
 
+export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
+export type MutatorMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 
 export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): (state: S, action: MutatorAction) => S {
     return (state: S, action: MutatorAction) => {

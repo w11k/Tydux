@@ -181,4 +181,30 @@ describe("Store - sanity tests", function () {
         assert.equal(store.chars, "A");
     });
 
+    it("(compiler checks)", function () {
+        class MyState {
+            s1 = 1;
+        }
+
+        class MyMutator extends Mutator<MyState> {
+            // invalid = 2;
+
+            met1(): number {
+                this.state.s1++;
+                return 1;
+            }
+        }
+
+        class MyStore extends Store<MyMutator, MyState> {
+            action1() {
+                // const x: number = this.mutate.met1();
+                // console.log(this.mutate.invalid + 1);
+            }
+        }
+
+        const store = new MyStore("myStore", new MyMutator(), new MyState());
+
+        store.action1();
+    });
+
 });

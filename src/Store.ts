@@ -1,10 +1,10 @@
 import * as _ from "lodash";
 import {Observable, ReplaySubject} from "rxjs";
-import {map} from "rxjs/operators";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {registerStore} from "./global-state";
+import {Middleware} from "./middleware";
 import {createReducerFromMutator, Mutator} from "./mutator";
 import {
     ObservableSelection,
@@ -19,7 +19,7 @@ export interface Action {
     type: string;
 }
 
-export class MutatorEvent<S> {
+export class ProcessedAction<S> {
     constructor(readonly storeId: string,
                 readonly action: Action,
                 readonly state: S,
@@ -51,54 +51,53 @@ export function createActionFromArguments(actionTypeName: string, fn: any, args:
 
 export abstract class Store<M extends Mutator<S>, S> {
 
+    private readonly stateChangesSubject = new ReplaySubject<S>(1);
+
     private _state: S = undefined as any;
 
-    private readonly mutatorEventsSubject = new ReplaySubject<MutatorEvent<S>>(1);
-
-    private _undispatchedMutatorEventsCount = 0;
+    private _undeliveredProcessedActionsCount = 0;
 
     private readonly memberMethodCallstack: string[] = [];
 
+    private readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
+
+    readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
+
     protected readonly mutate: M;
-
-    readonly mutatorEvents$: Observable<MutatorEvent<S>> = this.mutatorEventsSubject;
-
-    readonly stateChangesSubject = new ReplaySubject<S>(1);
 
     constructor(readonly storeId: string,
                 mutatorInstance: Mutator<S>,
-                readonly initialState: S) {
-
-        failIfInstanceMembersExistExceptState(mutatorInstance);
-
-        this.mutate = this.createMutatorProxy(mutatorInstance);
-        delete (this.mutate as any).state;
+                readonly initialState: S,
+                private readonly middleware: Middleware<Store<any, S>, S>[] = []) {
 
         this.enrichInstanceMethods();
-
-        this.mutatorEvents$
-            .subscribe(event => {
-                this.stateChangesSubject.next(event.state);
-            });
+        failIfInstanceMembersExistExceptState(mutatorInstance);
+        this.mutate = this.createMutatorProxy(mutatorInstance);
+        delete (this.mutate as any).state;
 
         registerStore(this, state => {
             this.setState(state);
             this.stateChangesSubject.next(state);
         });
 
-        this.processMutator(new MutatorEvent(
-            this.storeId,
-            {type: "@@INIT"},
-            initialState
-        ));
+        this.processDispatchedAction({type: "@@INIT"}, initialState);
+
+        this.initMiddleware();
+    }
+
+    private initMiddleware() {
+        const setStateFn = (action: Action, state: S) => {
+            this.processDispatchedAction(action, state);
+        };
+        this.middleware.forEach(m => m.init(this, setStateFn));
     }
 
     get state(): Readonly<S> {
         return this._state;
     }
 
-    hasUndispatchedMutatorEvents() {
-        return this._undispatchedMutatorEventsCount !== 0;
+    hasUndeliveredProcessedActions() {
+        return this._undeliveredProcessedActionsCount !== 0;
     }
 
     select(): ObservableSelection<Readonly<S>>;
@@ -150,15 +149,23 @@ export abstract class Store<M extends Mutator<S>, S> {
         };
     }
 
-    private processMutator(mutatorEvent: MutatorEvent<S>) {
-        this.setState(mutatorEvent.state);
+    private processDispatchedAction(action: Action, newState: S, duration?: number) {
+        this.setState(newState);
+
+        const processedAction = new ProcessedAction(
+            this.storeId,
+            action,
+            newState,
+            duration
+        );
 
         // async delivery to avoid re-entrant problems
         // https://github.com/ReactiveX/rxjs/issues/2155
-        this._undispatchedMutatorEventsCount++;
+        this._undeliveredProcessedActionsCount++;
         setTimeout(() => {
-            this._undispatchedMutatorEventsCount--;
-            this.mutatorEventsSubject.next(mutatorEvent);
+            this._undeliveredProcessedActionsCount--;
+            this.stateChangesSubject.next(newState);
+            this.processedActionsSubject.next(processedAction);
         }, 0);
     }
 
@@ -179,23 +186,34 @@ export abstract class Store<M extends Mutator<S>, S> {
                 const stateProxy = createProxy(self.state);
 
                 const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
-                const newState = reducer(stateProxy, {type: mutatorMethodName, payload: args});
+
+                let action = {type: mutatorMethodName, payload: args};
+                for (let m of self.middleware) {
+                    const newAction = m.beforeActionDispatch(this, stateProxy, action);
+                    if (newAction != null) {
+                        action = newAction;
+                    }
+                }
+
+                const newState = reducer(stateProxy, action);
 
                 let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
                 storeMethodName = _.isNil(storeMethodName) ? "" : "#" + storeMethodName;
                 const actionType = self.storeId + storeMethodName + " / " + mutatorMethodName;
 
-                const mutatorEvent = new MutatorEvent(
-                    self.storeId,
+                // const mutatorEvent = new ProcessedAction(
+                //     self.storeId,
+                //     createActionFromArguments(actionType, mutatorFn, args),
+                //     newState as S
+                // );
+
+                const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : undefined;
+
+                self.processDispatchedAction(
                     createActionFromArguments(actionType, mutatorFn, args),
-                    newState as S
+                    newState as S,
+                    duration
                 );
-
-                if (tyduxDevelopmentModeEnabled) {
-                    mutatorEvent.duration = Date.now() - start;
-                }
-
-                self.processMutator(mutatorEvent);
             };
         }
 

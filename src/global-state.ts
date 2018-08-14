@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import {Observable, Subject} from "rxjs";
-import {MutatorEvent, Store} from "./Store";
+import {ProcessedAction, Store} from "./Store";
 
 
 class StoreWithSetStateFn {
@@ -12,9 +12,9 @@ const storeMap: { [name: string]: StoreWithSetStateFn } = {};
 
 let globalState: any = {};
 
-const globalStateChangesSubject = new Subject<MutatorEvent<any>>();
+const globalStateChangesSubject = new Subject<ProcessedAction<any>>();
 
-export const globalStateChanges$: Observable<MutatorEvent<any>> = globalStateChangesSubject.asObservable();
+export const globalStateChanges$: Observable<ProcessedAction<any>> = globalStateChangesSubject.asObservable();
 
 export function resetTydux() {
     globalState = {};
@@ -31,8 +31,8 @@ export function registerStore<S>(store: Store<any, S>, setStateFn: (state: S) =>
     }
 
     storeMap[store.storeId] = new StoreWithSetStateFn(store, setStateFn);
-    store.mutatorEvents$
-        .subscribe((event: MutatorEvent<any>) => {
+    store.processedActions$
+        .subscribe((event: ProcessedAction<any>) => {
             globalState[event.storeId] = event.state;
             globalStateChangesSubject.next(event);
         });

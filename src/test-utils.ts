@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {Observable} from "rxjs";
 import {filter, take} from "rxjs/operators";
-import {MutatorEvent, Store} from "./Store";
+import {ProcessedAction, Store} from "./Store";
 
 export function collect<T>(observable: Observable<T>) {
     const calls: T[] = [];
@@ -29,11 +29,12 @@ export function createAsyncPromise<T>(returns: T): Promise<T> {
     });
 }
 
-export async function afterAllStoreEvents(store: Store<any, any>): Promise<MutatorEvent<any>> {
-    return store.mutatorEvents$
+export async function afterAllStoreEvents(store: Store<any, any>): Promise<any> {
+    return store.select()
         .pipe(
-            filter(() => !store.hasUndispatchedMutatorEvents()),
+            filter(() => !store.hasUndeliveredProcessedActions()),
             take(1)
         )
+        .unbounded()
         .toPromise();
 }

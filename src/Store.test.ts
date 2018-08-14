@@ -383,7 +383,7 @@ describe("Store", function () {
             constructor() {
                 super("test", new TestMutator(), {list1: [], list2: []});
 
-                this.mutatorEvents$
+                this.processedActions$
                     .pipe(
                         map(event => event.state.list1),
                         distinctUntilChanged((val1, val2) => areArraysShallowEquals(val1, val2))
@@ -403,7 +403,7 @@ describe("Store", function () {
         const store = new TestStore();
 
         const events: any[] = [];
-        store.mutatorEvents$.subscribe(event => {
+        store.processedActions$.subscribe(event => {
             events.push([event.action.type, event.state]);
         });
 
