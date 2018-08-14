@@ -69,12 +69,6 @@ export abstract class Store<M extends Mutator<S>, S> {
                 mutatorInstance: Mutator<S>,
                 readonly initialState: S) {
 
-        this.processMutator(new MutatorEvent(
-            this.storeId,
-            {type: "@@INIT"},
-            initialState
-        ));
-
         failIfInstanceMembersExistExceptState(mutatorInstance);
 
         this.mutate = this.createMutatorProxy(mutatorInstance);
@@ -91,6 +85,12 @@ export abstract class Store<M extends Mutator<S>, S> {
             this.setState(state);
             this.stateChangesSubject.next(state);
         });
+
+        this.processMutator(new MutatorEvent(
+            this.storeId,
+            {type: "@@INIT"},
+            initialState
+        ));
     }
 
     get state(): Readonly<S> {
@@ -166,24 +166,24 @@ export abstract class Store<M extends Mutator<S>, S> {
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
-    private createMutatorProxy(mutatorsInstance: any): M {
-        const reducer = createReducerFromMutator(mutatorsInstance);
+    private createMutatorProxy(mutatorInstance: any): M {
+        const reducer = createReducerFromMutator(mutatorInstance);
         const proxyObj = {} as any;
-        for (let mutatorName of _.functionsIn(mutatorsInstance)) {
-            const mutatorFn = mutatorsInstance[mutatorName];
+        for (let mutatorMethodName of _.functionsIn(mutatorInstance)) {
+            const mutatorFn = mutatorInstance[mutatorMethodName];
             const self = this;
 
             let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
-            proxyObj[mutatorName] = function () {
+            proxyObj[mutatorMethodName] = function () {
                 const args = arguments as any;
                 const stateProxy = createProxy(self.state);
 
                 const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
-                const newState = reducer(stateProxy, {type: mutatorName, payload: args});
+                const newState = reducer(stateProxy, {type: mutatorMethodName, payload: args});
 
                 let storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
                 storeMethodName = _.isNil(storeMethodName) ? "" : "#" + storeMethodName;
-                const actionType = self.storeId + storeMethodName + " / " + mutatorName;
+                const actionType = self.storeId + storeMethodName + " / " + mutatorMethodName;
 
                 const mutatorEvent = new MutatorEvent(
                     self.storeId,
