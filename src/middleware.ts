@@ -1,12 +1,12 @@
 import {Action, ProcessedAction, Store} from "./Store";
 
 
-export interface Middleware<T extends Store<any, S>, S> {
+export type MiddlewareInit<T extends Store<any, S>, S> = (store: T) => Middleware<S>;
 
-    init(store: T, setStateFn: (action: Action, state: S) => void): void;
+export interface Middleware<S> {
 
-    beforeActionDispatch(store: T, state: S, action: Action): any;
+    beforeActionDispatch(state: S, action: Action): any;
 
-    afterProcessedAction(store: T, processedAction: ProcessedAction<S>): void;
+    afterProcessedAction(processedAction: ProcessedAction<S>): void;
 
 }

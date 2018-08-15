@@ -4,7 +4,6 @@ import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {registerStore} from "./global-state";
-import {Middleware} from "./middleware";
 import {createReducerFromMutator, Mutator} from "./mutator";
 import {
     ObservableSelection,
@@ -12,6 +11,7 @@ import {
     selectToObservableSelection
 } from "./ObservableSelection";
 import {createProxy} from "./utils";
+import {Middleware, MiddlewareInit} from "./middleware";
 
 export interface Action {
     [param: string]: any;
@@ -51,6 +51,8 @@ export function createActionFromArguments(actionTypeName: string, fn: any, args:
 
 export abstract class Store<M extends Mutator<S>, S> {
 
+    private readonly middleware: Middleware<S>[];
+
     private readonly stateChangesSubject = new ReplaySubject<S>(1);
 
     private _state: S = undefined as any;
@@ -68,7 +70,8 @@ export abstract class Store<M extends Mutator<S>, S> {
     constructor(readonly storeId: string,
                 mutatorInstance: Mutator<S>,
                 readonly initialState: S,
-                private readonly middleware: Middleware<Store<any, S>, S>[] = []) {
+                // middlewareInitFns: MiddlewareInit<Store<any, S>, S>[] = []
+    ) {
 
         this.enrichInstanceMethods();
         failIfInstanceMembersExistExceptState(mutatorInstance);
@@ -82,14 +85,18 @@ export abstract class Store<M extends Mutator<S>, S> {
 
         this.processDispatchedAction({type: "@@INIT"}, initialState);
 
-        this.initMiddleware();
+        this.middleware = this.initMiddleware([]);
     }
 
-    private initMiddleware() {
-        const setStateFn = (action: Action, state: S) => {
-            this.processDispatchedAction(action, state);
-        };
-        this.middleware.forEach(m => m.init(this, setStateFn));
+    public getMiddlewareInitFunctions(): MiddlewareInit<this, S>[] {
+        return [];
+    }
+
+    private initMiddleware(middlewareInitFns: MiddlewareInit<this, S>[]): Middleware<S>[] {
+        // const setStateFn = (action: Action, state: S) => {
+        //     this.processDispatchedAction(action, state);
+        // };
+        return middlewareInitFns.map(m => m(this));
     }
 
     get state(): Readonly<S> {
@@ -189,7 +196,7 @@ export abstract class Store<M extends Mutator<S>, S> {
 
                 let action = {type: mutatorMethodName, payload: args};
                 for (let m of self.middleware) {
-                    const newAction = m.beforeActionDispatch(this, stateProxy, action);
+                    const newAction = m.beforeActionDispatch(stateProxy, action);
                     if (newAction != null) {
                         action = newAction;
                     }
