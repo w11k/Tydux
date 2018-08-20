@@ -70,7 +70,7 @@ export abstract class Store<M extends Mutator<S>, S> {
     constructor(readonly storeId: string,
                 mutatorInstance: Mutator<S>,
                 readonly initialState: S,
-                // middlewareInitFns: MiddlewareInit<Store<any, S>, S>[] = []
+                middlewareInitFns: MiddlewareInit<Store<any, S>, S>[] = []
     ) {
 
         this.enrichInstanceMethods();
@@ -88,8 +88,8 @@ export abstract class Store<M extends Mutator<S>, S> {
         this.middleware = this.initMiddleware([]);
     }
 
-    public getMiddlewareInitFunctions(): MiddlewareInit<this, S>[] {
-        return [];
+    addMiddleware(middleware: MiddlewareInit<this, S>) {
+
     }
 
     private initMiddleware(middlewareInitFns: MiddlewareInit<this, S>[]): Middleware<S>[] {
@@ -228,3 +228,9 @@ export abstract class Store<M extends Mutator<S>, S> {
     }
 
 }
+
+
+
+
+
+
