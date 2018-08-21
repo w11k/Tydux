@@ -1,6 +1,6 @@
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Middleware, MiddlewareMutator, StoreMiddlewareConnector} from "./middleware";
+import {Middleware, MiddlewareMutator} from "./middleware";
 import {Mutator} from "./mutator";
 import {Store} from "./Store";
 
@@ -33,13 +33,10 @@ describe("Middleware", function () {
         }
 
         class MyMiddleware extends Middleware<TestState, Store<any, TestState>, MyMiddlewareMutator> {
-            constructor(connector: StoreMiddlewareConnector<TestState, Store<any, TestState>>) {
-                super(connector, new MyMiddlewareMutator());
-            }
         }
 
         const store = new TestStore("TestStore", new TestMutator(), new TestState());
-        store.addMiddleware(connector => new MyMiddleware(connector));
+        store.addMiddleware(new MyMiddleware(store, new MyMiddlewareMutator()));
     });
 
     // it("gets called before action dispatch", function (done) {

@@ -4,7 +4,7 @@ import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {registerStore} from "./global-state";
-import {Middleware, MiddlewareMutator, StoreMiddlewareConnector} from "./middleware";
+import {Middleware, MiddlewareMutator} from "./middleware";
 import {createReducerFromMutator, Mutator, MutatorMethods} from "./mutator";
 import {
     ObservableSelection,
@@ -84,9 +84,7 @@ export abstract class Store<M extends Mutator<S>, S> {
         this.processDispatchedAction({type: "@@INIT"}, initialState);
     }
 
-    addMiddleware(middlewareConnectFn: (connector: StoreMiddlewareConnector<S, this>) => Middleware<S, this, MiddlewareMutator<S>>) {
-        const connector = new StoreMiddlewareConnector<S, this>(this);
-        let middleware = middlewareConnectFn(connector);
+    addMiddleware(middleware: Middleware<S, this, MiddlewareMutator<S>>) {
         this.middleware.push(middleware);
     }
 
