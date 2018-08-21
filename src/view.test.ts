@@ -77,6 +77,11 @@ describe("View", function () {
             }
         });
 
+        view.select(s => ({
+            v1: s.store1.value1,
+            v2: s.child1.child2.store1.value1
+        }));
+
         let collected = collect(view.select().unbounded());
         collected.assert(
             {store1: {value1: 11}, child1: {child2: {store1: {value1: 11}}}}

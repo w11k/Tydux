@@ -4,19 +4,19 @@ import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {registerStore} from "./global-state";
-import {createReducerFromMutator, Mutator} from "./mutator";
+import {Middleware, MiddlewareMutator, StoreMiddlewareConnector} from "./middleware";
+import {createReducerFromMutator, Mutator, MutatorMethods} from "./mutator";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
-import {createProxy} from "./utils";
-import {Middleware, MiddlewareInit} from "./middleware";
+import {createProxy, isNil} from "./utils";
 
 export interface Action {
-    [param: string]: any;
+    readonly type: string;
 
-    type: string;
+    readonly [param: string]: any;
 }
 
 export class ProcessedAction<S> {
@@ -51,7 +51,7 @@ export function createActionFromArguments(actionTypeName: string, fn: any, args:
 
 export abstract class Store<M extends Mutator<S>, S> {
 
-    private readonly middleware: Middleware<S>[];
+    private readonly middleware: Middleware<S, this, MiddlewareMutator<S>>[] = [];
 
     private readonly stateChangesSubject = new ReplaySubject<S>(1);
 
@@ -65,13 +65,11 @@ export abstract class Store<M extends Mutator<S>, S> {
 
     readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
 
-    protected readonly mutate: M;
+    protected readonly mutate: MutatorMethods<M>;
 
     constructor(readonly storeId: string,
                 mutatorInstance: Mutator<S>,
-                readonly initialState: S,
-                middlewareInitFns: MiddlewareInit<Store<any, S>, S>[] = []
-    ) {
+                readonly initialState: S) {
 
         this.enrichInstanceMethods();
         failIfInstanceMembersExistExceptState(mutatorInstance);
@@ -84,19 +82,12 @@ export abstract class Store<M extends Mutator<S>, S> {
         });
 
         this.processDispatchedAction({type: "@@INIT"}, initialState);
-
-        this.middleware = this.initMiddleware([]);
     }
 
-    addMiddleware(middleware: MiddlewareInit<this, S>) {
-
-    }
-
-    private initMiddleware(middlewareInitFns: MiddlewareInit<this, S>[]): Middleware<S>[] {
-        // const setStateFn = (action: Action, state: S) => {
-        //     this.processDispatchedAction(action, state);
-        // };
-        return middlewareInitFns.map(m => m(this));
+    addMiddleware(middlewareConnectFn: (connector: StoreMiddlewareConnector<S, this>) => Middleware<S, this, MiddlewareMutator<S>>) {
+        const connector = new StoreMiddlewareConnector<S, this>(this);
+        let middleware = middlewareConnectFn(connector);
+        this.middleware.push(middleware);
     }
 
     get state(): Readonly<S> {
@@ -174,6 +165,8 @@ export abstract class Store<M extends Mutator<S>, S> {
             this.stateChangesSubject.next(newState);
             this.processedActionsSubject.next(processedAction);
         }, 0);
+
+        // this.middleware.forEach(m => m.afterActionProcessed(processedAction));
     }
 
     private setState(state: S) {
@@ -194,13 +187,13 @@ export abstract class Store<M extends Mutator<S>, S> {
 
                 const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
 
-                let action = {type: mutatorMethodName, payload: args};
-                for (let m of self.middleware) {
-                    const newAction = m.beforeActionDispatch(stateProxy, action);
-                    if (newAction != null) {
-                        action = newAction;
-                    }
-                }
+                let action = {type: mutatorMethodName, arguments: args};
+                // for (let m of self.middleware) {
+                //     const newAction = m.beforeActionDispatch(stateProxy, action);
+                //     if (!isNil(newAction)) {
+                //         action = newAction;
+                //     }
+                // }
 
                 const newState = reducer(stateProxy, action);
 

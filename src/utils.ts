@@ -77,3 +77,7 @@ export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Obser
         }
     };
 }
+
+export function isNil(obj: any) {
+    return obj === null || obj === undefined;
+}

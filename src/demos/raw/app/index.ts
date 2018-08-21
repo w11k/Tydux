@@ -76,7 +76,7 @@ const store: TodoStore = new TodoStore();
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
-            <button onclick='(${() => store.clearTodos()})();'>
+            <button onclick="store.clearTodos()">
                 Clear
             </button>
         

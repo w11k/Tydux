@@ -32,16 +32,17 @@
     "source-map-support": "0.5.3",
     "ts-node": "4.1.0",
     "tslint": "5.9.1",
-    "typescript": "3.0.1",
+    "typescript": "^2.9.1",
     "webpack": "3.10.0",
     "webpack-dev-server": "2.11.1"
   },
   "scripts": {
     "clean": "del-cli dist",
     "tslint": "tslint --project tsconfig.json --config tslint.json",
-    "compile": "tsc -p tsconfig.dist.json",
+    "compile": "tsc -p tsconfig.json",
+    "compile-dist": "tsc -p tsconfig.dist.json",
     "types": "cp src/types27.d.ts dist; cp src/types28.d.ts dist",
-    "dist": "npm run clean ; npm run tslint ; npm run compile ; npm run types",
+    "dist": "npm run clean ; npm run tslint ; npm run compile-dist ; npm run types",
     "test": "mocha --opts spec/mocha.opts src/**/*test.ts",
     "test-watch": "mocha --opts spec/mocha.opts -w --watch-extensions ts src/**/*test.ts",
     "demos-raw": "webpack-dev-server --config src/demos/raw/webpack.config.js"

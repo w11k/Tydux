@@ -2,9 +2,9 @@ import {failIfInstanceMembersExistExceptState} from "./Store";
 import {createFailingProxy, failIfNotUndefined} from "./utils";
 
 export interface MutatorAction {
-    type: string;
+    readonly type: string;
 
-    payload?: any[];
+    readonly arguments?: any[];
 }
 
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
@@ -12,7 +12,7 @@ export type MutatorMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 
 export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): (state: S, action: MutatorAction) => S {
     return (state: S, action: MutatorAction) => {
-        const mutatorThisProxy: {state: S} = {state};
+        const mutatorThisProxy: { state: S } = {state};
         Object.setPrototypeOf(mutatorThisProxy, mutatorInstance);
         try {
             mutatorInstance.state = state;
@@ -20,7 +20,7 @@ export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): (state
             if (mutatorFn === undefined) {
                 return state;
             }
-            const result = mutatorFn.apply(mutatorThisProxy, action.payload);
+            const result = mutatorFn.apply(mutatorThisProxy, action.arguments);
             const stateAfterRun = mutatorThisProxy.state;
             delete mutatorThisProxy.state;
             failIfNotUndefined(result);

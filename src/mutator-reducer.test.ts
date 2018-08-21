@@ -23,9 +23,9 @@ describe("ReducerFromMutator", function () {
         const reducer = createReducerFromMutator(new TestMutator());
         let state = {n1: 0};
 
-        state = reducer(state, {type: "mut1", payload: []});
+        state = reducer(state, {type: "mut1", arguments: []});
         assert.equal(state.n1, 10);
-        state = reducer(state, {type: "mut2", payload: []});
+        state = reducer(state, {type: "mut2", arguments: []});
         assert.equal(state.n1, 1010);
     });
 
@@ -39,7 +39,7 @@ describe("ReducerFromMutator", function () {
         const reducer = createReducerFromMutator(new TestMutator());
         let state = {n1: 0};
 
-        state = reducer(state, {type: "invalid", payload: []});
+        state = reducer(state, {type: "invalid", arguments: []});
         assert.equal(state.n1, 0);
     });
 
@@ -53,9 +53,9 @@ describe("ReducerFromMutator", function () {
         const reducer = createReducerFromMutator(new TestMutator());
         let state = {n1: 0};
 
-        state = reducer(state, {type: "mut1", payload: [10]});
+        state = reducer(state, {type: "mut1", arguments: [10]});
         assert.equal(state.n1, 10);
-        state = reducer(state, {type: "mut1", payload: [5]});
+        state = reducer(state, {type: "mut1", arguments: [5]});
         assert.equal(state.n1, 15);
     });
 
