@@ -33,6 +33,7 @@ class TodoMutators extends Mutator<TodoState> {
     }
 
     addTodoToList(todo: Todo) {
+        console.log("addTodoToList", todo);
         this.state.todos = [
             ...this.state.todos,
             todo
@@ -82,29 +83,34 @@ class MyMiddlewareMutator extends Mutator<TodoState> {
 
 class MyMiddleware extends Middleware<TodoState, MyMiddlewareMutator, TodoStore> {
 
-    // private firstCall = true;
+    private firstCall = true;
 
     getName() {
         return "MyMiddleware";
     }
 
+    getMutator() {
+        return new MyMiddlewareMutator();
+    }
+
     afterActionProcessed(processedAction: ProcessedAction<TodoState>): void {
         console.log("afterActionProcessed", processedAction.mutatorAction);
-        // if (this.firstCall) {
-        //     setTimeout(() => {
-        //         this.mutatorReducer(this.state, processedAction.mutatorAction);
-            // }, 2000);
-        // }
+        if (this.firstCall) {
+            setTimeout(() => {
+                console.log("calling mutatorDispatcher");
+                this.mutatorDispatcher(processedAction.mutatorAction);
+            }, 2000);
+        }
 
 
         // this.mutate.addRandomTodo();
 
-        // this.firstCall = false;
+        this.firstCall = false;
     }
 
 }
 
-store.installMiddleware(init => new MyMiddleware(init, new MyMiddlewareMutator()));
+store.installMiddleware(new MyMiddleware());
 
 
 (window as any).store = store;
@@ -138,3 +144,5 @@ store.select()
     .subscribe(() => {
         renderApp();
     });
+
+setTimeout(() => store.addTodo("test"), 500);

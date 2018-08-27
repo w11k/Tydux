@@ -2,8 +2,8 @@ import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Middleware} from "./middleware";
-import {Mutator} from "./mutator";
-import {Store} from "./Store";
+import {Mutator, MutatorAction} from "./mutator";
+import {ProcessedAction, Store} from "./Store";
 
 
 class TestState {
@@ -29,88 +29,51 @@ describe("Middleware", function () {
     afterEach(() => resetTydux());
 
     it("has the same state as the store", function () {
-
-        class MyMiddlewareMutator extends Mutator<TestState> {
-            // setN1To100() {
-            //     this.state.n1 = 100;
-            // }
-        }
-
-        class MyMiddleware extends Middleware<TestState, MyMiddlewareMutator, TestStore> {
+        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
             getName(): string {
                 return "";
             }
-            // beforeActionDispatch(state: TestState, action: Action): any {
-            //     console.log("beforeActionDispatch", state, action);
-            // }
-            //
-            // afterActionProcessed(processedAction: ProcessedAction<TestState>): void {
-            //     console.log("afterActionProcessed", processedAction);
-            // }
         }
 
         const store = new TestStore("TestStore", new TestMutator(), new TestState());
-        const ms = store.installMiddleware(init => {
-            return new MyMiddleware(init, new MyMiddlewareMutator());
-        });
+        const ms = store.installMiddleware(new MyMiddleware());
 
         assert.deepEqual(store.state, ms.state);
         store.action();
         assert.deepEqual(store.state, ms.state);
     });
 
-    // it("gets called before action dispatch", function (done) {
-    //     const myMiddleware: MiddlewareInit<TestStore, TestState> = () => {
-    //         return {
-    //             beforeActionDispatch(state) {
-    //                 assert.deepEqual(state, new TestState());
-    //                 done();
-    //             },
-    //             afterActionProcessed() {
-    //             }
-    //         };
-    //     };
-    //
-    //     const store = new TestStore("TestStore", new TestMutator(), new TestState());
-    //     store.addMiddleware(myMiddleware);
-    //     store.action();
-    // });
+    it("beforeActionDispatch", function (done) {
+        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
+            getName(): string {
+                return "";
+            }
 
-    // it("can alter the event", function () {
-    //     const myMiddleware: MiddlewareInit<TestStore, TestState> = () => {
-    //         return {
-    //             beforeActionDispatch(state, action) {
-    //                 return {
-    //                     ...action,
-    //                     arguments: [10]
-    //                 };
-    //             },
-    //             afterActionProcessed() {
-    //             }
-    //         };
-    //     };
-    //
-    //     const store = new TestStore("TestStore", new TestMutator(), new TestState());
-    //     store.addMiddleware(myMiddleware);
-    //     store.action();
-    //     assert.equal(store.state.n1, 10);
-    // });
+            beforeActionDispatch(state: TestState, action: MutatorAction): any {
+                done();
+            }
+        }
 
-    // it("gets called after an event was dispatched", function (done) {
-    //     const myMiddleware: MiddlewareInit<TestStore, TestState> = () => {
-    //         return {
-    //             beforeActionDispatch() {
-    //             },
-    //             afterActionProcessed(processedAction) {
-    //                 assert.equal(processedAction.state.n1, 1);
-    //                 done();
-    //             }
-    //         };
-    //     };
-    //
-    //     const store = new TestStore("TestStore", new TestMutator(), new TestState());
-    //     store.addMiddleware(myMiddleware);
-    //     store.action();
-    // });
+        const store = new TestStore("TestStore", new TestMutator(), new TestState());
+        store.installMiddleware(new MyMiddleware());
+        store.action();
+    });
+
+    it("afterActionProcessed", function (done) {
+        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
+            getName(): string {
+                return "";
+            }
+
+            afterActionProcessed(processedAction: ProcessedAction<TestState>): void {
+                done();
+            }
+        }
+
+        const store = new TestStore("TestStore", new TestMutator(), new TestState());
+        store.installMiddleware(new MyMiddleware());
+        store.action();
+    });
+
 
 });

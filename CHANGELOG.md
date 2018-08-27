@@ -1,4 +1,10 @@
 
+# Version 8.2.0
+
+- added supported for middleware
+- BUGFIX: only use ES Proxys in development mode
+
+
 # Version 8.1.3
 
 - Requires TypeScript 2.9 or greater

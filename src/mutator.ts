@@ -1,3 +1,4 @@
+import {isTyduxDevelopmentModeEnabled} from "./development";
 import {failIfInstanceMembersExistExceptState} from "./Store";
 import {createFailingProxy, failIfNotUndefined} from "./utils";
 
@@ -11,6 +12,8 @@ export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ?
 export type MutatorMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 
 export type MutatorReducer<S> = (state: S, action: MutatorAction) => S;
+
+export type MutatorDispatcher = (action: MutatorAction) => void;
 
 export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): MutatorReducer<S> {
     return (state: S, action: MutatorAction) => {
@@ -29,13 +32,15 @@ export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): Mutato
             failIfInstanceMembersExistExceptState(mutatorThisProxy);
             return stateAfterRun;
         } finally {
-            Object.setPrototypeOf(mutatorThisProxy, createFailingProxy());
+            if (isTyduxDevelopmentModeEnabled()) {
+                Object.setPrototypeOf(mutatorThisProxy, createFailingProxy());
+            }
         }
     };
 }
 
 
-export abstract class Mutator<S> {
+export class Mutator<S> {
 
     state: S = undefined as any;
 

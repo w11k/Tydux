@@ -5,7 +5,7 @@ import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {registerStoreInGlobalState} from "./global-state";
 import {Middleware, MiddlewareInit} from "./middleware";
-import {createReducerFromMutator, Mutator, MutatorAction, MutatorMethods, MutatorReducer} from "./mutator";
+import {createReducerFromMutator, Mutator, MutatorAction, MutatorDispatcher, MutatorMethods} from "./mutator";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
@@ -13,11 +13,11 @@ import {
 } from "./ObservableSelection";
 import {createProxy} from "./utils";
 
-export interface Action {
-    readonly type: string;
-
-    readonly [param: string]: any;
-}
+// export interface Action {
+//     readonly type: string;
+//
+//     readonly [param: string]: any;
+// }
 
 export class ProcessedAction<S> {
     constructor(readonly storeId: string,
@@ -83,7 +83,7 @@ export class Store<M extends Mutator<S>, S> {
 
     readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
 
-    private readonly mutatorReducer: MutatorReducer<S>;
+    private readonly mutatorDispatcher: MutatorDispatcher;
 
     protected readonly mutate: MutatorMethods<M>;
 
@@ -98,10 +98,11 @@ export class Store<M extends Mutator<S>, S> {
         this.enrichInstanceMethods();
         failIfInstanceMembersExistExceptState(mutatorInstance);
 
+        this.mutatorDispatcher = this.createMutatorDispatcher(mutatorInstance);
         this.mutate = this.createMutatorProxy(mutatorInstance);
-        delete (this.mutate as any).state;
-        this.mutatorReducer = createReducerFromMutator(mutatorInstance);
 
+
+        delete (this.mutate as any).state;
 
         registerStoreInGlobalState(
             this.storeConnector.storeId,
@@ -112,7 +113,7 @@ export class Store<M extends Mutator<S>, S> {
                 this.storeConnector.stateChangesSubject.next(state);
             });
 
-        this.processDispatchedMutatorAction(null, {type: "@@INIT", arguments: [initialState]}, null, initialState);
+        this.processDispatchedMutatorAction(null, {type: "@@INIT", arguments: [initialState]}, initialState);
     }
 
     get state(): Readonly<S> {
@@ -121,22 +122,6 @@ export class Store<M extends Mutator<S>, S> {
 
     hasUndeliveredProcessedActions() {
         return this._undeliveredProcessedActionsCount !== 0;
-    }
-
-    installMiddleware(middlewareFactory: (init: MiddlewareInit<S>) => Middleware<S, Mutator<S>, this>) {
-        const middlewareInit = new MiddlewareInit(this.storeConnector, this.mutatorReducer);
-        let middleware = middlewareFactory(middlewareInit);
-        const middlewareStore = new Store(
-            this.storeId + `|${this.middleware.length}-${middleware.getName()}`,
-            middleware.mutator,
-            this.state,
-            this.storeConnector
-        );
-
-        middleware.mutate = middlewareStore.mutate;
-        this.middleware.push(middleware);
-
-        return middlewareStore;
     }
 
     select(): ObservableSelection<Readonly<S>>;
@@ -149,6 +134,24 @@ export class Store<M extends Mutator<S>, S> {
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
         return selectNonNilToObervableSelection(this.storeConnector.stateChangesSubject, selector);
+    }
+
+    installMiddleware(middleware: Middleware<S, Mutator<S>, this>) {
+        let mutator = middleware.getMutator();
+
+        const middlewareStore = new Store(
+            this.storeId + `|${this.middleware.length}-${middleware.getName()}`,
+            mutator,
+            this.state,
+            this.storeConnector
+        );
+
+        middleware.initMiddleware(new MiddlewareInit(this.storeConnector, this.mutatorDispatcher));
+
+        middleware.mutate = middlewareStore.mutate;
+        this.middleware.push(middleware);
+
+        return middlewareStore;
     }
 
     private enrichInstanceMethods() {
@@ -190,13 +193,10 @@ export class Store<M extends Mutator<S>, S> {
 
     private processDispatchedMutatorAction(context: string | null | undefined,
                                            mutatorAction: MutatorAction,
-                                           mutatorFn: Function | null,
                                            newState: S,
                                            duration?: number) {
 
         this.storeConnector.setState(newState);
-
-        // console.log("mutatorAction", mutatorAction);
 
         const processedAction = new ProcessedAction(
             this.storeId,
@@ -221,41 +221,44 @@ export class Store<M extends Mutator<S>, S> {
     private createMutatorProxy(mutatorInstance: any): any {
         const proxyObj = {} as any;
         for (let mutatorMethodName of _.functionsIn(mutatorInstance)) {
-            const mutatorFn = mutatorInstance[mutatorMethodName];
             const self = this;
-
-            let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
             proxyObj[mutatorMethodName] = function () {
-                // const args = arguments as any;
                 const args = Array.prototype.slice.call(arguments);
-
-                const stateProxy = createProxy(self.state);
-
-                const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
-
                 const mutatorAction: MutatorAction = {type: mutatorMethodName, arguments: args};
-                for (let m of self.middleware) {
-                    const result = m.beforeActionDispatch(stateProxy, mutatorAction);
-                    if (result === false) {
-                        return;
-                    }
-                }
-
-                const newState = self.mutatorReducer(stateProxy, mutatorAction);
-                const storeMethodName = self.memberMethodCallstack[self.memberMethodCallstack.length - 1];
-                const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : undefined;
-
-                self.processDispatchedMutatorAction(
-                    storeMethodName,
-                    mutatorAction,
-                    mutatorFn,
-                    newState as S,
-                    duration
-                );
+                self.mutatorDispatcher(mutatorAction);
             };
         }
 
         return proxyObj;
+    }
+
+    private createMutatorDispatcher(mutatorInstance: any): MutatorDispatcher {
+        const mutatorReducer = createReducerFromMutator(mutatorInstance);
+
+        return (mutatorAction: MutatorAction) => {
+            let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
+            const stateProxy = createProxy(this.state);
+            const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;
+
+            for (let m of this.middleware) {
+                const result = m.beforeActionDispatch(stateProxy, mutatorAction);
+                if (result === false) {
+                    return;
+                }
+            }
+
+            const newState = mutatorReducer(stateProxy, mutatorAction);
+
+            const storeMethodName = this.memberMethodCallstack[this.memberMethodCallstack.length - 1];
+            const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : undefined;
+
+            this.processDispatchedMutatorAction(
+                storeMethodName,
+                mutatorAction,
+                newState as S,
+                duration
+            );
+        };
     }
 
 }
