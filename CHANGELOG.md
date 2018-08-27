@@ -1,4 +1,9 @@
 
+# Version 8.1.3
+
+- Requires TypeScript 2.9 or greater
+
+
 # Version 8.1.2
 
 - fixed bug: Angular integration: existing ngOnDestroy method was replaced and not preserved

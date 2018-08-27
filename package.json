@@ -1,6 +1,6 @@
 {
   "name": "@w11k/tydux",
-  "version": "8.1.2",
+  "version": "8.1.3",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "license": "Apache-2.0",
@@ -41,8 +41,7 @@
     "tslint": "tslint --project tsconfig.json --config tslint.json",
     "compile": "tsc -p tsconfig.json",
     "compile-dist": "tsc -p tsconfig.dist.json",
-    "types": "cp src/types27.d.ts dist; cp src/types28.d.ts dist",
-    "dist": "npm run clean ; npm run tslint ; npm run compile-dist ; npm run types",
+    "dist": "npm run clean ; npm run tslint ; npm run compile-dist",
     "test": "mocha --opts spec/mocha.opts src/**/*test.ts",
     "test-watch": "mocha --opts spec/mocha.opts -w --watch-extensions ts src/**/*test.ts",
     "demos-raw": "webpack-dev-server --config src/demos/raw/webpack.config.js"
