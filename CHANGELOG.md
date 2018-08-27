@@ -1,4 +1,9 @@
 
+# Version 8.1.2
+
+- fixed bug: Angular integration: existing ngOnDestroy method was replaced and not preserved
+
+
 # Version 8.1.0
 
 - added `ObservableSelection.pipe()`

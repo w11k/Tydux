@@ -4,13 +4,15 @@ import {createFailingProxy, failIfNotUndefined} from "./utils";
 export interface MutatorAction {
     readonly type: string;
 
-    readonly arguments?: any[];
+    readonly arguments: any[];
 }
 
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 export type MutatorMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 
-export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): (state: S, action: MutatorAction) => S {
+export type MutatorReducer<S> = (state: S, action: MutatorAction) => S;
+
+export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): MutatorReducer<S> {
     return (state: S, action: MutatorAction) => {
         const mutatorThisProxy: { state: S } = {state};
         Object.setPrototypeOf(mutatorThisProxy, mutatorInstance);

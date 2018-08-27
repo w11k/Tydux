@@ -1,6 +1,6 @@
-const webpack = require('webpack');
-const path = require("path");
-const ats = require('awesome-typescript-loader');
+var webpack = require('webpack');
+var path = require("path");
+var ats = require('awesome-typescript-loader');
 
 module.exports = {
     entry: path.resolve(__dirname, "app", "index.ts"),

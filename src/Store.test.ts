@@ -404,7 +404,7 @@ describe("Store", function () {
 
         const events: any[] = [];
         store.processedActions$.subscribe(event => {
-            events.push([event.action.type, event.state]);
+            events.push([event.mutatorAction.type, event.state]);
         });
 
         store.action();
@@ -413,9 +413,9 @@ describe("Store", function () {
 
         assert.deepEqual(events, [
             ["@@INIT", {list1: [], list2: []}],
-            ["test#action / setList1", {list1: [0], list2: []}],
-            ["test / setList2", {list1: [0], list2: [0]}],
-            ["test / setList2", {list1: [0], list2: [0, 1]}],
+            ["setList1", {list1: [0], list2: []}],
+            ["setList2", {list1: [0], list2: [0]}],
+            ["setList2", {list1: [0], list2: [0, 1]}],
         ]);
 
     });

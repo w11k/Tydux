@@ -73,7 +73,7 @@ describe("ReducerFromMutator", function () {
 
         const reducer = createReducerFromMutator(new TestMutator());
         const state = {n1: 0};
-        reducer(state, {type: "mut1"});
+        reducer(state, {type: "mut1", arguments: []});
     });
 
     it("can not access other methods asynchronously", function (done) {
@@ -94,7 +94,7 @@ describe("ReducerFromMutator", function () {
 
         const reducer = createReducerFromMutator(new TestMutator());
         const state = {n1: 0};
-        reducer(state, {type: "mut1"});
+        reducer(state, {type: "mut1", arguments: []});
     });
 
 });

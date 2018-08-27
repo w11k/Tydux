@@ -1,30 +1,36 @@
-import {Mutator} from "./mutator";
-import {Store} from "./Store";
+import {Mutator, MutatorAction, MutatorMethods, MutatorReducer} from "./mutator";
+import {ProcessedAction, Store, StoreConnector} from "./Store";
 
 
-// export class StoreMiddlewareConnector<S, T extends Store<any, S>> {
-//     constructor(readonly store: T) {}
-// }
-
-export class MiddlewareMutator<S> extends Mutator<S> {
+export class MiddlewareInit<S> {
+    constructor(readonly storeConnector: StoreConnector<S>,
+                readonly mutatorReducer: MutatorReducer<S>) {
+    }
 }
 
-export class Middleware<S, T extends Store<any, S>, M extends MiddlewareMutator<S>>
-    extends Store<any, S> {
+export abstract class Middleware<S, M extends Mutator<S>, T extends Store<any, S>> {
 
-    constructor(store: T, mutator: M) {
-        super(store.storeId + "(mutator)", mutator, store.state);
+    mutate!: MutatorMethods<M>;
+
+    private readonly storeConnector: StoreConnector<S>;
+
+    protected readonly mutatorReducer: MutatorReducer<S>;
+
+    constructor(middlewareInit: MiddlewareInit<S>, readonly mutator: M) {
+        this.storeConnector = middlewareInit.storeConnector;
+        this.mutatorReducer = middlewareInit.mutatorReducer;
     }
 
+    abstract getName(): string;
 
+    get state(): Readonly<S> {
+        return this.storeConnector.state;
+    }
 
-    // beforeActionDispatch(state: S, action: Action): any {
-    //
-    // }
-    //
-    // afterActionProcessed(processedAction: ProcessedAction<S>): void {
-    //
-    // }
+    beforeActionDispatch(state: S, action: MutatorAction): boolean | void {
+    }
 
+    afterActionProcessed(processedAction: ProcessedAction<S>): void {
+    }
 
 }

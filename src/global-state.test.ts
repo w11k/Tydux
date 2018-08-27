@@ -41,12 +41,13 @@ describe("global state", function () {
 
         await afterAllStoreEvents(store);
 
-        assert.equal(events[0].action.type, "@@INIT");
+        assert.equal(events[0].mutatorAction.type, "@@INIT");
 
-        assert.equal(events[1].action.type, "store#action1 / mut1");
+        assert.equal(events[1].mutatorAction.type, "mut1");
 
-        assert.equal(events[2].action.type, "store#action1 / mut2");
-        assert.equal(events[2].action["[0] count"], 2);
+        assert.equal(events[2].mutatorAction.type, "mut2");
+        console.log(events[2].mutatorAction);
+        assert.deepEqual(events[2].mutatorAction.arguments, [2]);
     });
 
     it("replay MutatorEvents", function () {

@@ -25,15 +25,19 @@ export function getGlobalTyduxState() {
     return globalState;
 }
 
-export function registerStore<S>(store: Store<any, S>, setStateFn: (state: S) => void) {
-    if (_.has(storeMap, store.storeId)) {
-        throw new Error(`store ID '${store.storeId}' is not unique`);
+export function registerStoreInGlobalState<S>(storeId: string,
+                                              checkUnique: boolean,
+                                              store: Store<any, S>,
+                                              setStateFn: (state: S) => void) {
+
+    if (checkUnique && _.has(storeMap, storeId)) {
+        throw new Error(`store ID '${storeId}' is not unique`);
     }
 
-    storeMap[store.storeId] = new StoreWithSetStateFn(store, setStateFn);
+    storeMap[storeId] = new StoreWithSetStateFn(store, setStateFn);
     store.processedActions$
         .subscribe((event: ProcessedAction<any>) => {
-            globalState[event.storeId] = event.state;
+            globalState[storeId] = event.state;
             globalStateChangesSubject.next(event);
         });
 }

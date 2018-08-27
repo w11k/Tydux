@@ -1,6 +1,7 @@
+import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Middleware, MiddlewareMutator} from "./middleware";
+import {Middleware} from "./middleware";
 import {Mutator} from "./mutator";
 import {Store} from "./Store";
 
@@ -10,14 +11,14 @@ class TestState {
 }
 
 class TestMutator extends Mutator<TestState> {
-    assignN1(val: number) {
-        this.state.n1 = val;
+    addToN1(val: number) {
+        this.state.n1 += val;
     }
 }
 
 class TestStore extends Store<TestMutator, TestState> {
     action() {
-        this.mutate.assignN1(1);
+        this.mutate.addToN1(1);
     }
 }
 
@@ -27,16 +28,35 @@ describe("Middleware", function () {
 
     afterEach(() => resetTydux());
 
-    it("gets called immediately and receives the current state", function (done) {
+    it("has the same state as the store", function () {
 
-        class MyMiddlewareMutator extends MiddlewareMutator<TestState> {
+        class MyMiddlewareMutator extends Mutator<TestState> {
+            // setN1To100() {
+            //     this.state.n1 = 100;
+            // }
         }
 
-        class MyMiddleware extends Middleware<TestState, Store<any, TestState>, MyMiddlewareMutator> {
+        class MyMiddleware extends Middleware<TestState, MyMiddlewareMutator, TestStore> {
+            getName(): string {
+                return "";
+            }
+            // beforeActionDispatch(state: TestState, action: Action): any {
+            //     console.log("beforeActionDispatch", state, action);
+            // }
+            //
+            // afterActionProcessed(processedAction: ProcessedAction<TestState>): void {
+            //     console.log("afterActionProcessed", processedAction);
+            // }
         }
 
         const store = new TestStore("TestStore", new TestMutator(), new TestState());
-        store.addMiddleware(new MyMiddleware(store, new MyMiddlewareMutator()));
+        const ms = store.installMiddleware(init => {
+            return new MyMiddleware(init, new MyMiddlewareMutator());
+        });
+
+        assert.deepEqual(store.state, ms.state);
+        store.action();
+        assert.deepEqual(store.state, ms.state);
     });
 
     // it("gets called before action dispatch", function (done) {

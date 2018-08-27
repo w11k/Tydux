@@ -1,6 +1,7 @@
 import {enableTyduxDevelopmentMode} from "../../../development";
+import {Middleware} from "../../../middleware";
 import {Mutator} from "../../../mutator";
-import {Store} from "../../../Store";
+import {ProcessedAction, Store} from "../../../Store";
 import "./index.html";
 import {createTodoList} from "./mock";
 
@@ -44,8 +45,8 @@ class TodoStore extends Store<TodoMutators, TodoState> {
 
     constructor() {
         super("todos", new TodoMutators(), new TodoState());
-        this.addTodo("Todo 1");
-        this.addTodo("Todo 2");
+        // this.addTodo("Todo 1");
+        // this.addTodo("Todo 2");
     }
 
     addTodo(name: string) {
@@ -69,6 +70,41 @@ class TodoStore extends Store<TodoMutators, TodoState> {
 }
 
 const store: TodoStore = new TodoStore();
+
+class MyMiddlewareMutator extends Mutator<TodoState> {
+    addRandomTodo(prefix = "mutator-") {
+        this.state.todos = [
+            ...this.state.todos,
+            {name: prefix + Math.random()}
+        ];
+    }
+}
+
+class MyMiddleware extends Middleware<TodoState, MyMiddlewareMutator, TodoStore> {
+
+    // private firstCall = true;
+
+    getName() {
+        return "MyMiddleware";
+    }
+
+    afterActionProcessed(processedAction: ProcessedAction<TodoState>): void {
+        console.log("afterActionProcessed", processedAction.mutatorAction);
+        // if (this.firstCall) {
+        //     setTimeout(() => {
+        //         this.mutatorReducer(this.state, processedAction.mutatorAction);
+            // }, 2000);
+        // }
+
+
+        // this.mutate.addRandomTodo();
+
+        // this.firstCall = false;
+    }
+
+}
+
+store.installMiddleware(init => new MyMiddleware(init, new MyMiddlewareMutator()));
 
 
 (window as any).store = store;

@@ -1,4 +1,5 @@
 import {getGlobalTyduxState, globalStateChanges$, setStateForAllStores} from "./global-state";
+import {isNil} from "./utils";
 
 interface DevToolsState {
     actionsById: {
@@ -45,10 +46,14 @@ export function enableDevTools() {
 
     globalStateChanges$
         .subscribe(event => {
+            const origin = event.storeId;
+            const context = isNil(event.context) ? "" : "#" + event.context;
             const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
+            const type = `[${origin + context} / ${event.mutatorAction.type}] ${meta}`;
+
             const action = {
-                ...event.action,
-                "type": "[" + event.action.type + "]" + meta
+                ...event.mutatorAction,
+                type
             };
 
             devTools.send(action, getGlobalTyduxState());
