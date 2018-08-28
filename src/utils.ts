@@ -2,10 +2,10 @@ import * as _ from "lodash";
 import {Observable, Operator, Subscriber} from "rxjs";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
 
-let hasProxySuport: boolean = false;
+let hasProxySupport: boolean = false;
 try {
     new Proxy({}, {});
-    hasProxySuport = true;
+    hasProxySupport = true;
 } catch (e) {
     // ignore
 }
@@ -62,7 +62,7 @@ export function createProxy<T>(target: T): T {
 }
 
 export function createFailingProxy(): object {
-    if (!hasProxySuport) {
+    if (!hasProxySupport) {
         return {};
     }
 
