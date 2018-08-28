@@ -1,8 +1,14 @@
 import * as _ from "lodash";
-import {Observable} from "rxjs";
-import {Operator} from "rxjs";
-import {Subscriber} from "rxjs";
+import {Observable, Operator, Subscriber} from "rxjs";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
+
+let hasProxySuport: boolean = false;
+try {
+    new Proxy({}, {});
+    hasProxySuport = true;
+} catch (e) {
+    // ignore
+}
 
 export function areArraysShallowEquals(array1: any[], array2: any[]): boolean {
     if (array1.length !== array2.length) {
@@ -31,20 +37,20 @@ export function failIfNotUndefined(value: any): void {
     }
 }
 
-export function assignStateValue<S>(obj: { state: S }, state: S) {
-    delete obj.state;
-    const stateContainer = [state];
-    Object.defineProperty(obj, "state", {
-        configurable: true,
-        enumerable: false,
-        get: () => {
-            return stateContainer[0];
-        },
-        set: (value: any) => {
-            stateContainer[0] = value;
-        }
-    });
-}
+// export function assignStateValue<S>(obj: { state: S }, state: S) {
+//     delete obj.state;
+//     const stateContainer = [state];
+//     Object.defineProperty(obj, "state", {
+//         configurable: true,
+//         enumerable: false,
+//         get: () => {
+//             return stateContainer[0];
+//         },
+//         set: (value: any) => {
+//             stateContainer[0] = value;
+//         }
+//     });
+// }
 
 export function createProxy<T>(target: T): T {
     const proxy: any = {};
@@ -56,6 +62,10 @@ export function createProxy<T>(target: T): T {
 }
 
 export function createFailingProxy(): object {
+    if (!hasProxySuport) {
+        return {};
+    }
+
     const target = {};
     // noinspection JSUnusedGlobalSymbols
     const handler = {
@@ -78,6 +88,6 @@ export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Obser
     };
 }
 
-export function isNil(obj: any): obj is null|undefined {
+export function isNil(obj: any): obj is null | undefined {
     return obj === null || obj === undefined;
 }

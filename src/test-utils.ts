@@ -1,7 +1,10 @@
 import {assert} from "chai";
 import {Observable} from "rxjs";
 import {filter, take} from "rxjs/operators";
-import {ProcessedAction, Store} from "./Store";
+import {Store} from "./Store";
+
+export const NOOP = () => {
+};
 
 export function collect<T>(observable: Observable<T>) {
     const calls: T[] = [];

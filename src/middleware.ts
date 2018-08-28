@@ -36,9 +36,19 @@ export abstract class Middleware<S, M extends Mutator<S>, T extends Store<any, S
         this.mutatorDispatcher = middlewareInit.mutatorDispatcher;
     }
 
-    beforeActionDispatch(state: S, action: MutatorAction): boolean | void {
+    /**
+     * Called by the store before a dispatched action gets executed by the mutator.
+     * If this method returns false, the dispatched action will be cancelled.
+     *
+     * @param state The current store's state
+     * @param action The dispatched action
+     */
+    beforeActionDispatch(state: S, action: MutatorAction): false | void {
     }
 
+    /**
+     * Called by the store after a dispatched action was executed by the mutator.
+     */
     afterActionProcessed(processedAction: ProcessedAction<S>): void {
     }
 

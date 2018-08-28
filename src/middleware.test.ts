@@ -31,7 +31,7 @@ describe("Middleware", function () {
     it("has the same state as the store", function () {
         class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
             getName(): string {
-                return "";
+                return "TestMiddleware";
             }
         }
 
@@ -46,7 +46,7 @@ describe("Middleware", function () {
     it("beforeActionDispatch", function (done) {
         class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
             getName(): string {
-                return "";
+                return "TestMiddleware";
             }
 
             beforeActionDispatch(state: TestState, action: MutatorAction): any {
@@ -62,7 +62,7 @@ describe("Middleware", function () {
     it("afterActionProcessed", function (done) {
         class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
             getName(): string {
-                return "";
+                return "TestMiddleware";
             }
 
             afterActionProcessed(processedAction: ProcessedAction<TestState>): void {

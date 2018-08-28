@@ -13,11 +13,6 @@ import {
 } from "./ObservableSelection";
 import {createProxy} from "./utils";
 
-// export interface Action {
-//     readonly type: string;
-//
-//     readonly [param: string]: any;
-// }
 
 export class ProcessedAction<S> {
     constructor(readonly storeId: string,
@@ -34,21 +29,6 @@ export function failIfInstanceMembersExistExceptState(obj: any) {
         throw new Error(mutatorHasInstanceMembers + ": " + members.join(","));
     }
 }
-
-// export function createActionFromArguments(actionTypeName: string, fn: any, args: IArguments): Action {
-//     const fnString = fn.toString();
-//     const argsString = fnString.substring(fnString.indexOf("(") + 1, fnString.indexOf(")"));
-//     const argNames = argsString.split(",").map((a: string) => a.trim());
-//
-//     const action: any = {};
-//     for (let i = 0; i < args.length; i++) {
-//         const arg = "[" + i + "] " + argNames[i];
-//         action[arg] = args[i];
-//     }
-//     action.type = actionTypeName;
-//
-//     return action;
-// }
 
 export class StoreConnector<S> {
 
@@ -71,6 +51,8 @@ export class StoreConnector<S> {
 
 export class Store<M extends Mutator<S>, S> {
 
+    private destroyed = false;
+
     private readonly storeConnector: StoreConnector<S>;
 
     private readonly middleware: Middleware<S, Mutator<S>, this>[] = [];
@@ -79,7 +61,7 @@ export class Store<M extends Mutator<S>, S> {
 
     private readonly memberMethodCallstack: string[] = [];
 
-    readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
+    private readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
 
     readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
 
@@ -118,6 +100,23 @@ export class Store<M extends Mutator<S>, S> {
 
     get state(): Readonly<S> {
         return this.storeConnector.state;
+    }
+
+    /**
+     * Completes all observables returned by this store. Once this method gets called,
+     * dispatched actions won't have an effect.
+     */
+    destroy(): void {
+        this.destroyed = true;
+        this.storeConnector.stateChangesSubject.complete();
+        this.processedActionsSubject.complete();
+    }
+
+    /**
+     * Delegate to Store#destroy() for Angular.
+     */
+    ngOnDestroy(): void {
+        this.destroy();
     }
 
     hasUndeliveredProcessedActions() {
@@ -236,6 +235,10 @@ export class Store<M extends Mutator<S>, S> {
         const mutatorReducer = createReducerFromMutator(mutatorInstance);
 
         return (mutatorAction: MutatorAction) => {
+            if (this.destroyed) {
+                return;
+            }
+
             let tyduxDevelopmentModeEnabled = isTyduxDevelopmentModeEnabled();
             const stateProxy = createProxy(this.state);
             const start = tyduxDevelopmentModeEnabled ? Date.now() : 0;

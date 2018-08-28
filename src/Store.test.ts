@@ -6,7 +6,7 @@ import {resetTydux} from "./global-state";
 import {Mutator} from "./mutator";
 import {EmptyMutators} from "./mutator.test";
 import {Store} from "./Store";
-import {afterAllStoreEvents, collect, createAsyncPromise} from "./test-utils";
+import {afterAllStoreEvents, collect, createAsyncPromise, NOOP} from "./test-utils";
 import {areArraysShallowEquals} from "./utils";
 
 
@@ -417,7 +417,33 @@ describe("Store", function () {
             ["setList2", {list1: [0], list2: [0]}],
             ["setList2", {list1: [0], list2: [0, 1]}],
         ]);
+    });
 
+    it("destroy() completes processedActions$ observable", function (done) {
+        class TestStore extends Store<Mutator<any>, { n1: number }> {
+        }
+
+        const store = new TestStore("", new Mutator(), {n1: 0});
+        store.processedActions$.subscribe(NOOP, NOOP, done);
+        store.destroy();
+    });
+
+    it("destroy() completes observable returned by select()", function (done) {
+        class TestStore extends Store<Mutator<any>, { n1: number }> {
+        }
+
+        const store = new TestStore("", new Mutator(), {n1: 0});
+        store.select().unbounded().subscribe(NOOP, NOOP, done);
+        store.destroy();
+    });
+
+    it("destroy() completes observable returned by selectNonNil()", function (done) {
+        class TestStore extends Store<Mutator<any>, { n1: number }> {
+        }
+
+        const store = new TestStore("", new Mutator(), {n1: 0});
+        store.selectNonNil(s => s).unbounded().subscribe(NOOP, NOOP, done);
+        store.destroy();
     });
 
 });
