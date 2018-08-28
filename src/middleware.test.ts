@@ -17,8 +17,8 @@ class TestMutator extends Mutator<TestState> {
 }
 
 class TestStore extends Store<TestMutator, TestState> {
-    action() {
-        this.mutate.addToN1(1);
+    action(val: number) {
+        this.mutate.addToN1(val);
     }
 }
 
@@ -39,7 +39,7 @@ describe("Middleware", function () {
         const ms = store.installMiddleware(new MyMiddleware());
 
         assert.deepEqual(store.state, ms.state);
-        store.action();
+        store.action(1);
         assert.deepEqual(store.state, ms.state);
     });
 
@@ -50,13 +50,14 @@ describe("Middleware", function () {
             }
 
             beforeActionDispatch(state: TestState, action: MutatorAction): any {
+                assert.deepEqual(action.arguments, [1]);
                 done();
             }
         }
 
         const store = new TestStore("TestStore", new TestMutator(), new TestState());
         store.installMiddleware(new MyMiddleware());
-        store.action();
+        store.action(1);
     });
 
     it("afterActionProcessed", function (done) {
@@ -66,14 +67,34 @@ describe("Middleware", function () {
             }
 
             afterActionProcessed(processedAction: ProcessedAction<TestState>): void {
+                assert.deepEqual(processedAction.mutatorAction.arguments, [1]);
                 done();
             }
         }
 
         const store = new TestStore("TestStore", new TestMutator(), new TestState());
         store.installMiddleware(new MyMiddleware());
-        store.action();
+        store.action(1);
     });
 
+    it("can dispatch actions", function () {
+        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
+
+            getName(): string {
+                return "TestMiddleware";
+            }
+
+            dispatch() {
+                this.mutatorDispatcher({type: "addToN1", arguments: [9]});
+            }
+        }
+
+        const store = new TestStore("TestStore", new TestMutator(), new TestState());
+        let myMiddleware = new MyMiddleware();
+        store.installMiddleware(myMiddleware);
+        store.action(2);
+        myMiddleware.dispatch();
+        assert.deepEqual(store.state, {n1: 11});
+    });
 
 });
