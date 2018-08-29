@@ -1,4 +1,9 @@
 
+# Version 8.3.1
+
+- improved middleware logging
+
+
 # Version 8.3.0
 
 - added Store#destroy() and Store#ngOnDestroy()

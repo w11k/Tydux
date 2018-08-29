@@ -59,7 +59,7 @@ export class Store<M extends Mutator<S>, S> {
 
     private _undeliveredProcessedActionsCount = 0;
 
-    private readonly memberMethodCallstack: string[] = [];
+    private readonly mutatorContextCallstack: string[] = [];
 
     private readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
 
@@ -138,14 +138,24 @@ export class Store<M extends Mutator<S>, S> {
     installMiddleware(middleware: Middleware<S, Mutator<S>, this>) {
         let mutator = middleware.getMutator();
 
+        let middlewareCounter = this.middleware.length;
         const middlewareStore = new Store(
-            this.storeId + `|${this.middleware.length}-${middleware.getName()}`,
+            this.storeId + `|${middlewareCounter}-${middleware.getName()}`,
             mutator,
             this.state,
             this.storeConnector
         );
 
-        middleware.initMiddleware(new MiddlewareInit(this.storeConnector, this.mutatorDispatcher));
+        const mutatorDispatcher: MutatorDispatcher = (action: MutatorAction) => {
+            try {
+                this.mutatorContextCallstack.push("|" + middlewareCounter + "-" + middleware.getName());
+                this.mutatorDispatcher(action);
+            } finally {
+                this.mutatorContextCallstack.pop();
+            }
+        };
+
+        middleware.initMiddleware(new MiddlewareInit(this.storeConnector, mutatorDispatcher));
 
         middleware.mutate = middlewareStore.mutate;
         this.middleware.push(middleware);
@@ -170,22 +180,22 @@ export class Store<M extends Mutator<S>, S> {
         const self = this;
         let member = (this as any)[name];
         Object.getPrototypeOf(this)[name] = function () {
-            self.memberMethodCallstack.push(name);
+            self.mutatorContextCallstack.push(name);
             try {
                 const result = member.apply(this, arguments);
                 if (result instanceof Promise) {
                     return new Promise(resolve => {
-                        self.memberMethodCallstack.push(name);
+                        self.mutatorContextCallstack.push(name);
                         resolve(result);
                     }).then(value => {
-                        self.memberMethodCallstack.pop();
+                        self.mutatorContextCallstack.pop();
                         return value;
                     });
                 } else {
                     return result;
                 }
             } finally {
-                self.memberMethodCallstack.pop();
+                self.mutatorContextCallstack.pop();
             }
         };
     }
@@ -252,7 +262,7 @@ export class Store<M extends Mutator<S>, S> {
 
             const newState = mutatorReducer(stateProxy, mutatorAction);
 
-            const storeMethodName = this.memberMethodCallstack[this.memberMethodCallstack.length - 1];
+            const storeMethodName = this.mutatorContextCallstack[this.mutatorContextCallstack.length - 1];
             const duration = tyduxDevelopmentModeEnabled ? Date.now() - start : undefined;
 
             this.processDispatchedMutatorAction(
