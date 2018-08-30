@@ -140,7 +140,7 @@ export class Store<M extends Mutator<S>, S> {
 
         let middlewareCounter = this.middleware.length;
         const middlewareStore = new Store(
-            this.storeId + `|${middlewareCounter}-${middleware.getName()}`,
+            this.storeId + `_${middlewareCounter}-${middleware.getName()}`,
             mutator,
             this.state,
             this.storeConnector
@@ -180,7 +180,7 @@ export class Store<M extends Mutator<S>, S> {
         const self = this;
         let member = (this as any)[name];
         Object.getPrototypeOf(this)[name] = function () {
-            self.mutatorContextCallstack.push(name);
+            self.mutatorContextCallstack.push("#" + name);
             try {
                 const result = member.apply(this, arguments);
                 if (result instanceof Promise) {
