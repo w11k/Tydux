@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import {Observable, ReplaySubject} from "rxjs";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
@@ -12,6 +11,7 @@ import {
     selectToObservableSelection
 } from "./ObservableSelection";
 import {createProxy} from "./utils";
+import {functionsIn, functions, keys, difference} from "lodash";
 
 
 export class ProcessedAction<S> {
@@ -24,7 +24,7 @@ export class ProcessedAction<S> {
 }
 
 export function failIfInstanceMembersExistExceptState(obj: any) {
-    let members = _.difference(_.keys(obj), ["state"]);
+    let members = difference(keys(obj), ["state"]);
     if (members.length > 0) {
         throw new Error(mutatorHasInstanceMembers + ": " + members.join(","));
     }
@@ -167,7 +167,7 @@ export class Store<M extends Mutator<S>, S> {
         const methodNamesUntilStoreParent: string[] = [];
         let level = this;
         while (level instanceof Store) {
-            methodNamesUntilStoreParent.push(..._.functions(level));
+            methodNamesUntilStoreParent.push(...functions(level));
             level = Object.getPrototypeOf(level);
         }
 
@@ -229,7 +229,7 @@ export class Store<M extends Mutator<S>, S> {
 
     private createMutatorProxy(mutatorInstance: any): any {
         const proxyObj = {} as any;
-        for (let mutatorMethodName of _.functionsIn(mutatorInstance)) {
+        for (let mutatorMethodName of functionsIn(mutatorInstance)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const args = Array.prototype.slice.call(arguments);

@@ -1,8 +1,8 @@
 var webpack = require('webpack');
-var path = require("path");
-var ats = require('awesome-typescript-loader');
+var path = require('path');
 
 module.exports = {
+    mode: "production",
     entry: path.resolve(__dirname, "app", "index.ts"),
     output: {
         path: path.resolve(__dirname, "app"),
@@ -15,7 +15,14 @@ module.exports = {
     devtool: 'cheap-module-eval-source-map',
     module: {
         rules: [{
-            test: /\.tsx?$/, loader: 'awesome-typescript-loader'
+            test: /\.tsx?$/, use: [
+                {
+                    loader: 'ts-loader',
+                    options: {
+                        configFile: "tsconfig.dist.es2015.json"
+                    }
+                }
+            ]
         }, {
             test: /\.html$/,
             use: [{
@@ -27,12 +34,8 @@ module.exports = {
 
             }]
         }]
-
     },
-    plugins: [
-        new ats.CheckerPlugin(),
-        new webpack.HotModuleReplacementPlugin()
-    ],
+    plugins: [],
     devServer: {
         inline: true,
         overlay: true,

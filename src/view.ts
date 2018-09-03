@@ -1,4 +1,6 @@
-import * as _ from "lodash";
+import {cloneDeep, forIn, get, isPlainObject, last} from "lodash/index";
+
+// import {cloneDeep, forIn, get, isPlainObject, last} from "lodash";
 import {Observable} from "rxjs";
 import {Observer} from "rxjs";
 import {skip} from "rxjs/operators";
@@ -53,11 +55,11 @@ export class View<T> {
     }
 
     private findStoresInTree(tree: any, path: string[], foundStores: [string[], Store<any, any>][]): void {
-        _.forIn(tree, (child, key) => {
-            const localPath = _.cloneDeep(path);
+        forIn(tree, (child, key) => {
+            const localPath = cloneDeep(path);
             localPath.push(key);
 
-            if (_.isPlainObject(child)) {
+            if (isPlainObject(child)) {
                 this.findStoresInTree(child, localPath, foundStores);
             } else if (child instanceof Store) {
                 foundStores.push([localPath, child]);
@@ -99,9 +101,9 @@ export class View<T> {
 
         const newParentState: any = {};
         let parentPath = path.slice(0, path.length - 1);
-        let currentParentState = parentPath.length > 0 ? _.get(stateCell[0], parentPath) : stateCell[0];
+        let currentParentState = parentPath.length > 0 ? get(stateCell[0], parentPath) : stateCell[0];
         Object.assign(newParentState, currentParentState);
-        newParentState[_.last(path)!] = stateChange;
+        newParentState[last(path)!] = stateChange;
         Object.freeze(newParentState);
 
         return this.mergeState(stateCell, parentPath, newParentState);
