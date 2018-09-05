@@ -1,16 +1,16 @@
 import {getGlobalTyduxState, globalStateChanges$, setStateForAllStores} from "./global-state";
 import {isNil} from "./utils";
 
-interface DevToolsState {
-    actionsById: {
-        [id: string]: any;
-    };
-    computedStates: { state: any }[];
-    currentStateIndex: number;
-    nextActionId: number;
-    skippedActionIds: number[];
-    stagedActionIds: number[];
-}
+// interface DevToolsState {
+//     actionsById: {
+//         [id: string]: any;
+//     };
+//     computedStates: { state: any }[];
+//     currentStateIndex: number;
+//     nextActionId: number;
+//     skippedActionIds: number[];
+//     stagedActionIds: number[];
+// }
 
 export function enableDevTools() {
     const devToolsEnabled = typeof window !== "undefined"

@@ -8,8 +8,8 @@ PACKAGE_VERSION=v$(cat package.json  | grep version  | head -1  | awk -F: '{ pri
 git checkout master && \
 git fetch && \
 git merge origin/master && \
-npm run dist && \
 npm run test && \
+npm run dist && \
 git tag ${PACKAGE_VERSION} && \
 npm publish --access public && \
 git push && \

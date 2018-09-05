@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import * as _ from "lodash";
+import {isNil} from "lodash";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
@@ -126,7 +126,7 @@ describe("Store", function () {
     it("selectNonNil(with selector)", async function () {
         class TestMutator extends Mutator<{ n1?: number }> {
             inc() {
-                this.state.n1 = !_.isNil(this.state.n1) ? this.state.n1 + 1 : 1;
+                this.state.n1 = !isNil(this.state.n1) ? this.state.n1 + 1 : 1;
             }
 
             clear() {

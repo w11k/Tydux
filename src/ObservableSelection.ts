@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import {isArray, isNil, isPlainObject} from "lodash";
 import {Observable, Operator} from "rxjs";
 import {OperatorFunction} from "rxjs/internal/types";
 import {distinctUntilChanged, filter, map} from "rxjs/operators";
@@ -10,12 +10,12 @@ export function selectToObservableSelection<S, R>(input$: Observable<S>,
     const output$ = input$
         .pipe(
             map(stateChange => {
-                return !_.isNil(selector) ? selector(stateChange) : stateChange as any;
+                return !isNil(selector) ? selector(stateChange) : stateChange as any;
             }),
             distinctUntilChanged((oldVal, newVal) => {
-                if (_.isArray(oldVal) && _.isArray(newVal)) {
+                if (isArray(oldVal) && isArray(newVal)) {
                     return areArraysShallowEquals(oldVal, newVal);
-                } else if (_.isPlainObject(newVal) && _.isPlainObject(newVal)) {
+                } else if (isPlainObject(newVal) && isPlainObject(newVal)) {
                     return arePlainObjectsShallowEquals(oldVal, newVal);
                 } else {
                     return oldVal === newVal;
@@ -31,7 +31,7 @@ export function selectNonNilToObervableSelection<S, R>(input$: Observable<S>,
     const output$ = selectToObservableSelection(input$, selector)
         .unbounded()
         .pipe(
-            filter(val => !_.isNil(val)),
+            filter(val => !isNil(val)),
             map(val => val!)
         );
 

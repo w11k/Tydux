@@ -1,12 +1,10 @@
-import * as _ from "lodash";
-import {Observable} from "rxjs";
-import {Operator} from "rxjs";
-import {Subscriber} from "rxjs";
+import {Observable, Operator, Subscriber} from "rxjs";
+import {isNil} from "lodash";
 
 
 function runInScopeDigest(scope: AngularJS1ScopeLike, fn: () => void) {
-    if (!_.isNil(scope)
-        && !_.isNil(scope.$root)
+    if (!isNil(scope)
+        && !isNil(scope.$root)
         && scope.$root.$$phase !== "$apply"
         && scope.$root.$$phase !== "$digest") {
         scope.$apply(fn);

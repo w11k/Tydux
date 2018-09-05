@@ -1,17 +1,13 @@
-import {cloneDeep, forIn, get, isPlainObject, last} from "lodash/index";
-
-// import {cloneDeep, forIn, get, isPlainObject, last} from "lodash";
-import {Observable} from "rxjs";
-import {Observer} from "rxjs";
+import {cloneDeep, forIn, get, isPlainObject, last} from "lodash";
+import {Observable, Observer, Subscriber, Subscription} from "rxjs";
 import {skip} from "rxjs/operators";
-import {Subscriber} from "rxjs";
-import {Subscription} from "rxjs";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
 import {Store} from "./Store";
+
 
 export type ViewTreeState<T> = {
     [K in keyof T]

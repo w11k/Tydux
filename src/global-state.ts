@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import {forEach, has} from "lodash";
 import {Observable, Subject} from "rxjs";
 import {ProcessedAction, Store} from "./Store";
 
@@ -18,7 +18,7 @@ export const globalStateChanges$: Observable<ProcessedAction<any>> = globalState
 
 export function resetTydux() {
     globalState = {};
-    _.forEach(storeMap, (val, key) => delete storeMap[key]);
+    forEach(storeMap, (val, key) => delete storeMap[key]);
 }
 
 export function getGlobalTyduxState() {
@@ -30,7 +30,7 @@ export function registerStoreInGlobalState<S>(storeId: string,
                                               store: Store<any, S>,
                                               setStateFn: (state: S) => void) {
 
-    if (checkUnique && _.has(storeMap, storeId)) {
+    if (checkUnique && has(storeMap, storeId)) {
         throw new Error(`store ID '${storeId}' is not unique`);
     }
 
@@ -55,7 +55,7 @@ export function setStateForAllStores(globalState: any) {
 }
 
 export function clearAllStores() {
-    _.forEach(storeMap, (storeWithSetStateFn) => {
+    forEach(storeMap, (storeWithSetStateFn) => {
         storeWithSetStateFn.setStateFn(storeWithSetStateFn.store.initialState);
     });
 }

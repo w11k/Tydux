@@ -1,3 +1,4 @@
+import {difference, functions, functionsIn, keys} from "lodash";
 import {Observable, ReplaySubject} from "rxjs";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
@@ -11,7 +12,6 @@ import {
     selectToObservableSelection
 } from "./ObservableSelection";
 import {createProxy} from "./utils";
-import {functionsIn, functions, keys, difference} from "lodash";
 
 
 export class ProcessedAction<S> {

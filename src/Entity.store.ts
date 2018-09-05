@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import {clone, keys} from "lodash";
 import {map} from "rxjs/operators";
 import {Mutator} from "./mutator";
 import {ObservableSelection} from "./ObservableSelection";
@@ -22,7 +22,7 @@ export class EntityMutators<T> extends Mutator<EntityState<T>> {
 
     load(objs: { [id: string]: T }) {
         this.state.entities = objs;
-        this.state.ids = _.keys(objs);
+        this.state.ids = keys(objs);
     }
 
     add(id: string, obj: T) {
@@ -53,7 +53,7 @@ export class EntityMutators<T> extends Mutator<EntityState<T>> {
         const after = this.state.ids.slice(idx + 1);
         this.state.ids = [...before, ...after];
 
-        const entities = _.clone(this.state.entities);
+        const entities = clone(this.state.entities);
         delete entities[id];
         this.state.entities = entities;
 
