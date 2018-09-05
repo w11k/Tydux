@@ -1,4 +1,9 @@
 
+# Version 8.3.2
+
+- added es2015 modules to enable tree-shaking
+
+
 # Version 8.3.1
 
 - improved middleware logging
