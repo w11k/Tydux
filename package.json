@@ -1,6 +1,6 @@
 {
   "name": "@w11k/tydux",
-  "version": "8.3.2",
+  "version": "8.3.3",
   "main": "./dist/index.js",
   "module": "./dist/es2015/index.js",
   "typings": "dist/index.d.ts",
