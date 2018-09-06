@@ -6,7 +6,6 @@ function isObjectLike(val: any): boolean {
     return typeof val === "object";
 }
 
-
 function forKeys(obj: any, iter: any) {
     let idx, keys;
     if (Array.isArray(obj)) {

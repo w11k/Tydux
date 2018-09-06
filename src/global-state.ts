@@ -1,5 +1,5 @@
-import {forEach, has} from "lodash";
 import {Observable, Subject} from "rxjs";
+import {forEach, has} from "./lodash/lodash";
 import {ProcessedAction, Store} from "./Store";
 
 
@@ -19,6 +19,7 @@ export const globalStateChanges$: Observable<ProcessedAction<any>> = globalState
 export function resetTydux() {
     globalState = {};
     forEach(storeMap, (val, key) => delete storeMap[key]);
+
 }
 
 export function getGlobalTyduxState() {

@@ -1,12 +1,13 @@
-import {cloneDeep, forIn, get, isPlainObject, last} from "lodash";
 import {Observable, Observer, Subscriber, Subscription} from "rxjs";
 import {skip} from "rxjs/operators";
+import {forEachIn, isPlainObject} from "./lodash/lodash";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
 import {Store} from "./Store";
+import {get, last} from "./utils";
 
 
 export type ViewTreeState<T> = {
@@ -51,8 +52,8 @@ export class View<T> {
     }
 
     private findStoresInTree(tree: any, path: string[], foundStores: [string[], Store<any, any>][]): void {
-        forIn(tree, (child, key) => {
-            const localPath = cloneDeep(path);
+        forEachIn(tree, (child, key) => {
+            const localPath = [...path];
             localPath.push(key);
 
             if (isPlainObject(child)) {
@@ -97,7 +98,8 @@ export class View<T> {
 
         const newParentState: any = {};
         let parentPath = path.slice(0, path.length - 1);
-        let currentParentState = parentPath.length > 0 ? get(stateCell[0], parentPath) : stateCell[0];
+        const currentParentState = get(stateCell[0], parentPath);
+
         Object.assign(newParentState, currentParentState);
         newParentState[last(path)!] = stateChange;
         Object.freeze(newParentState);

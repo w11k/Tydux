@@ -1,5 +1,4 @@
 import {assert} from "chai";
-import {isNil} from "lodash";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
@@ -7,7 +6,7 @@ import {Mutator} from "./mutator";
 import {EmptyMutators} from "./mutator.test";
 import {Store} from "./Store";
 import {afterAllStoreEvents, collect, createAsyncPromise, NOOP} from "./test-utils";
-import {areArraysShallowEquals} from "./utils";
+import {areArraysShallowEquals, isNil} from "./utils";
 
 
 describe("Store", function () {

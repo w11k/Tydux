@@ -139,6 +139,7 @@ describe("View", function () {
 
         let called = false;
         view.select().unbounded().subscribe(s => {
+            console.log(1);
             assert.throws(() => {
                 (s.child1 as any)["a"] = "a";
             });

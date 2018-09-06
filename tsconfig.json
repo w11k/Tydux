@@ -23,17 +23,13 @@
       "es2015.core",
       "es2015.proxy",
       "es2015.promise",
+      "es2015.symbol",
       "dom"
     ],
     "rootDir": "src",
     "target": "es5",
     "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "lodash/*": [
-        "node_modules/@types/lodash-es/*"
-      ]
-    }
+    "baseUrl": "."
   },
   "include": [
     "src/**/*"

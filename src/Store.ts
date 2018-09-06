@@ -1,4 +1,3 @@
-import {difference, functions, functionsIn, keys} from "lodash";
 import {Observable, ReplaySubject} from "rxjs";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
@@ -11,7 +10,7 @@ import {
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
-import {createProxy} from "./utils";
+import {createProxy, functions, functionsIn} from "./utils";
 
 
 export class ProcessedAction<S> {
@@ -24,7 +23,7 @@ export class ProcessedAction<S> {
 }
 
 export function failIfInstanceMembersExistExceptState(obj: any) {
-    let members = difference(keys(obj), ["state"]);
+    const members = Object.keys(obj).filter(key => key !== "state");
     if (members.length > 0) {
         throw new Error(mutatorHasInstanceMembers + ": " + members.join(","));
     }

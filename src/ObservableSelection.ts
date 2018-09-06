@@ -1,8 +1,8 @@
-import {isArray, isNil, isPlainObject} from "lodash";
 import {Observable, Operator} from "rxjs";
 import {OperatorFunction} from "rxjs/internal/types";
 import {distinctUntilChanged, filter, map} from "rxjs/operators";
-import {areArraysShallowEquals, arePlainObjectsShallowEquals} from "./utils";
+import {isPlainObject} from "./lodash/lodash";
+import {areArraysShallowEquals, arePlainObjectsShallowEquals, isNil} from "./utils";
 
 
 export function selectToObservableSelection<S, R>(input$: Observable<S>,
@@ -13,7 +13,7 @@ export function selectToObservableSelection<S, R>(input$: Observable<S>,
                 return !isNil(selector) ? selector(stateChange) : stateChange as any;
             }),
             distinctUntilChanged((oldVal, newVal) => {
-                if (isArray(oldVal) && isArray(newVal)) {
+                if (Array.isArray(oldVal) && Array.isArray(newVal)) {
                     return areArraysShallowEquals(oldVal, newVal);
                 } else if (isPlainObject(newVal) && isPlainObject(newVal)) {
                     return arePlainObjectsShallowEquals(oldVal, newVal);

@@ -10,22 +10,18 @@
     "dist"
   ],
   "dependencies": {
-    "es6-shim": "0.35.3",
-    "lodash": "4.17.10",
-    "lodash-es": "4.17.10"
+    "es6-shim": "0.35.3"
   },
   "peerDependencies": {
     "rxjs": ">= 5.5"
   },
   "devDependencies": {
-    "@types/es6-shim": "0.31.35",
-    "ts-loader": "5.0.0",
-    "webpack-cli": "3.1.0",
     "@types/chai": "4.1.2",
-    "@types/lodash": "4.14.116",
+    "@types/es6-shim": "0.31.35",
     "@types/mocha": "2.2.48",
     "chai": "4.1.2",
     "del-cli": "1.1.0",
+    "esm": "3.0.82",
     "extract-loader": "3.0.0",
     "file-loader": "2.0.0",
     "html-loader": "0.5.5",
@@ -33,11 +29,13 @@
     "nyc": "^11.4.1",
     "rxjs": "6.2.0",
     "source-map-support": "0.5.3",
+    "ts-loader": "5.0.0",
     "ts-node": "4.1.0",
     "tslint": "5.9.1",
     "typescript": "^2.9.1",
     "webpack": "4.17.1",
     "webpack-bundle-analyzer": "2.13.1",
+    "webpack-cli": "3.1.0",
     "webpack-dev-server": "3.1.7"
   },
   "scripts": {

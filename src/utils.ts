@@ -1,4 +1,3 @@
-import {assignIn, every, keysIn} from "lodash";
 import {Observable, Operator, Subscriber} from "rxjs";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
 
@@ -15,7 +14,7 @@ export function areArraysShallowEquals(array1: any[], array2: any[]): boolean {
         return false;
     }
 
-    return every(array1, (val, idx) => {
+    return array1.every((val, idx) => {
         return val === array2[idx];
     });
 }
@@ -26,7 +25,7 @@ export function arePlainObjectsShallowEquals(obj1: any, obj2: any): boolean {
         return false;
     }
 
-    return every(keysInObj1, (val) => {
+    return keysInObj1.every((val) => {
         return obj1[val] === obj2[val];
     });
 }
@@ -56,7 +55,9 @@ export function createProxy<T>(target: T): T {
     const proxy: any = {};
     // re-assign members. Otherwise these members would be marked as read only.
     // Also flattens the new state object.
-    assignIn(proxy, target);
+    // assignIn(proxy, target);
+    Object.assign(proxy, target);
+
     Object.setPrototypeOf(proxy, target);
     return proxy;
 }
@@ -91,3 +92,47 @@ export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Obser
 export function isNil(obj: any): obj is null | undefined {
     return obj === null || obj === undefined;
 }
+
+
+export function last(array: any[]) {
+    const length = array == null ? 0 : array.length;
+    return length ? array[length - 1] : undefined;
+}
+
+export function functions(object: any): string[] {
+    if (object == null) {
+        return [];
+    }
+    return Object.keys(object).filter((key) => typeof object[key] === "function");
+}
+
+export function functionsIn(object: any) {
+    let fnMembers: string[] = functions(object);
+    let proto = Object.getPrototypeOf(object);
+    if (proto !== null) {
+        fnMembers = [...fnMembers, ...functionsIn(proto)];
+    }
+    return fnMembers;
+}
+
+export function keysIn(object: any) {
+    let keys: string[] = Object.keys(object);
+    let proto = Object.getPrototypeOf(object);
+    if (proto !== null) {
+        keys = [...keys, ...functionsIn(proto)];
+    }
+    return keys;
+}
+
+export function get(obj: any, path: string[]) {
+    let target = obj;
+    for (let p of path) {
+        if (target !== undefined && target.hasOwnProperty(p)) {
+            target = target[p];
+        } else {
+            return undefined;
+        }
+    }
+    return target;
+}
+

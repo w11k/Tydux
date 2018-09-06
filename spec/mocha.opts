@@ -1,6 +1,7 @@
 --require source-map-support/register
 --require ts-node/register
 --require spec/setup.js
+--require esm
 
 --ui bdd
 --reporter spec

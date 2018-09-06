@@ -1,5 +1,5 @@
 import {Observable, Operator, Subscriber} from "rxjs";
-import {isNil} from "lodash";
+import {isNil} from "./utils";
 
 
 function runInScopeDigest(scope: AngularJS1ScopeLike, fn: () => void) {
