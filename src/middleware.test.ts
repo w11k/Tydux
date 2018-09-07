@@ -50,7 +50,7 @@ describe("Middleware", function () {
             }
 
             beforeActionDispatch(state: TestState, action: MutatorAction): any {
-                assert.deepEqual(action.arguments, [1]);
+                assert.deepEqual(action.payload, [1]);
                 done();
             }
         }
@@ -67,7 +67,7 @@ describe("Middleware", function () {
             }
 
             afterActionProcessed(processedAction: ProcessedAction<TestState>): void {
-                assert.deepEqual(processedAction.mutatorAction.arguments, [1]);
+                assert.deepEqual(processedAction.mutatorAction.payload, [1]);
                 done();
             }
         }
@@ -85,7 +85,7 @@ describe("Middleware", function () {
             }
 
             dispatch() {
-                this.mutatorDispatcher({type: "addToN1", arguments: [9]});
+                this.mutatorDispatcher({type: "addToN1", payload: [9]});
             }
         }
 

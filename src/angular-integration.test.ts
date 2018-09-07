@@ -19,7 +19,7 @@ describe("Angular integration", function () {
 
         class TestMutator extends Mutator<State> {
             inc() {
-                this.state.a++;
+                this.state.count++;
             }
         }
 
@@ -30,7 +30,7 @@ describe("Angular integration", function () {
         }
 
         const events: any[] = [];
-        const store = new TestStore("", new TestMutator(), {a: 0});
+        const store = new TestStore("", new TestMutator(), {count: 0});
 
         class DummyComponent implements OnDestroyLike {
             ngOnDestroy() {
@@ -41,7 +41,7 @@ describe("Angular integration", function () {
         const component = new DummyComponent();
 
         store
-            .select(s => s.a)
+            .select(s => s.count)
             .bounded(toAngularComponent(component))
             .subscribe(a => events.push(a));
 

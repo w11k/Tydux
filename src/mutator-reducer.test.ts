@@ -23,9 +23,9 @@ describe("ReducerFromMutator", function () {
         const reducer = createReducerFromMutator(new TestMutator());
         let state = {n1: 0};
 
-        state = reducer(state, {type: "mut1", arguments: []});
+        state = reducer(state, {type: "mut1", payload: []});
         assert.equal(state.n1, 10);
-        state = reducer(state, {type: "mut2", arguments: []});
+        state = reducer(state, {type: "mut2", payload: []});
         assert.equal(state.n1, 1010);
     });
 
@@ -39,7 +39,7 @@ describe("ReducerFromMutator", function () {
         const reducer = createReducerFromMutator(new TestMutator());
         let state = {n1: 0};
 
-        state = reducer(state, {type: "invalid", arguments: []});
+        state = reducer(state, {type: "invalid", payload: []});
         assert.equal(state.n1, 0);
     });
 
@@ -53,9 +53,9 @@ describe("ReducerFromMutator", function () {
         const reducer = createReducerFromMutator(new TestMutator());
         let state = {n1: 0};
 
-        state = reducer(state, {type: "mut1", arguments: [10]});
+        state = reducer(state, {type: "mut1", payload: [10]});
         assert.equal(state.n1, 10);
-        state = reducer(state, {type: "mut1", arguments: [5]});
+        state = reducer(state, {type: "mut1", payload: [5]});
         assert.equal(state.n1, 15);
     });
 
@@ -73,7 +73,7 @@ describe("ReducerFromMutator", function () {
 
         const reducer = createReducerFromMutator(new TestMutator());
         const state = {n1: 0};
-        reducer(state, {type: "mut1", arguments: []});
+        reducer(state, {type: "mut1", payload: []});
     });
 
     it("can not access other methods asynchronously", function (done) {
@@ -94,7 +94,7 @@ describe("ReducerFromMutator", function () {
 
         const reducer = createReducerFromMutator(new TestMutator());
         const state = {n1: 0};
-        reducer(state, {type: "mut1", arguments: []});
+        reducer(state, {type: "mut1", payload: []});
     });
 
 });

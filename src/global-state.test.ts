@@ -44,7 +44,7 @@ describe("global state", function () {
         assert.equal(events[0].mutatorAction.type, "@@INIT");
         assert.equal(events[1].mutatorAction.type, "mut1");
         assert.equal(events[2].mutatorAction.type, "mut2");
-        assert.deepEqual(events[2].mutatorAction.arguments, [2]);
+        assert.deepEqual(events[2].mutatorAction.payload, [2]);
     });
 
     it("replay MutatorEvents", function () {

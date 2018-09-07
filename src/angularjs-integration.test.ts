@@ -19,7 +19,7 @@ describe("AngularJS integration", function () {
 
         class TestMutator extends Mutator<State> {
             inc() {
-                this.state.a++;
+                this.state.count++;
             }
         }
 
@@ -30,7 +30,7 @@ describe("AngularJS integration", function () {
         }
 
         const events: any[] = [];
-        const store = new TestStore("", new TestMutator(), {a: 0});
+        const store = new TestStore("", new TestMutator(), {count: 0});
 
         class DummyScope implements AngularJS1ScopeLike {
 
@@ -55,7 +55,7 @@ describe("AngularJS integration", function () {
         const scope = new DummyScope(rootScope);
 
         store
-            .select(s => s.a)
+            .select(s => s.count)
             .bounded(toAngularJSScope(scope))
             .subscribe(a => events.push(a));
 

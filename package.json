@@ -10,7 +10,8 @@
     "dist"
   ],
   "dependencies": {
-    "es6-shim": "0.35.3"
+    "es6-shim": "0.35.3",
+    "redux": "4.0.0"
   },
   "peerDependencies": {
     "rxjs": ">= 5.5"

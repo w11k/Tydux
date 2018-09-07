@@ -145,11 +145,11 @@ describe("Mutators", function () {
     it("state changes are only persistent if the mutator did not throw an exception", function () {
         class TestMutator extends Mutator<any> {
             mut1() {
-                this.state.a = 1;
-                if (this.state.a > 0) {
+                this.state.count = 1;
+                if (this.state.count > 0) {
                     throw new Error("");
                 }
-                this.state.a = 2;
+                this.state.count = 2;
             }
         }
 
@@ -159,9 +159,9 @@ describe("Mutators", function () {
             }
         }
 
-        const store = new MyStore("", new TestMutator(), {a: 0});
+        const store = new MyStore("", new TestMutator(), {count: 0});
         assert.throws(() => store.action());
-        assert.equal(store.state.a, 0);
+        assert.equal(store.state.count, 0);
     });
 
     it("mutators must not have instance members", function () {

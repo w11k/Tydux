@@ -1,17 +1,45 @@
+import {Action} from "redux";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {failIfInstanceMembersExistExceptState} from "./Store";
 import {createFailingProxy, failIfNotUndefined} from "./utils";
 
-export interface MutatorAction {
+export interface MutatorAction extends Action<string> {
     readonly type: string;
+    readonly payload?: any[];
+}
 
-    readonly arguments: any[];
+export function createTypeForInvocationFromStore(storeId: string,
+                                                 storeMethodName: string | undefined,
+                                                 mutatorMethodName: string) {
+
+    if (storeMethodName !== undefined) {
+        storeMethodName = "#" + storeMethodName;
+    }
+
+    return `${storeId}${storeMethodName} / ${mutatorMethodName}`;
+}
+
+export function createActionForMutator(action: MutatorAction): MutatorAction | null {
+    const idx = action.type.lastIndexOf(" / ");
+    if (idx === -1) {
+        return null;
+    }
+
+    const tail = action.type.substring(idx + 3);
+    if (tail.length === 0) {
+        return null;
+    }
+
+    return {
+        ...action,
+        type: tail,
+    };
 }
 
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 export type MutatorMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 
-export type MutatorReducer<S> = (state: S, action: MutatorAction) => S;
+export type MutatorReducer<S> = (state: S, action: Action<string>) => S;
 
 export type MutatorDispatcher = (action: MutatorAction) => void;
 
@@ -25,7 +53,8 @@ export function createReducerFromMutator<S>(mutatorInstance: Mutator<S>): Mutato
             if (mutatorFn === undefined) {
                 return state;
             }
-            const result = mutatorFn.apply(mutatorThisProxy, action.arguments);
+
+            const result = mutatorFn.apply(mutatorThisProxy, action.payload);
             const stateAfterRun = mutatorThisProxy.state;
             delete mutatorThisProxy.state;
             failIfNotUndefined(result);

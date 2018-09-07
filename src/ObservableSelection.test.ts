@@ -23,7 +23,7 @@ describe("ObservableSelection", function () {
 
         class TestMutator extends Mutator<State> {
             inc() {
-                this.state.a++;
+                this.state.count++;
             }
         }
 
@@ -33,7 +33,7 @@ describe("ObservableSelection", function () {
             }
         }
 
-        const store = new TestStore("", new TestMutator(), {a: 0});
+        const store = new TestStore("", new TestMutator(), {count: 0});
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
@@ -49,7 +49,7 @@ describe("ObservableSelection", function () {
                 };
             });
 
-        let collected = collect(store.select(s => s.a).bounded(operator));
+        let collected = collect(store.select(s => s.count).bounded(operator));
 
         store.action();
         store.action();
@@ -74,7 +74,7 @@ describe("ObservableSelection", function () {
 
         class TestMutator extends Mutator<State> {
             inc() {
-                this.state.a++;
+                this.state.count++;
             }
         }
 
@@ -84,7 +84,7 @@ describe("ObservableSelection", function () {
             }
         }
 
-        const store = new TestStore("", new TestMutator(), {a: 0});
+        const store = new TestStore("", new TestMutator(), {count: 0});
 
         const events: any[] = [];
 
@@ -107,7 +107,7 @@ describe("ObservableSelection", function () {
             });
 
         store
-            .select(s => s.a)
+            .select(s => s.count)
             .bounded(operator)
             .subscribe(s => events.push(s));
 
@@ -135,7 +135,7 @@ describe("ObservableSelection", function () {
 
         class TestMutator extends Mutator<State> {
             inc() {
-                this.state.a++;
+                this.state.count++;
             }
         }
 
@@ -145,12 +145,12 @@ describe("ObservableSelection", function () {
             }
         }
 
-        const store = new TestStore("", new TestMutator(), {a: 0});
+        const store = new TestStore("", new TestMutator(), {count: 0});
 
         const events: any[] = [];
 
         store
-            .select(s => s.a)
+            .select(s => s.count)
             .pipe(
                 map(x => x + 100),
                 map(x => "a:" + x)

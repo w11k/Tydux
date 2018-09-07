@@ -17,7 +17,7 @@ describe("Store - sanity tests", function () {
         class MyStore extends Store<any, any> {
 
             action() {
-                (this.state as any).a = 1;
+                (this.state as any).count = 1;
             }
 
         }
