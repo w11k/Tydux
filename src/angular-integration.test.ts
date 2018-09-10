@@ -2,8 +2,8 @@ import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutator} from "./mutator";
-import {Store} from "./Store";
+import {Commands} from "./commands";
+import {Fassade} from "./Fassade";
 import {afterAllStoreEvents} from "./test-utils";
 
 
@@ -17,15 +17,15 @@ describe("Angular integration", function () {
 
         type State = { a: number };
 
-        class TestMutator extends Mutator<State> {
+        class TestMutator extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Store<TestMutator, State> {
+        class TestStore extends Fassade<TestMutator, State> {
             action() {
-                this.mutate.inc();
+                this.commands.inc();
             }
         }
 

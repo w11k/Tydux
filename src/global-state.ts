@@ -1,10 +1,10 @@
 import {Observable, Subject} from "rxjs";
 import {forEach, has} from "./lodash/lodash";
-import {ProcessedAction, Store} from "./Store";
+import {ProcessedAction, Fassade, resetFassadeIds} from "./Fassade";
 
 
 class StoreWithSetStateFn {
-    constructor(readonly store: Store<any, any>, readonly setStateFn: (state: any) => void) {
+    constructor(readonly store: Fassade<any, any>, readonly setStateFn: (state: any) => void) {
     }
 }
 
@@ -19,7 +19,7 @@ export const globalStateChanges$: Observable<ProcessedAction<any>> = globalState
 export function resetTydux() {
     globalState = {};
     forEach(storeMap, (val, key) => delete storeMap[key]);
-
+    resetFassadeIds();
 }
 
 export function getGlobalTyduxState() {
@@ -28,7 +28,7 @@ export function getGlobalTyduxState() {
 
 export function registerStoreInGlobalState<S>(storeId: string,
                                               checkUnique: boolean,
-                                              store: Store<any, S>,
+                                              store: Fassade<any, S>,
                                               setStateFn: (state: S) => void) {
 
     if (checkUnique && has(storeMap, storeId)) {

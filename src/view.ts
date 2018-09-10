@@ -6,20 +6,20 @@ import {
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
-import {Store} from "./Store";
+import {Fassade} from "./Fassade";
 import {get, last} from "./utils";
 
 
 export type ViewTreeState<T> = {
     [K in keyof T]
-    : T[K] extends Store<any, infer S> ? S
+    : T[K] extends Fassade<any, infer S> ? S
         : T[K] extends object ? ViewTreeState<T[K]>
             : never;
 };
 
 export class View<T> {
 
-    private readonly stores: [string[], Store<any, any>][] = [];
+    private readonly stores: [string[], Fassade<any, any>][] = [];
 
     private readonly stateChanges$: Observable<ViewTreeState<Readonly<T>>> =
         Observable.create((subscriber: Subscriber<ViewTreeState<Readonly<T>>>) => {
@@ -51,14 +51,14 @@ export class View<T> {
         return this._internalSubscriptionCount;
     }
 
-    private findStoresInTree(tree: any, path: string[], foundStores: [string[], Store<any, any>][]): void {
+    private findStoresInTree(tree: any, path: string[], foundStores: [string[], Fassade<any, any>][]): void {
         forEachIn(tree, (child, key) => {
             const localPath = [...path];
             localPath.push(key);
 
             if (isPlainObject(child)) {
                 this.findStoresInTree(child, localPath, foundStores);
-            } else if (child instanceof Store) {
+            } else if (child instanceof Fassade) {
                 foundStores.push([localPath, child]);
             }
         });
@@ -66,7 +66,7 @@ export class View<T> {
 
     private subscribeStores(stateCell: [ViewTreeState<Readonly<T>>],
                             observer: Observer<ViewTreeState<Readonly<T>>>,
-                            foundStores: [string[], Store<any, any>][],
+                            foundStores: [string[], Fassade<any, any>][],
                             subscriptions: Subscription[]) {
 
         for (const [path, child] of foundStores) {

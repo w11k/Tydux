@@ -46,7 +46,7 @@ export function enableDevTools() {
 
     globalStateChanges$
         .subscribe(event => {
-            const origin = event.storeId;
+            const origin = event.fassadeId;
             const context = isNil(event.context) ? "" : event.context;
             const meta = event.duration !== undefined ? ` (${event.duration}ms)` : "";
             const type = `[${origin + context} / ${event.mutatorAction.type}] ${meta}`;

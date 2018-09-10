@@ -1,8 +1,8 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {globalStateChanges$} from "./global-state";
-import {Mutator} from "./mutator";
-import {ProcessedAction, Store} from "./Store";
+import {Commands} from "./commands";
+import {ProcessedAction, Fassade} from "./Fassade";
 import {afterAllStoreEvents} from "./test-utils";
 
 
@@ -15,7 +15,7 @@ describe("global state", function () {
     it("collects MutatorEvents", async function () {
         const events: ProcessedAction<any>[] = [];
 
-        class MyMutators extends Mutator<{ count: number }> {
+        class MyMutators extends Commands<{ count: number }> {
             mut1() {
                 this.state.count = 1;
             }
@@ -25,10 +25,10 @@ describe("global state", function () {
             }
         }
 
-        class MyStore extends Store<MyMutators, { count: number }> {
+        class MyStore extends Fassade<MyMutators, { count: number }> {
             action1() {
-                this.mutate.mut1();
-                this.mutate.mut2(2);
+                this.commands.mut1();
+                this.commands.mut2(2);
             }
         }
 
@@ -48,13 +48,13 @@ describe("global state", function () {
     });
 
     it("replay MutatorEvents", function () {
-        class MyMutators extends Mutator<{ count: number }> {
+        class MyMutators extends Commands<{ count: number }> {
             mut(count: number) {
                 this.state.count = count;
             }
         }
 
-        class MyStore extends Store<MyMutators, { count: number }> {
+        class MyStore extends Fassade<MyMutators, { count: number }> {
         }
 
         const store = new MyStore("myStore", new MyMutators(), {count: 0});

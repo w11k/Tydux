@@ -2,23 +2,23 @@ import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Middleware} from "./middleware";
-import {Mutator, MutatorAction} from "./mutator";
-import {ProcessedAction, Store} from "./Store";
+import {Commands, MutatorAction} from "./commands";
+import {ProcessedAction, Fassade} from "./Fassade";
 
 
 class TestState {
     n1 = 0;
 }
 
-class TestMutator extends Mutator<TestState> {
+class TestMutator extends Commands<TestState> {
     addToN1(val: number) {
         this.state.n1 += val;
     }
 }
 
-class TestStore extends Store<TestMutator, TestState> {
+class TestStore extends Fassade<TestMutator, TestState> {
     action(val: number) {
-        this.mutate.addToN1(val);
+        this.commands.addToN1(val);
     }
 }
 
@@ -29,7 +29,7 @@ describe("Middleware", function () {
     afterEach(() => resetTydux());
 
     it("has the same state as the store", function () {
-        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
+        class MyMiddleware extends Middleware<TestState, Commands<any>, TestStore> {
             getName(): string {
                 return "TestMiddleware";
             }
@@ -44,7 +44,7 @@ describe("Middleware", function () {
     });
 
     it("beforeActionDispatch", function (done) {
-        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
+        class MyMiddleware extends Middleware<TestState, Commands<any>, TestStore> {
             getName(): string {
                 return "TestMiddleware";
             }
@@ -61,7 +61,7 @@ describe("Middleware", function () {
     });
 
     it("afterActionProcessed", function (done) {
-        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
+        class MyMiddleware extends Middleware<TestState, Commands<any>, TestStore> {
             getName(): string {
                 return "TestMiddleware";
             }
@@ -78,7 +78,7 @@ describe("Middleware", function () {
     });
 
     it("can dispatch actions", function () {
-        class MyMiddleware extends Middleware<TestState, Mutator<any>, TestStore> {
+        class MyMiddleware extends Middleware<TestState, Commands<any>, TestStore> {
 
             getName(): string {
                 return "TestMiddleware";

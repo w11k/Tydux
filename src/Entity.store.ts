@@ -1,7 +1,7 @@
 import {map} from "rxjs/operators";
-import {Mutator} from "./mutator";
+import {Commands} from "./commands";
 import {ObservableSelection} from "./ObservableSelection";
-import {Store} from "./Store";
+import {Fassade} from "./Fassade";
 
 export interface EntityMap<T> {
     [id: string]: T;
@@ -12,7 +12,7 @@ export interface EntityState<T> {
     entities: EntityMap<T>;
 }
 
-export class EntityMutators<T> extends Mutator<EntityState<T>> {
+export class EntityMutators<T> extends Commands<EntityState<T>> {
 
     clear() {
         this.state.ids = [];
@@ -66,7 +66,7 @@ export type Constructor<T> = {
     new(...args: any[]): T;
 };
 
-export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, EntityState<T>> {
+export class EntityStore<T, I extends keyof T> extends Fassade<EntityMutators<T>, EntityState<T>> {
 
     constructor(storeId: string, readonly constructor: Constructor<T>, readonly entityIdField: I) {
         super(storeId, new EntityMutators(), {
@@ -76,11 +76,11 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
     }
 
     clear(): void {
-        this.mutate.clear();
+        this.commands.clear();
     }
 
     load(objs: { [id: string]: T }): void {
-        this.mutate.load(objs);
+        this.commands.load(objs);
     }
 
     add(obj: T | T[]): void {
@@ -90,7 +90,7 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
 
         obj.forEach((o: T) => {
             const key = o[this.entityIdField].toString();
-            this.mutate.add(key, o);
+            this.commands.add(key, o);
         });
     }
 
@@ -101,7 +101,7 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
 
         obj.forEach((o: T) => {
             const key = o[this.entityIdField];
-            this.mutate.update(key.toString(), o);
+            this.commands.update(key.toString(), o);
         });
     }
 
@@ -112,7 +112,7 @@ export class EntityStore<T, I extends keyof T> extends Store<EntityMutators<T>, 
 
         obj.forEach((o: T) => {
             const key = o[this.entityIdField];
-            this.mutate.remove(key.toString());
+            this.commands.remove(key.toString());
         });
     }
 

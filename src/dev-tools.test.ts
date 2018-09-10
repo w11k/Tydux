@@ -1,8 +1,8 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {globalStateChanges$, resetTydux} from "./global-state";
-import {Mutator} from "./mutator";
-import {Store} from "./Store";
+import {Commands} from "./commands";
+import {Fassade} from "./Fassade";
 import {createAsyncPromise} from "./test-utils";
 
 describe("DevTools", function () {
@@ -14,7 +14,7 @@ describe("DevTools", function () {
     it("events contain the store and mutators name", function (done) {
         const eventActionTypes: string[] = [];
 
-        class MyMutators extends Mutator<any> {
+        class MyMutators extends Commands<any> {
             mut1() {
             }
 
@@ -25,15 +25,15 @@ describe("DevTools", function () {
             }
         }
 
-        class MyStore extends Store<MyMutators, any> {
+        class MyStore extends Fassade<MyMutators, any> {
             action1() {
-                this.mutate.mut1();
-                this.mutate.mut2();
+                this.commands.mut1();
+                this.commands.mut2();
             }
 
             action2() {
-                this.mutate.mut1();
-                this.mutate.mut3();
+                this.commands.mut1();
+                this.commands.mut3();
             }
         }
 
@@ -69,7 +69,7 @@ describe("DevTools", function () {
     it("events contain the store and mutators name, support for async methods", function (done) {
         const eventActionTypes: string[] = [];
 
-        class MyMutators extends Mutator<any> {
+        class MyMutators extends Commands<any> {
             mut1() {
             }
 
@@ -77,16 +77,16 @@ describe("DevTools", function () {
             }
         }
 
-        class MyStore extends Store<MyMutators, any> {
+        class MyStore extends Fassade<MyMutators, any> {
 
             async action1() {
-                this.mutate.mut1();
+                this.commands.mut1();
                 this.innerAction();
-                this.mutate.mut2();
+                this.commands.mut2();
                 await createAsyncPromise(10);
-                this.mutate.mut1();
+                this.commands.mut1();
                 this.innerAction();
-                this.mutate.mut2();
+                this.commands.mut2();
 
                 setTimeout(() => {
                     assert.deepEqual(eventActionTypes, [
@@ -105,8 +105,8 @@ describe("DevTools", function () {
             }
 
             private innerAction() {
-                this.mutate.mut1();
-                this.mutate.mut2();
+                this.commands.mut1();
+                this.commands.mut2();
             }
         }
 

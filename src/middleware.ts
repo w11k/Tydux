@@ -1,26 +1,26 @@
-import {Mutator, MutatorAction, MutatorDispatcher, MutatorMethods} from "./mutator";
-import {ProcessedAction, Store, StoreConnector} from "./Store";
+import {Commands, MutatorAction, CommandDispatcher, CommandsMethods} from "./commands";
+import {ProcessedAction, Fassade, StoreConnector} from "./Fassade";
 import {isNil} from "./utils";
 
 
 export class MiddlewareInit<S> {
     constructor(readonly storeConnector: StoreConnector<S>,
-                readonly mutatorDispatcher: MutatorDispatcher) {
+                readonly mutatorDispatcher: CommandDispatcher) {
     }
 }
 
-export abstract class Middleware<S, M extends Mutator<S>, T extends Store<any, S>> {
+export abstract class Middleware<S, M extends Commands<S>, T extends Fassade<any, S>> {
 
-    mutate!: MutatorMethods<M>;
+    mutate!: CommandsMethods<M>;
 
     private storeConnector!: StoreConnector<S>;
 
-    protected mutatorDispatcher!: MutatorDispatcher;
+    protected mutatorDispatcher!: CommandDispatcher;
 
     abstract getName(): string;
 
     getMutator(): M {
-        return new Mutator() as M;
+        return new Commands() as M;
     }
 
     get state(): Readonly<S> {

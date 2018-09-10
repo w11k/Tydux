@@ -5,9 +5,9 @@ import {Subject} from "rxjs";
 import {Subscriber} from "rxjs";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutator} from "./mutator";
+import {Commands} from "./commands";
 import {ObservableSelection} from "./ObservableSelection";
-import {Store} from "./Store";
+import {Fassade} from "./Fassade";
 import {afterAllStoreEvents, collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
@@ -21,15 +21,15 @@ describe("ObservableSelection", function () {
     it("bounded() can be used to complete the stream", async function () {
         type State = { a: number };
 
-        class TestMutator extends Mutator<State> {
+        class TestMutator extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Store<TestMutator, State> {
+        class TestStore extends Fassade<TestMutator, State> {
             action() {
-                this.mutate.inc();
+                this.commands.inc();
             }
         }
 
@@ -72,15 +72,15 @@ describe("ObservableSelection", function () {
 
         type State = { a: number };
 
-        class TestMutator extends Mutator<State> {
+        class TestMutator extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Store<TestMutator, State> {
+        class TestStore extends Fassade<TestMutator, State> {
             action() {
-                this.mutate.inc();
+                this.commands.inc();
             }
         }
 
@@ -133,15 +133,15 @@ describe("ObservableSelection", function () {
 
         type State = { a: number };
 
-        class TestMutator extends Mutator<State> {
+        class TestMutator extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Store<TestMutator, State> {
+        class TestStore extends Fassade<TestMutator, State> {
             action() {
-                this.mutate.inc();
+                this.commands.inc();
             }
         }
 

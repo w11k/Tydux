@@ -1,7 +1,7 @@
 import {enableTyduxDevelopmentMode} from "../../../development";
 import {Middleware} from "../../../middleware";
-import {Mutator} from "../../../mutator";
-import {ProcessedAction, Store} from "../../../Store";
+import {Commands} from "../../../commands";
+import {ProcessedAction, Fassade} from "../../../Fassade";
 import "./index.html";
 import {createTodoList} from "./mock";
 
@@ -22,7 +22,7 @@ class TodoState {
 }
 
 
-class TodoMutators extends Mutator<TodoState> {
+class TodoMutators extends Commands<TodoState> {
 
     clearTodos() {
         this.state.todos = [];
@@ -42,7 +42,7 @@ class TodoMutators extends Mutator<TodoState> {
 
 }
 
-class TodoStore extends Store<TodoMutators, TodoState> {
+class TodoStore extends Fassade<TodoMutators, TodoState> {
 
     constructor() {
         super("todos", new TodoMutators(), new TodoState());
@@ -55,24 +55,24 @@ class TodoStore extends Store<TodoMutators, TodoState> {
             throw new Error("TODO must not be empty");
         }
 
-        this.mutate.addTodoToList({name: name});
+        this.commands.addTodoToList({name: name});
     }
 
     clearTodos() {
-        this.mutate.clearTodos();
+        this.commands.clearTodos();
     }
 
     async loadTodos() {
-        this.mutate.clearTodos();
+        this.commands.clearTodos();
         const todos = await createTodoList();
-        this.mutate.setTodos(todos);
+        this.commands.setTodos(todos);
     }
 
 }
 
 const store: TodoStore = new TodoStore();
 
-class MyMiddlewareMutator extends Mutator<TodoState> {
+class MyMiddlewareMutator extends Commands<TodoState> {
     addRandomTodo(prefix = "mutator-") {
         this.state.todos = [
             ...this.state.todos,

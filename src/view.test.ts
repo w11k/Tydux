@@ -1,8 +1,8 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutator} from "./mutator";
-import {Store} from "./Store";
+import {Commands} from "./commands";
+import {Fassade} from "./Fassade";
 import {afterAllStoreEvents, collect} from "./test-utils";
 import {View} from "./view";
 
@@ -11,20 +11,20 @@ class State1 {
     value1 = 10;
 }
 
-class Mutators1 extends Mutator<State1> {
+class Mutators1 extends Commands<State1> {
     mut1() {
         this.state.value1++;
     }
 }
 
-class Store1 extends Store<Mutators1, State1> {
+class Store1 extends Fassade<Mutators1, State1> {
 
     constructor() {
         super("store1", new Mutators1(), new State1());
     }
 
     action1() {
-        this.mutate.mut1();
+        this.commands.mut1();
     }
 }
 
@@ -33,20 +33,20 @@ class State2 {
     value2 = 20;
 }
 
-class Mutators2 extends Mutator<State2> {
+class Mutators2 extends Commands<State2> {
     mut2() {
         this.state.value2++;
     }
 }
 
-class Store2 extends Store<Mutators2, State2> {
+class Store2 extends Fassade<Mutators2, State2> {
 
     constructor() {
         super("store2", new Mutators2(), new State2());
     }
 
     action2() {
-        this.mutate.mut2();
+        this.commands.mut2();
     }
 }
 

@@ -1,103 +1,112 @@
 import {assert} from "chai";
+import {Action, createStore, Store as ReduxStore} from "redux";
+import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
+import {createMountPoint, Fassade, tyduxReducer} from "./Fassade";
 import {resetTydux} from "./global-state";
-import {EmptyMutators} from "./mutator.test";
-import {Store} from "./Store";
+import {collect, createReduxWithMountPoint} from "./test-utils";
 
 
-describe("Store", function () {
+describe("Fassade", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
     afterEach(() => resetTydux());
 
-    /*
-        it("documentation", async function () {
-            // collect output
-            const output: string[] = [];
-            const log = (...msgs: any[]) => output.push(msgs.join(" "));
-
-            class MyState {
-                count = 0;
+    it("documentation", async function () {
+        const initialState = {
+            someValue: 0,
+            managedByFassade: {
+                val: 10
             }
+        };
 
-            class MyMutators extends Mutator<MyState> {
-                increment() {
-                    this.state.count++;
-                }
+        type AppState = typeof initialState;
+        type ManagedByFassadeState = typeof initialState.managedByFassade;
 
-                decrement() {
-                    this.state.count--;
-                }
-            }
-
-            class MyStore extends Store<MyMutators, MyState> {
-
-                action() {
-                    this.mutate.increment();
-                    this.mutate.increment();
-                    this.mutate.decrement();
-                }
-            }
-
-            const store = new MyStore("myStore", new MyMutators(), new MyState());
-
-            // directly query the state
-            log("query", store.state.count);
-
-            // observe the state
-            store.select(s => s.count).unbounded().subscribe(count => {
-                log("observe", count);
-            });
-
-            // dispatch actions
-            store.action();
-
-            await afterAllStoreEvents(store);
-            assert.deepEqual(output, [
-                "query 0",
-                "observe 0",
-                "observe 1",
-                "observe 2",
-                "observe 1"
-            ]);
-        });
-    */
-
-    it("ID must be unique", function () {
-        class TestStore extends Store<any, any> {
+        function app(state = initialState, action: Action) {
+            return tyduxReducer(state, action);
         }
 
-        new TestStore("s1", new EmptyMutators(), {});
-        new TestStore("s2", new EmptyMutators(), {});
-        assert.throws(() => {
-            new TestStore("s2", new EmptyMutators(), {});
+        let reduxStore: ReduxStore<AppState, Action> = createStore(app);
+        const mount = createMountPoint(
+            reduxStore,
+            s => s.managedByFassade,
+            (s, l) => ({...s, managedByFassade: l})
+        );
+
+        class MyCommands extends Commands<ManagedByFassadeState> {
+            inc(by: number) {
+                this.state.val += by;
+            }
+        }
+
+        class MyFassade extends Fassade<ManagedByFassadeState, MyCommands> {
+
+            getName() {
+                return "MyFassade";
+            }
+
+            createCommands() {
+                return new MyCommands();
+            }
+
+            action() {
+                this.commands.inc(100);
+            }
+        }
+
+        const myFassade = new MyFassade(mount);
+        myFassade.action();
+
+        assert.deepEqual(reduxStore.getState(), {
+            someValue: 0,
+            managedByFassade: {
+                val: 110
+            }
         });
     });
 
+    it("ID must be unique", function () {
+        let [, mount] = createReduxWithMountPoint({});
+
+        class TestFassade extends Fassade<any, any> {
+            createCommands() {
+                return new Commands();
+            }
+        }
+
+        const tf1 = new TestFassade(mount);
+        const tf2 = new TestFassade(mount);
+        assert.notEqual(tf1.fassadeId, tf2.fassadeId);
+    });
+
+    it("select()", function () {
+        class TestCommands extends Commands<{n1: number}> {
+            inc() {
+                this.state.n1++;
+            }
+        }
+
+        class TestFassade extends Fassade<{n1: number}, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+            actionInc() {
+                this.commands.inc();
+            }
+        }
+
+        let [, mount] = createReduxWithMountPoint({n1: 0});
+        const store = new TestFassade(mount);
+        let collected = collect(store.select().unbounded());
+        store.actionInc();
+        store.actionInc();
+
+        collected.assert({n1: 0}, {n1: 1}, {n1: 2});
+    });
+
     /*
-        it("select()", async function () {
-            class TestMutator extends Mutator<{ n1: number }> {
-                inc() {
-                    this.state.n1++;
-                }
-            }
-
-            class TestStore extends Store<TestMutator, { n1: number }> {
-                actionInc() {
-                    this.mutate.inc();
-                }
-            }
-
-            const store = new TestStore("", new TestMutator(), {n1: 0});
-            let collected = collect(store.select().unbounded());
-            store.actionInc();
-            store.actionInc();
-
-            await afterAllStoreEvents(store);
-            collected.assert({n1: 0}, {n1: 1}, {n1: 2});
-        });
-
         it("select(with selector)", async function () {
             class TestMutator extends Mutator<{ n1: number }> {
                 inc() {

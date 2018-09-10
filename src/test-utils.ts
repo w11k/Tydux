@@ -1,10 +1,21 @@
 import {assert} from "chai";
+import {createStore, Store} from "redux";
 import {Observable} from "rxjs";
-import {filter, take} from "rxjs/operators";
-import {Store} from "./Store";
+import {take} from "rxjs/operators";
+import {createMountPoint, Fassade, FassadeAction, MountPoint, tyduxReducer} from "./Fassade";
 
 export const NOOP = () => {
 };
+
+export function createReduxWithMountPoint<S>(initialState: S): [Store<S, FassadeAction>, MountPoint<S, S>] {
+    function app(state = initialState, action: FassadeAction) {
+        return tyduxReducer(state, action);
+    }
+
+    let reduxStore = createStore(app);
+    const mount = createMountPoint(reduxStore, s => s, (s, l) => ({...l}));
+    return [reduxStore, mount];
+}
 
 export function collect<T>(observable: Observable<T>) {
     const calls: T[] = [];
@@ -32,10 +43,10 @@ export function createAsyncPromise<T>(returns: T): Promise<T> {
     });
 }
 
-export async function afterAllStoreEvents(store: Store<any, any>): Promise<any> {
+export async function afterAllStoreEvents(store: Fassade<any, any>): Promise<any> {
     return store.select()
         .pipe(
-            filter(() => !store.hasUndeliveredProcessedActions()),
+            // filter(() => !store.hasUndeliveredProcessedActions()),
             take(1)
         )
         .unbounded()

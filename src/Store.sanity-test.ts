@@ -1,9 +1,9 @@
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
-import {Mutator} from "./mutator";
-import {EmptyMutators} from "./mutator.test";
-import {Store} from "./Store";
+import {Commands} from "./commands";
+import {EmptyMutators} from "./commands.test";
+import {Fassade} from "./Fassade";
 import {afterAllStoreEvents, collect, createAsyncPromise} from "./test-utils";
 
 
@@ -14,7 +14,7 @@ describe("Store - sanity tests", function () {
     afterEach(() => resetTydux());
 
     it("can not modify the state directly", function () {
-        class MyStore extends Store<any, any> {
+        class MyStore extends Fassade<any, any> {
 
             action() {
                 (this.state as any).count = 1;
@@ -27,7 +27,7 @@ describe("Store - sanity tests", function () {
     });
 
     it("can not assign the state", function () {
-        class MyStore extends Store<any, any> {
+        class MyStore extends Fassade<any, any> {
 
             action() {
                 (this.state as any) = {};
@@ -44,17 +44,17 @@ describe("Store - sanity tests", function () {
             count = 0;
         }
 
-        class MyMutators extends Mutator<MyState> {
+        class MyMutators extends Commands<MyState> {
             incrementBy(by: number) {
                 this.state.count += by;
             }
         }
 
-        class MyStore extends Store<MyMutators, MyState> {
+        class MyStore extends Fassade<MyMutators, MyState> {
             async action() {
-                this.mutate.incrementBy(1);
+                this.commands.incrementBy(1);
                 const by = await createAsyncPromise(10);
-                this.mutate.incrementBy(by);
+                this.commands.incrementBy(by);
 
                 await afterAllStoreEvents(store);
 
@@ -68,7 +68,7 @@ describe("Store - sanity tests", function () {
     });
 
     it("member method can use member variables", function () {
-        class MyStore extends Store<any, any> {
+        class MyStore extends Fassade<any, any> {
 
             counterA?: number;
 
@@ -91,7 +91,7 @@ describe("Store - sanity tests", function () {
     });
 
     it("member method can use async/await and instance variables", function (done) {
-        class MyStore extends Store<any, any> {
+        class MyStore extends Fassade<any, any> {
 
             counter = 0;
 
@@ -113,7 +113,7 @@ describe("Store - sanity tests", function () {
     });
 
     it("member methods and invoked sibling methods access the same instance variables", function () {
-        class MyStore extends Store<any, any> {
+        class MyStore extends Fassade<any, any> {
 
             counter = 0;
 
@@ -132,7 +132,7 @@ describe("Store - sanity tests", function () {
     });
 
     it("member method can use async/await and call sibling methods", function (done) {
-        class MyStore extends Store<any, any> {
+        class MyStore extends Fassade<any, any> {
 
             chars = "A";
 
@@ -160,7 +160,7 @@ describe("Store - sanity tests", function () {
     });
 
     it("exception in action method does not revert changes to instance variables", function () {
-        class MyStore extends Store<any, any> {
+        class MyStore extends Fassade<any, any> {
 
             chars = "";
 
@@ -186,7 +186,7 @@ describe("Store - sanity tests", function () {
             s1 = 1;
         }
 
-        class MyMutator extends Mutator<MyState> {
+        class MyMutator extends Commands<MyState> {
             // invalid = 2;
 
             met1(): number {
@@ -195,7 +195,7 @@ describe("Store - sanity tests", function () {
             }
         }
 
-        class MyStore extends Store<MyMutator, MyState> {
+        class MyStore extends Fassade<MyMutator, MyState> {
             action1() {
                 // const x: number = this.mutate.met1();
                 // console.log(this.mutate.invalid + 1);

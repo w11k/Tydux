@@ -1,5 +1,5 @@
-export * from "./Store";
+export * from "./Fassade";
 export * from "./ObservableSelection";
-export {Mutator} from "./mutator";
+export {Commands} from "./commands";
 export * from "./view";
 export * from "./development";

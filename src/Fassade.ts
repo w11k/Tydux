@@ -1,31 +1,13 @@
 import {Action, Dispatch, Store as ReduxStore, Unsubscribe} from "redux";
-import {Observable, Observer} from "rxjs";
+import {ReplaySubject, Subject} from "rxjs";
+import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands} from "./commands";
 import {mutatorHasInstanceMembers} from "./error-messages";
-import {
-    createActionForMutator,
-    createReducerFromMutator,
-    createTypeForInvocationFromStore,
-    Mutator,
-    MutatorAction,
-    MutatorMethods,
-    MutatorReducer
-} from "./mutator";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
 import {createProxy, functions, functionsIn} from "./utils";
-
-
-// export class ProcessedAction<S> {
-//     constructor(readonly storeId: string,
-//                 readonly context: string | null | undefined,
-//                 readonly mutatorAction: MutatorAction,
-//                 readonly state: S,
-//                 public duration?: number) {
-//     }
-// }
 
 export function failIfInstanceMembersExistExceptState(obj: any) {
     const members = Object.keys(obj).filter(key => key !== "state");
@@ -34,26 +16,7 @@ export function failIfInstanceMembersExistExceptState(obj: any) {
     }
 }
 
-// export class StoreConnector<S> {
-//
-//     private _state: S = undefined as any;
-//
-//     readonly stateChangesSubject = new ReplaySubject<S>(1);
-//
-//     constructor(readonly storeId: string) {
-//     }
-//
-//     get state(): Readonly<S> {
-//         return this._state;
-//     }
-//
-//     setState(state: S) {
-//         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
-//     }
-//
-// }
-
-const tyduxStoreReducerList: MutatorReducer<any>[] = [];
+const tyduxStoreReducerList: CommandReducer<any>[] = [];
 
 export function tyduxReducer(state: any, action: any) {
     for (let reducer of tyduxStoreReducerList) {
@@ -62,21 +25,30 @@ export function tyduxReducer(state: any, action: any) {
     return state;
 }
 
-const uniqueStoreIds: { [id: string]: number } = {};
+let uniqueFassadeIds: { [id: string]: number } = {};
 
-function getUniqueStoreId(name: string) {
-    if (uniqueStoreIds[name] === undefined) {
-        uniqueStoreIds[name] = 1;
+function createUniqueFassadeId(name: string) {
+    if (uniqueFassadeIds[name] === undefined) {
+        uniqueFassadeIds[name] = 1;
     } else {
-        uniqueStoreIds[name] += 1;
+        uniqueFassadeIds[name] += 1;
     }
 
-    const count = uniqueStoreIds[name];
+    const count = uniqueFassadeIds[name];
     if (count === 1) {
         return name;
     } else {
         return `${name}(${count})`;
     }
+}
+
+export function resetFassadeIds() {
+    uniqueFassadeIds = {};
+}
+
+export interface FassadeAction extends Action<string> {
+    payload: any[];
+    debugContext?: string;
 }
 
 export interface MountPoint<S, L> {
@@ -99,46 +71,44 @@ export function createMountPoint<S, L>(store: ReduxStore<S, any>,
     };
 }
 
-export abstract class Store<S, M extends Mutator<S>> {
+export abstract class Fassade<S, M extends Commands<S>> {
 
-    readonly storeId: string;
+    readonly fassadeId: string;
 
     private destroyed = false;
 
     // private _undeliveredProcessedActionsCount = 0;
 
-    private readonly mutatorContextCallstack: string[] = [];
+    private readonly commandContextCallstack: string[] = [];
 
-    private readonly reduxStoreObservable: Observable<S> = Observable.create((observer: Observer<S>) => {
-        return this.mountPoint.subscribe(() => {
-            observer.next(this.mountPoint.getState());
-        });
-    });
+    private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
     // private readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
     // readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
 
-    protected readonly mutate: MutatorMethods<M>;
+    protected readonly commands: CommandsMethods<M>;
 
     constructor(readonly mountPoint: MountPoint<any, S>) {
-        const mutatorInstance = this.createMutator();
-        failIfInstanceMembersExistExceptState(mutatorInstance);
-
-        this.storeId = getUniqueStoreId(this.getName().replace(" ", "_"));
-
+        this.fassadeId = createUniqueFassadeId(this.getName().replace(" ", "_"));
         this.enrichInstanceMethods();
 
-        this.mutate = this.createMutatorProxy(mutatorInstance);
-        tyduxStoreReducerList.push(this.createMutatorReducer(mutatorInstance));
+        const commands = this.createCommands();
+        failIfInstanceMembersExistExceptState(commands);
+        this.commands = this.createCommandsProxy(commands);
+        tyduxStoreReducerList.push(this.createReducerFromCommands(commands));
+        delete (this.commands as any).state;
 
-        delete (this.mutate as any).state;
+        this.reduxStoreStateSubject.next(mountPoint.getState());
+        mountPoint.subscribe(() => {
+            this.reduxStoreStateSubject.next(mountPoint.getState());
+        });
     }
 
     getName() {
-        return "unnamed";
+        return "UnnamedFassade";
     }
 
-    abstract createMutator(): M;
+    abstract createCommands(): M;
 
     get state(): Readonly<S> {
         return this.mountPoint.getState();
@@ -149,7 +119,7 @@ export abstract class Store<S, M extends Mutator<S>> {
      * dispatched actions won't have an effect.
      */
     destroy(): void {
-        this.destroyed = true;
+        // this.destroyed = true;
         // this.storeConnector.stateChangesSubject.complete();
         // this.processedActionsSubject.complete();
     }
@@ -167,20 +137,18 @@ export abstract class Store<S, M extends Mutator<S>> {
 
     select(): ObservableSelection<Readonly<S>>;
 
-    // select<R>(selector: (state: Readonly<S>) => R): ObservableSelection<R>;
-
     select<R>(selector?: (state: Readonly<S>) => R): ObservableSelection<R> {
-        return selectToObservableSelection(this.reduxStoreObservable, selector);
+        return selectToObservableSelection(this.reduxStoreStateSubject, selector);
     }
 
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
-        return selectNonNilToObervableSelection(this.reduxStoreObservable, selector);
+        return selectNonNilToObervableSelection(this.reduxStoreStateSubject, selector);
     }
 
     private enrichInstanceMethods() {
         const methodNamesUntilStoreParent: string[] = [];
         let level: any = this;
-        while (level instanceof Store) {
+        while (level instanceof Fassade) {
             methodNamesUntilStoreParent.push(...functions(level));
             level = Object.getPrototypeOf(level);
         }
@@ -194,35 +162,35 @@ export abstract class Store<S, M extends Mutator<S>> {
         const self = this;
         let member = (this as any)[name];
         Object.getPrototypeOf(this)[name] = function () {
-            self.mutatorContextCallstack.push(name);
+            self.commandContextCallstack.push(name);
             try {
                 const result = member.apply(this, arguments);
                 if (result instanceof Promise) {
                     return new Promise(resolve => {
-                        self.mutatorContextCallstack.push(name);
+                        self.commandContextCallstack.push(name);
                         resolve(result);
                     }).then(value => {
-                        self.mutatorContextCallstack.pop();
+                        self.commandContextCallstack.pop();
                         return value;
                     });
                 } else {
                     return result;
                 }
             } finally {
-                self.mutatorContextCallstack.pop();
+                self.commandContextCallstack.pop();
             }
         };
     }
 
-    private createMutatorProxy(mutatorInstance: any): any {
+    private createCommandsProxy(mutatorInstance: any): any {
         const proxyObj = {} as any;
         for (let mutatorMethodName of functionsIn(mutatorInstance)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
-                const storeMethodName = self.mutatorContextCallstack[self.mutatorContextCallstack.length - 1];
-                const actionType = createTypeForInvocationFromStore(self.storeId, storeMethodName, mutatorMethodName);
+                const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
+                const actionType = `${self.fassadeId} / ${mutatorMethodName}`;
                 const args = Array.prototype.slice.call(arguments);
-                const mutatorAction: Action<string> = {type: actionType, payload: args} as any;
+                const mutatorAction: FassadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
                 self.mountPoint.dispatch(mutatorAction);
             };
         }
@@ -230,44 +198,32 @@ export abstract class Store<S, M extends Mutator<S>> {
         return proxyObj;
     }
 
-    private createMutatorReducer(mutatorInstance: any): MutatorReducer<S> {
-        const mutatorReducer = createReducerFromMutator<S>(mutatorInstance);
+    private createReducerFromCommands(commands: any): CommandReducer<S> {
+        const mutatorReducer = createReducerFromCommands<S>(this.fassadeId, commands);
 
-        return (state: any, mutatorAction: MutatorAction) => {
+        return (state: any, action: FassadeAction) => {
             const preLocalState = createProxy(this.mountPoint.extractState(state));
 
-            if (this.destroyed || !this.isActionForThisStore(mutatorAction)) {
+            if (this.destroyed || !this.isActionForThisFassade(action)) {
                 return state;
             }
 
-            const mutatorMethodName = createActionForMutator(mutatorAction);
-            if (mutatorMethodName !== null) {
-                const postLocalState = mutatorReducer(preLocalState, mutatorMethodName);
-                state = this.mountPoint.setState(state, postLocalState);
-            }
+            // const action = this.createActionWithoutStoreIdInType(action);
+            // if (action !== null) {
+            const postLocalState = mutatorReducer(preLocalState, action);
+            state = this.mountPoint.setState(state, postLocalState);
+            // }
 
             return state;
         };
     }
 
-    private isActionForThisStore(mutatorAction: MutatorAction) {
-        if (typeof mutatorAction.type !== "string") {
+    private isActionForThisFassade(action: Action) {
+        if (typeof action.type !== "string") {
             return;
         }
 
-        if (mutatorAction.type.indexOf(" / ") === -1) {
-            return false;
-        }
-        let idx = mutatorAction.type.indexOf("#");
-        if (idx === -1) {
-            idx = mutatorAction.type.indexOf(" ");
-        }
-        if (idx === -1) {
-            return false;
-        }
-
-        const forStoreId = mutatorAction.type.substr(0, idx);
-        return forStoreId === this.storeId;
+        return action.type.indexOf(`${this.fassadeId} / `) === 0;
     }
 
 }
