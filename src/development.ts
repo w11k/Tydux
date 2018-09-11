@@ -1,5 +1,3 @@
-import {enableDevTools} from "./dev-tools";
-
 let developmentMode = false;
 
 export function enableTyduxDevelopmentMode(enable: boolean = true) {
@@ -7,7 +5,6 @@ export function enableTyduxDevelopmentMode(enable: boolean = true) {
         console.log("enableTyduxDevelopmentMode() called. Tydux is running in the development mode.");
     }
     developmentMode = enable;
-    enableDevTools();
 }
 
 export function isTyduxDevelopmentModeEnabled() {

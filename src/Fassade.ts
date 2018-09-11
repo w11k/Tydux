@@ -1,4 +1,4 @@
-import {Action, Dispatch, Store as ReduxStore, Unsubscribe} from "redux";
+import {Action} from "redux";
 import {ReplaySubject, Subject} from "rxjs";
 import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands} from "./commands";
 import {mutatorHasInstanceMembers} from "./error-messages";
@@ -7,6 +7,7 @@ import {
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
+import {MountPoint} from "./store";
 import {createProxy, functions, functionsIn} from "./utils";
 
 export function failIfInstanceMembersExistExceptState(obj: any) {
@@ -14,15 +15,6 @@ export function failIfInstanceMembersExistExceptState(obj: any) {
     if (members.length > 0) {
         throw new Error(mutatorHasInstanceMembers + ": " + members.join(", "));
     }
-}
-
-const tyduxStoreReducerList: CommandReducer<any>[] = [];
-
-export function tyduxReducer(state: any, action: any) {
-    for (let reducer of tyduxStoreReducerList) {
-        state = reducer(state, action);
-    }
-    return state;
 }
 
 let uniqueFassadeIds: { [id: string]: number } = {};
@@ -42,33 +34,9 @@ function createUniqueFassadeId(name: string) {
     }
 }
 
-export function resetFassadeIds() {
-    uniqueFassadeIds = {};
-}
-
 export interface FassadeAction extends Action<string> {
     payload: any[];
     debugContext?: string;
-}
-
-export interface MountPoint<S, L> {
-    dispatch: Dispatch<Action<string>>;
-    getState: () => L;
-    extractState: (globalState: S) => L;
-    setState: (globalState: S, localState: L) => S;
-    subscribe: (listener: () => void) => Unsubscribe;
-}
-
-export function createMountPoint<S, L>(store: ReduxStore<S, any>,
-                                       stateGetter: (globalState: S) => L,
-                                       stateSetter: (globalState: S, localState: L) => S): MountPoint<S, L> {
-    return {
-        dispatch: store.dispatch.bind(store),
-        getState: () => stateGetter(store.getState()),
-        extractState: (state: S) => stateGetter(state),
-        setState: stateSetter,
-        subscribe: store.subscribe.bind(store),
-    };
 }
 
 export abstract class Fassade<S, M extends Commands<S>> {
@@ -81,7 +49,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     private readonly commandContextCallstack: string[] = [];
 
-    private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
+    private readonly reduxStoreStateSubject: Subject<Readonly<S>> = new ReplaySubject<S>(1);
 
     // private readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
     // readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
@@ -95,12 +63,12 @@ export abstract class Fassade<S, M extends Commands<S>> {
         const commands = this.createCommands();
         failIfInstanceMembersExistExceptState(commands);
         this.commands = this.createCommandsProxy(commands);
-        tyduxStoreReducerList.push(this.createReducerFromCommands(commands));
+        mountPoint.addReducer(this.createReducerFromCommands(commands));
         delete (this.commands as any).state;
 
-        this.reduxStoreStateSubject.next(mountPoint.getState());
+        this.reduxStoreStateSubject.next(this.state);
         mountPoint.subscribe(() => {
-            this.reduxStoreStateSubject.next(mountPoint.getState());
+            this.reduxStoreStateSubject.next(this.state);
         });
     }
 
@@ -135,7 +103,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
     //     return this._undeliveredProcessedActionsCount !== 0;
     // }
 
-    select(): ObservableSelection<Readonly<S>>;
+    // select(): ObservableSelection<Readonly<S>>;
 
     select<R>(selector?: (state: Readonly<S>) => R): ObservableSelection<R> {
         return selectToObservableSelection(this.reduxStoreStateSubject, selector);

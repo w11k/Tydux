@@ -1,3 +1,4 @@
+/*
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
 import {EntityStore} from "./Entity.store";
@@ -69,3 +70,4 @@ describe("EntityStore", function () {
     });
 
 });
+*/

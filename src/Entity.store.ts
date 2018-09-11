@@ -1,3 +1,4 @@
+/*
 import {map} from "rxjs/operators";
 import {Commands} from "./commands";
 import {ObservableSelection} from "./ObservableSelection";
@@ -138,3 +139,4 @@ export class EntityStore<T, I extends keyof T> extends Fassade<EntityMutators<T>
     //     return new EntityStoreObserver(this.mutatorEvents$.pipe(map(e => e.state)));
     // }
 }
+*/

@@ -1,16 +1,9 @@
 import {Commands} from "./commands";
-import {enableTyduxDevelopmentMode} from "./development";
-import {resetTydux} from "./global-state";
-
 
 export class EmptyMutators extends Commands<any> {
 }
 
 describe("Commands", function () {
-
-    beforeEach(() => enableTyduxDevelopmentMode());
-
-    afterEach(() => resetTydux());
 
     // it("methods can assign state properties", function () {
     //     class TestMutator extends Mutator<{ n1: number }> {

@@ -1,20 +1,12 @@
 import {assert} from "chai";
-import {createStore, Store} from "redux";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
-import {createMountPoint, Fassade, FassadeAction, MountPoint, tyduxReducer} from "./Fassade";
+import {Fassade} from "./Fassade";
+import {createTyduxStore, MountPoint} from "./store";
 
-export const NOOP = () => {
-};
-
-export function createReduxWithMountPoint<S>(initialState: S): [Store<S, FassadeAction>, MountPoint<S, S>] {
-    function app(state = initialState, action: FassadeAction) {
-        return tyduxReducer(state, action);
-    }
-
-    let reduxStore = createStore(app);
-    const mount = createMountPoint(reduxStore, s => s, (s, l) => ({...l}));
-    return [reduxStore, mount];
+export function createTestMount<S>(initialState: S): MountPoint<S, S> {
+    const tyduxStore = createTyduxStore(initialState);
+    return tyduxStore.createMountPoint(s => s, (s, l) => Object.assign({}, l));
 }
 
 export function collect<T>(observable: Observable<T>) {

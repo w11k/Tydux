@@ -1,74 +1,14 @@
 import {assert} from "chai";
-import {Action, createStore, Store as ReduxStore} from "redux";
 import {Commands} from "./commands";
-import {enableTyduxDevelopmentMode} from "./development";
-import {createMountPoint, Fassade, tyduxReducer} from "./Fassade";
-import {resetTydux} from "./global-state";
-import {collect, createReduxWithMountPoint} from "./test-utils";
+import {Fassade} from "./Fassade";
+import {collect, createTestMount} from "./test-utils";
+import {isNil} from "./utils";
 
 
 describe("Fassade", function () {
 
-    beforeEach(() => enableTyduxDevelopmentMode());
-
-    afterEach(() => resetTydux());
-
-    it("documentation", async function () {
-        const initialState = {
-            someValue: 0,
-            managedByFassade: {
-                val: 10
-            }
-        };
-
-        type AppState = typeof initialState;
-        type ManagedByFassadeState = typeof initialState.managedByFassade;
-
-        function app(state = initialState, action: Action) {
-            return tyduxReducer(state, action);
-        }
-
-        let reduxStore: ReduxStore<AppState, Action> = createStore(app);
-        const mount = createMountPoint(
-            reduxStore,
-            s => s.managedByFassade,
-            (s, l) => ({...s, managedByFassade: l})
-        );
-
-        class MyCommands extends Commands<ManagedByFassadeState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
-
-        class MyFassade extends Fassade<ManagedByFassadeState, MyCommands> {
-
-            getName() {
-                return "MyFassade";
-            }
-
-            createCommands() {
-                return new MyCommands();
-            }
-
-            action() {
-                this.commands.inc(100);
-            }
-        }
-
-        const myFassade = new MyFassade(mount);
-        myFassade.action();
-
-        assert.deepEqual(reduxStore.getState(), {
-            someValue: 0,
-            managedByFassade: {
-                val: 110
-            }
-        });
-    });
-
     it("ID must be unique", function () {
-        let [, mount] = createReduxWithMountPoint({});
+        const mount = createTestMount({});
 
         class TestFassade extends Fassade<any, any> {
             createCommands() {
@@ -82,22 +22,23 @@ describe("Fassade", function () {
     });
 
     it("select()", function () {
-        class TestCommands extends Commands<{n1: number}> {
+        class TestCommands extends Commands<{ n1: number }> {
             inc() {
                 this.state.n1++;
             }
         }
 
-        class TestFassade extends Fassade<{n1: number}, TestCommands> {
+        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
             createCommands() {
                 return new TestCommands();
             }
+
             actionInc() {
                 this.commands.inc();
             }
         }
 
-        let [, mount] = createReduxWithMountPoint({n1: 0});
+        const mount = createTestMount({n1: 0});
         const store = new TestFassade(mount);
         let collected = collect(store.select().unbounded());
         store.actionInc();
@@ -106,67 +47,78 @@ describe("Fassade", function () {
         collected.assert({n1: 0}, {n1: 1}, {n1: 2});
     });
 
+    it("select(with selector)", function () {
+        class TestCommands extends Commands<{ n1: number }> {
+            inc() {
+                this.state.n1++;
+            }
+        }
+
+        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            actionInc() {
+                this.commands.inc();
+            }
+        }
+
+        const store = new TestFassade(createTestMount({n1: 0}));
+        let collected = collect(store.select(s => s.n1).unbounded());
+        store.actionInc();
+        store.actionInc();
+
+        collected.assert(0, 1, 2);
+    });
+
+    it("selectNonNil(with selector)", function () {
+        class TestState {
+            n1?: number;
+        }
+
+        class TestCommands extends Commands<TestState> {
+            inc() {
+                this.state.n1 = !isNil(this.state.n1) ? this.state.n1 + 1 : 1;
+            }
+
+            clear() {
+                this.state.n1 = undefined;
+            }
+        }
+
+        class TestFassade extends Fassade<TestState, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            actionInc() {
+                this.commands.inc();
+            }
+
+            actionClear() {
+                this.commands.clear();
+            }
+        }
+
+        const mount = createTestMount(new TestState());
+        const store = new TestFassade(mount);
+        let collected = collect(store.selectNonNil(s => s.n1).unbounded());
+        store.actionInc(); // 1
+        store.actionClear();
+        store.actionInc(); // 1
+        store.actionInc(); // 2
+        store.actionClear();
+        store.actionInc(); // 1
+
+
+        collected.assert(1, 1, 2, 1);
+    });
+
     /*
-        it("select(with selector)", async function () {
-            class TestMutator extends Mutator<{ n1: number }> {
-                inc() {
-                    this.state.n1++;
-                }
-            }
-
-            class TestStore extends Store<TestMutator, { n1: number }> {
-                actionInc() {
-                    this.mutate.inc();
-                }
-            }
-
-            const store = new TestStore("", new TestMutator(), {n1: 0});
-            let collected = collect(store.select(s => s.n1).unbounded());
-            store.actionInc();
-            store.actionInc();
-
-            await afterAllStoreEvents(store);
-
-            collected.assert(0, 1, 2);
-        });
-
-        it("selectNonNil(with selector)", async function () {
-            class TestMutator extends Mutator<{ n1?: number }> {
-                inc() {
-                    this.state.n1 = !isNil(this.state.n1) ? this.state.n1 + 1 : 1;
-                }
-
-                clear() {
-                    this.state.n1 = undefined;
-                }
-            }
-
-            class TestStore extends Store<TestMutator, { n1?: number }> {
-                actionInc() {
-                    this.mutate.inc();
-                }
-
-                actionClear() {
-                    this.mutate.clear();
-                }
-            }
-
-            const store = new TestStore("", new TestMutator(), {n1: undefined});
-            let collected = collect(store.selectNonNil(s => s.n1).unbounded());
-            store.actionInc(); // 1
-            store.actionClear();
-            store.actionInc(); // 1
-            store.actionInc(); // 2
-            store.actionClear();
-            store.actionInc(); // 1
-
-            await afterAllStoreEvents(store);
-
-            collected.assert(1, 1, 2, 1);
-        });
 
         it("select(with selector return an Arrays) only emits values when the content of the array changes", async function () {
-            class TestMutator extends Mutator<{ a: number; b: number; c: number }> {
+            class TestCommands extends Commands<{ a: number; b: number; c: number }> {
                 incAB() {
                     this.state.count++;
                     this.state.b++;
@@ -177,17 +129,17 @@ describe("Fassade", function () {
                 }
             }
 
-            class TestStore extends Store<TestMutator, { a: number; b: number; c: number }> {
+            class TestFassade extends Fassade<TestCommands, { a: number; b: number; c: number }> {
                 actionIncAB() {
-                    this.mutate.incAB();
+                    this.commands.incAB();
                 }
 
                 actionIncC() {
-                    this.mutate.incC();
+                    this.commands.incC();
                 }
             }
 
-            const store = new TestStore("", new TestMutator(), {count: 0, b: 10, c: 100});
+            const store = new TestFassade("", new TestCommands(), {count: 0, b: 10, c: 100});
             let collected = collect(store.select(s => [s.count, s.b]).unbounded());
             store.actionIncAB();
             store.actionIncC();
@@ -200,7 +152,7 @@ describe("Fassade", function () {
         });
 
         it("select(with selector return an object) only emits values when the content of the object changes", async function () {
-            class TestMutator extends Mutator<{ a: number; b: number; c: number }> {
+            class TestCommands extends Commands<{ a: number; b: number; c: number }> {
                 incAB() {
                     this.state.count++;
                     this.state.b++;
@@ -211,17 +163,17 @@ describe("Fassade", function () {
                 }
             }
 
-            class TestStore extends Store<TestMutator, { a: number; b: number; c: number }> {
+            class TestFassade extends Fassade<TestCommands, { a: number; b: number; c: number }> {
                 actionIncAB() {
-                    this.mutate.incAB();
+                    this.commands.incAB();
                 }
 
                 actionIncC() {
-                    this.mutate.incC();
+                    this.commands.incC();
                 }
             }
 
-            const store = new TestStore("", new TestMutator(), {count: 0, b: 10, c: 100});
+            const store = new TestFassade("", new TestCommands(), {count: 0, b: 10, c: 100});
             let collected = collect(store.select(s => {
                 return {
                     count: s.count,
@@ -244,19 +196,19 @@ describe("Fassade", function () {
 
         it("select() only triggers when the selected value deeply changed" +
             "", async function () {
-            class TestMutator extends Mutator<{ root: { child: { val1: number } } }> {
+            class TestCommands extends Commands<{ root: { child: { val1: number } } }> {
                 dummy() {
                 }
             }
 
-            class TestStore extends Store<TestMutator, { root: { child: { val1: number } } }> {
+            class TestFassade extends Fassade<TestCommands, { root: { child: { val1: number } } }> {
                 action() {
-                    this.mutate.dummy();
+                    this.commands.dummy();
                 }
             }
 
             const state = {root: {child: {val1: 1}}};
-            const store = new TestStore("", new TestMutator(), state);
+            const store = new TestFassade("", new TestCommands(), state);
             let collected = collect(store.select(s => s.root).unbounded());
             store.action(); // should not trigger select()
             store.action(); // should not trigger select()
@@ -274,7 +226,7 @@ describe("Fassade", function () {
                 count = 0;
             }
 
-            class MyMutators extends Mutator<MyState> {
+            class MyCommandss extends Commands<MyState> {
                 increment() {
                     this.state.count++;
                 }
@@ -284,15 +236,15 @@ describe("Fassade", function () {
                 }
             }
 
-            class MyStore extends Store<MyMutators, MyState> {
+            class MyStore extends Fassade<MyCommandss, MyState> {
                 action() {
-                    this.mutate.increment();
-                    this.mutate.increment();
-                    this.mutate.decrement();
+                    this.commands.increment();
+                    this.commands.increment();
+                    this.commands.decrement();
                 }
             }
 
-            const store = new MyStore("myStore", new MyMutators(), new MyState());
+            const store = new MyStore("myStore", new MyCommandss(), new MyState());
             let collected = collect(store.select(s => s.count).unbounded());
             store.action();
 
@@ -307,7 +259,7 @@ describe("Fassade", function () {
                 value?: number;
             }
 
-            class MyMutators extends Mutator<MyState> {
+            class MyCommandss extends Commands<MyState> {
                 setList(list: number[]) {
                     this.state.list = list;
                 }
@@ -317,17 +269,17 @@ describe("Fassade", function () {
                 }
             }
 
-            class MyStore extends Store<MyMutators, MyState> {
+            class MyStore extends Fassade<MyCommandss, MyState> {
                 setList() {
-                    this.mutate.setList([1, 2, 3]);
+                    this.commands.setList([1, 2, 3]);
                 }
 
                 setValue() {
-                    this.mutate.setValue(99);
+                    this.commands.setValue(99);
                 }
             }
 
-            const store = new MyStore("myStore", new MyMutators(), new MyState());
+            const store = new MyStore("myStore", new MyCommandss(), new MyState());
             store.setList();
             store.setValue();
 
@@ -341,7 +293,7 @@ describe("Fassade", function () {
                 value?: number;
             }
 
-            class MyMutators extends Mutator<MyState> {
+            class MyCommandss extends Commands<MyState> {
                 setList(list: number[]) {
                     this.state.list = list;
                 }
@@ -352,19 +304,19 @@ describe("Fassade", function () {
                 }
             }
 
-            class MyStore extends Store<MyMutators, MyState> {
+            class MyStore extends Fassade<MyCommandss, MyState> {
                 async setList() {
                     const list = await createAsyncPromise([1, 2, 3]);
-                    this.mutate.setList(list);
+                    this.commands.setList(list);
                 }
 
                 async setValue() {
                     const value = await createAsyncPromise(99);
-                    this.mutate.setValue(value);
+                    this.commands.setValue(value);
                 }
             }
 
-            const store = new MyStore("myStore", new MyMutators(), new MyState());
+            const store = new MyStore("myStore", new MyCommandss(), new MyState());
             await store.setList();
             await store.setValue();
 
@@ -372,8 +324,8 @@ describe("Fassade", function () {
             assert.equal(store.state.value, 99);
         });
 
-        it("emits MutatorEvents in the correct order when re-entrant code exists", async function () {
-            class TestMutator extends Mutator<{ list1: number[], list2: number[] }> {
+        it("emits CommandsEvents in the correct order when re-entrant code exists", async function () {
+            class TestCommands extends Commands<{ list1: number[], list2: number[] }> {
                 setList1(list: number[]) {
                     this.state.list1 = list;
                 }
@@ -383,12 +335,12 @@ describe("Fassade", function () {
                 }
             }
 
-            class TestStore extends Store<TestMutator, { list1: number[], list2: number[] }> {
+            class TestFassade extends Fassade<TestCommands, { list1: number[], list2: number[] }> {
 
                 private counter = 0;
 
                 constructor() {
-                    super("test", new TestMutator(), {list1: [], list2: []});
+                    super("test", new TestCommands(), {list1: [], list2: []});
 
                     this.processedActions$
                         .pipe(
@@ -396,22 +348,22 @@ describe("Fassade", function () {
                             distinctUntilChanged((val1, val2) => areArraysShallowEquals(val1, val2))
                         )
                         .subscribe(list1 => {
-                            this.mutate.setList2([...this.state.list2, list1.length]);
+                            this.commands.setList2([...this.state.list2, list1.length]);
                         });
                 }
 
                 action() {
-                    this.mutate.setList1([
+                    this.commands.setList1([
                         this.counter++,
                     ]);
                 }
             }
 
-            const store = new TestStore();
+            const store = new TestFassade();
 
             const events: any[] = [];
             store.processedActions$.subscribe(event => {
-                events.push([event.mutatorAction.type, event.state]);
+                events.push([event.CommandsAction.type, event.state]);
             });
 
             store.action();
@@ -427,28 +379,28 @@ describe("Fassade", function () {
         });
 
         it("destroy() completes processedActions$ observable", function (done) {
-            class TestStore extends Store<Mutator<any>, { n1: number }> {
+            class TestFassade extends Fassade<Commands<any>, { n1: number }> {
             }
 
-            const store = new TestStore("", new Mutator(), {n1: 0});
+            const store = new TestFassade("", new Commands(), {n1: 0});
             store.processedActions$.subscribe(NOOP, NOOP, done);
             store.destroy();
         });
 
         it("destroy() completes observable returned by select()", function (done) {
-            class TestStore extends Store<Mutator<any>, { n1: number }> {
+            class TestFassade extends Fassade<Commands<any>, { n1: number }> {
             }
 
-            const store = new TestStore("", new Mutator(), {n1: 0});
+            const store = new TestFassade("", new Commands(), {n1: 0});
             store.select().unbounded().subscribe(NOOP, NOOP, done);
             store.destroy();
         });
 
         it("destroy() completes observable returned by selectNonNil()", function (done) {
-            class TestStore extends Store<Mutator<any>, { n1: number }> {
+            class TestFassade extends Fassade<Commands<any>, { n1: number }> {
             }
 
-            const store = new TestStore("", new Mutator(), {n1: 0});
+            const store = new TestFassade("", new Commands(), {n1: 0});
             store.selectNonNil(s => s).unbounded().subscribe(NOOP, NOOP, done);
             store.destroy();
         });
