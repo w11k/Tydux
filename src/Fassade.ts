@@ -45,11 +45,11 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     private destroyed = false;
 
-    // private _undeliveredProcessedActionsCount = 0;
+    private undispatchedActionsCount = 0;
 
     private readonly commandContextCallstack: string[] = [];
 
-    private readonly reduxStoreStateSubject: Subject<Readonly<S>> = new ReplaySubject<S>(1);
+    private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
     // private readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
     // readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
@@ -68,7 +68,13 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
         this.reduxStoreStateSubject.next(this.state);
         mountPoint.subscribe(() => {
-            this.reduxStoreStateSubject.next(this.state);
+            this.undispatchedActionsCount++;
+            Promise.resolve().then(() => {
+                this.undispatchedActionsCount--;
+                this.reduxStoreStateSubject.next(this.state);
+            });
+
+
         });
     }
 
@@ -99,9 +105,9 @@ export abstract class Fassade<S, M extends Commands<S>> {
         this.destroy();
     }
 
-    // hasUndeliveredProcessedActions() {
-    //     return this._undeliveredProcessedActionsCount !== 0;
-    // }
+    hasUndispatchedActions() {
+        return this.undispatchedActionsCount !== 0;
+    }
 
     // select(): ObservableSelection<Readonly<S>>;
 
@@ -159,7 +165,14 @@ export abstract class Fassade<S, M extends Commands<S>> {
                 const actionType = `${self.fassadeId} / ${mutatorMethodName}`;
                 const args = Array.prototype.slice.call(arguments);
                 const mutatorAction: FassadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
-                self.mountPoint.dispatch(mutatorAction);
+
+                // trigger micro task to ease reentrant code
+                // self.undispatchedActionsCount++;
+                // setTimeout(() => {
+                //     self.undispatchedActionsCount--;
+                    return self.mountPoint.dispatch(mutatorAction);
+                // }, 0);
+                // self.mountPoint.dispatch(mutatorAction);
             };
         }
 

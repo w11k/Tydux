@@ -4,7 +4,7 @@ import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {EmptyMutators} from "./commands.test";
 import {Fassade} from "./Fassade";
-import {afterAllStoreEvents, collect, createAsyncPromise} from "./test-utils";
+import {dispatchedAllActions, collect, createAsyncPromise} from "./test-utils";
 
 
 describe("Store - sanity tests", function () {
@@ -56,7 +56,7 @@ describe("Store - sanity tests", function () {
                 const by = await createAsyncPromise(10);
                 this.commands.incrementBy(by);
 
-                await afterAllStoreEvents(store);
+                await dispatchedAllActions(store);
 
                 collected.assert(0, 1, 11);
             }

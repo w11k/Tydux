@@ -4,7 +4,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {afterAllStoreEvents} from "./test-utils";
+import {dispatchedAllActions} from "./test-utils";
 
 
 describe("Angular integration", function () {
@@ -48,15 +48,15 @@ describe("Angular integration", function () {
         store.action(); // 1
         store.action(); // 2
 
-        await afterAllStoreEvents(store);
+        await dispatchedAllActions(store);
 
         component.ngOnDestroy();
 
-        await afterAllStoreEvents(store);
+        await dispatchedAllActions(store);
 
         store.action(); // 3
 
-        await afterAllStoreEvents(store);
+        await dispatchedAllActions(store);
 
         assert.deepEqual(events, [
             0,

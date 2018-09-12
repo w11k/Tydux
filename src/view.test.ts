@@ -3,7 +3,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {afterAllStoreEvents, collect} from "./test-utils";
+import {dispatchedAllActions, collect} from "./test-utils";
 import {View} from "./view";
 
 // Store 1
@@ -63,10 +63,10 @@ describe("View", function () {
         const store2 = new Store2();
 
         store1.action1();
-        await afterAllStoreEvents(store1);
+        await dispatchedAllActions(store1);
 
         store2.action2();
-        await afterAllStoreEvents(store2);
+        await dispatchedAllActions(store2);
 
         const view = new View({
             store1,
@@ -93,10 +93,10 @@ describe("View", function () {
         const store2 = new Store2();
 
         store1.action1();
-        await afterAllStoreEvents(store1);
+        await dispatchedAllActions(store1);
 
         store2.action2();
-        await afterAllStoreEvents(store2);
+        await dispatchedAllActions(store2);
 
         const view = new View({
             child1: {
@@ -113,8 +113,8 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        await afterAllStoreEvents(store1);
-        await afterAllStoreEvents(store2);
+        await dispatchedAllActions(store1);
+        await dispatchedAllActions(store2);
 
         collected.assert(
             {child1: {child2: {store1: {value1: 11}, store2: {value2: 21}}}},
@@ -127,7 +127,7 @@ describe("View", function () {
     it("StateObserver always freezes the state", async function () {
         const store1 = new Store1();
         store1.action1();
-        await afterAllStoreEvents(store1);
+        await dispatchedAllActions(store1);
 
         const view = new View({
             child1: {
@@ -173,8 +173,8 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        await afterAllStoreEvents(store1);
-        await afterAllStoreEvents(store2);
+        await dispatchedAllActions(store1);
+        await dispatchedAllActions(store2);
 
         assert.deepEqual(values, [
            [10, 20],
@@ -203,8 +203,8 @@ describe("View", function () {
 
         store2.action2();
 
-        await afterAllStoreEvents(store1);
-        await afterAllStoreEvents(store2);
+        await dispatchedAllActions(store1);
+        await dispatchedAllActions(store2);
 
         assert.deepEqual(values, [
            [10],

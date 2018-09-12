@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import {Observable} from "rxjs";
-import {take} from "rxjs/operators";
+import {filter, take} from "rxjs/operators";
 import {Fassade} from "./Fassade";
 import {createTyduxStore, MountPoint} from "./store";
 
@@ -35,10 +35,10 @@ export function createAsyncPromise<T>(returns: T): Promise<T> {
     });
 }
 
-export async function afterAllStoreEvents(store: Fassade<any, any>): Promise<any> {
-    return store.select()
+export async function dispatchedAllActions(fassade: Fassade<any, any>): Promise<any> {
+    return fassade.select()
         .pipe(
-            // filter(() => !store.hasUndeliveredProcessedActions()),
+            filter(() => !fassade.hasUndispatchedActions()),
             take(1)
         )
         .unbounded()

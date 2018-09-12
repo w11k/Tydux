@@ -4,7 +4,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {afterAllStoreEvents} from "./test-utils";
+import {dispatchedAllActions} from "./test-utils";
 
 
 describe("AngularJS integration", function () {
@@ -61,7 +61,7 @@ describe("AngularJS integration", function () {
 
         store.action();
 
-        await afterAllStoreEvents(store);
+        await dispatchedAllActions(store);
 
         assert.deepEqual(events, [
             "pre",
