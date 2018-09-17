@@ -1,3 +1,4 @@
+/*
 import {Commands, MutatorAction, CommandDispatcher, CommandsMethods} from "./commands";
 import {ProcessedAction, Fassade, StoreConnector} from "./Fassade";
 import {isNil} from "./utils";
@@ -36,20 +37,21 @@ export abstract class Middleware<S, M extends Commands<S>, T extends Fassade<any
         this.mutatorDispatcher = middlewareInit.mutatorDispatcher;
     }
 
-    /**
+    /!**
      * Called by the store before a dispatched action gets executed by the mutator.
      * If this method returns false, the dispatched action will be cancelled.
      *
      * @param state The current store's state
      * @param action The dispatched action
-     */
+     *!/
     beforeActionDispatch(state: S, action: MutatorAction): false | void {
     }
 
-    /**
+    /!**
      * Called by the store after a dispatched action was executed by the mutator.
-     */
+     *!/
     afterActionProcessed(processedAction: ProcessedAction<S>): void {
     }
 
 }
+*/

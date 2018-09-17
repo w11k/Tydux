@@ -45,14 +45,13 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     private destroyed = false;
 
-    private undispatchedActionsCount = 0;
+    private bufferedStateChanges = 0;
 
     private readonly commandContextCallstack: string[] = [];
 
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
-    // private readonly processedActionsSubject = new ReplaySubject<ProcessedAction<S>>(1);
-    // readonly processedActions$: Observable<ProcessedAction<S>> = this.processedActionsSubject;
+    private state: S;
 
     protected readonly commands: CommandsMethods<M>;
 
@@ -66,15 +65,17 @@ export abstract class Fassade<S, M extends Commands<S>> {
         mountPoint.addReducer(this.createReducerFromCommands(commands));
         delete (this.commands as any).state;
 
+        this.state = mountPoint.getState();
         this.reduxStoreStateSubject.next(this.state);
+
         mountPoint.subscribe(() => {
-            this.undispatchedActionsCount++;
+            const currentState = Object.assign({}, mountPoint.getState());
+            this.bufferedStateChanges++;
             Promise.resolve().then(() => {
-                this.undispatchedActionsCount--;
-                this.reduxStoreStateSubject.next(this.state);
+                this.bufferedStateChanges--;
+                this.state = currentState;
+                this.reduxStoreStateSubject.next(currentState);
             });
-
-
         });
     }
 
@@ -84,8 +85,8 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     abstract createCommands(): M;
 
-    get state(): Readonly<S> {
-        return this.mountPoint.getState();
+    get getState(): Readonly<S> {
+        return this.state;
     }
 
     /**
@@ -105,8 +106,8 @@ export abstract class Fassade<S, M extends Commands<S>> {
         this.destroy();
     }
 
-    hasUndispatchedActions() {
-        return this.undispatchedActionsCount !== 0;
+    hasBufferedStateChanges() {
+        return this.bufferedStateChanges > 0;
     }
 
     // select(): ObservableSelection<Readonly<S>>;
@@ -167,9 +168,9 @@ export abstract class Fassade<S, M extends Commands<S>> {
                 const mutatorAction: FassadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
 
                 // trigger micro task to ease reentrant code
-                // self.undispatchedActionsCount++;
+                // self.bufferedStateChanges++;
                 // setTimeout(() => {
-                //     self.undispatchedActionsCount--;
+                //     self.bufferedStateChanges--;
                     return self.mountPoint.dispatch(mutatorAction);
                 // }, 0);
                 // self.mountPoint.dispatch(mutatorAction);
@@ -185,6 +186,8 @@ export abstract class Fassade<S, M extends Commands<S>> {
         return (state: any, action: FassadeAction) => {
             const preLocalState = createProxy(this.mountPoint.extractState(state));
 
+            console.log("pre  state", preLocalState);
+
             if (this.destroyed || !this.isActionForThisFassade(action)) {
                 return state;
             }
@@ -193,6 +196,8 @@ export abstract class Fassade<S, M extends Commands<S>> {
             // if (action !== null) {
             const postLocalState = mutatorReducer(preLocalState, action);
             state = this.mountPoint.setState(state, postLocalState);
+
+            console.log("post state", state);
             // }
 
             return state;

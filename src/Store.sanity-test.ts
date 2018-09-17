@@ -4,7 +4,7 @@ import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {EmptyMutators} from "./commands.test";
 import {Fassade} from "./Fassade";
-import {dispatchedAllActions, collect, createAsyncPromise} from "./test-utils";
+import {untilNoBufferedStateChanges, collect, createAsyncPromise} from "./test-utils";
 
 
 describe("Store - sanity tests", function () {
@@ -17,7 +17,7 @@ describe("Store - sanity tests", function () {
         class MyStore extends Fassade<any, any> {
 
             action() {
-                (this.state as any).count = 1;
+                (this.getState as any).count = 1;
             }
 
         }
@@ -30,7 +30,7 @@ describe("Store - sanity tests", function () {
         class MyStore extends Fassade<any, any> {
 
             action() {
-                (this.state as any) = {};
+                (this.getState as any) = {};
             }
 
         }
@@ -56,7 +56,7 @@ describe("Store - sanity tests", function () {
                 const by = await createAsyncPromise(10);
                 this.commands.incrementBy(by);
 
-                await dispatchedAllActions(store);
+                await untilNoBufferedStateChanges(store);
 
                 collected.assert(0, 1, 11);
             }

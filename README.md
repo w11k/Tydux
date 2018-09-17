@@ -64,3 +64,10 @@ Tydux is a TypeScript library for predictable state management. It follows the [
 ### [Redux Comparison](https://github.com/Tydux/Tydux/tree/master/doc/redux_comparison.md)
 ### [Redux DevTools](https://github.com/Tydux/Tydux/tree/master/doc/redux-devtools.md)
 
+
+# Patron
+
+❤️ [W11K - The Web Engineers](https://www.w11k.de/)
+
+❤️ [theCodeCampus - Trainings for Angular and TypeScript](https://www.thecodecampus.de/)
+

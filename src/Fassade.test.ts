@@ -4,7 +4,7 @@ import {distinctUntilChanged, map} from "rxjs/operators";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
 import {createTyduxStoreBridge} from "./store";
-import {collect, createAsyncPromise, createTestMount, dispatchedAllActions} from "./test-utils";
+import {collect, createAsyncPromise, createTestMount, untilNoBufferedStateChanges} from "./test-utils";
 import {areArraysShallowEquals, isNil} from "./utils";
 
 
@@ -24,7 +24,7 @@ describe("Fassade", function () {
         assert.notEqual(tf1.fassadeId, tf2.fassadeId);
     });
 
-    it("select()", function () {
+    it("select()", async function () {
         class TestCommands extends Commands<{ n1: number }> {
             inc() {
                 this.state.n1++;
@@ -42,15 +42,26 @@ describe("Fassade", function () {
         }
 
         const mount = createTestMount({n1: 0});
-        const store = new TestFassade(mount);
-        let collected = collect(store.select().unbounded());
-        store.actionInc();
-        store.actionInc();
+        const fassade = new TestFassade(mount);
 
-        collected.assert({n1: 0}, {n1: 1}, {n1: 2});
+        const values: any[] = [];
+        fassade.select((currentState) => {
+            values.push([currentState, fassade.getState]);
+        }).unbounded().subscribe();
+
+        fassade.actionInc();
+        fassade.actionInc();
+
+        await untilNoBufferedStateChanges(fassade);
+
+        assert.deepEqual(values, [
+            [{n1: 0}, {n1: 0}],
+            [{n1: 1}, {n1: 1}],
+            [{n1: 2}, {n1: 2}],
+        ]);
     });
 
-    it("select(with selector)", function () {
+    it("select(with selector)", async function () {
         class TestCommands extends Commands<{ n1: number }> {
             inc() {
                 this.state.n1++;
@@ -67,15 +78,16 @@ describe("Fassade", function () {
             }
         }
 
-        const store = new TestFassade(createTestMount({n1: 0}));
-        let collected = collect(store.select(s => s.n1).unbounded());
-        store.actionInc();
-        store.actionInc();
+        const fassade = new TestFassade(createTestMount({n1: 0}));
+        let collected = collect(fassade.select(s => s.n1).unbounded());
+        fassade.actionInc();
+        fassade.actionInc();
 
+        await untilNoBufferedStateChanges(fassade);
         collected.assert(0, 1, 2);
     });
 
-    it("selectNonNil(with selector)", function () {
+    it("selectNonNil(with selector)", async function () {
         interface TestState {
             n1?: number;
         }
@@ -105,19 +117,20 @@ describe("Fassade", function () {
         }
 
         const mount = createTestMount<TestState>({n1: undefined});
-        const store = new TestFassade(mount);
-        let collected = collect(store.selectNonNil(s => s.n1).unbounded());
-        store.actionInc(); // 1
-        store.actionClear();
-        store.actionInc(); // 1
-        store.actionInc(); // 2
-        store.actionClear();
-        store.actionInc(); // 1
+        const fassade = new TestFassade(mount);
+        let collected = collect(fassade.selectNonNil(s => s.n1).unbounded());
+        fassade.actionInc(); // 1
+        fassade.actionClear();
+        fassade.actionInc(); // 1
+        fassade.actionInc(); // 2
+        fassade.actionClear();
+        fassade.actionInc(); // 1
 
+        await untilNoBufferedStateChanges(fassade);
         collected.assert(1, 1, 2, 1);
     });
 
-    it("select(with selector return an Arrays) only emits values when the content of the array changes", function () {
+    it("select(with selector return an Arrays) only emits values when the content of the array changes", async function () {
         class TestCommands extends Commands<{ a: number; b: number; c: number }> {
             incAB() {
                 this.state.a++;
@@ -143,17 +156,18 @@ describe("Fassade", function () {
             }
         }
 
-        const store = new TestFassade(createTestMount({a: 0, b: 10, c: 100}));
-        let collected = collect(store.select(s => [s.a, s.b]).unbounded());
-        store.actionIncAB();
-        store.actionIncC();
-        store.actionIncAB();
-        store.actionIncC();
+        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}));
+        let collected = collect(fassade.select(s => [s.a, s.b]).unbounded());
+        fassade.actionIncAB();
+        fassade.actionIncC();
+        fassade.actionIncAB();
+        fassade.actionIncC();
 
+        await untilNoBufferedStateChanges(fassade);
         collected.assert([0, 10], [1, 11], [2, 12]);
     });
 
-    it("select(with selector return an object) only emits values when the content of the object changes", function () {
+    it("select(with selector return an object) only emits values when the content of the object changes", async function () {
         class TestCommands extends Commands<{ a: number; b: number; c: number }> {
             incAB() {
                 this.state.a++;
@@ -179,18 +193,19 @@ describe("Fassade", function () {
             }
         }
 
-        const store = new TestFassade(createTestMount({a: 0, b: 10, c: 100}));
-        let collected = collect(store.select(s => {
+        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}));
+        let collected = collect(fassade.select(s => {
             return {
                 a: s.a,
                 b: s.b
             };
         }).unbounded());
-        store.actionIncAB();
-        store.actionIncC(); // should not trigger select()
-        store.actionIncAB();
-        store.actionIncC(); // should not trigger select()
+        fassade.actionIncAB();
+        fassade.actionIncC(); // should not trigger select()
+        fassade.actionIncAB();
+        fassade.actionIncC(); // should not trigger select()
 
+        await untilNoBufferedStateChanges(fassade);
         collected.assert(
             {a: 0, b: 10},
             {a: 1, b: 11},
@@ -226,7 +241,7 @@ describe("Fassade", function () {
         );
     });
 
-    it("select() gets called on every `.command...` method invocation", function () {
+    it("select() gets called on every `.command...` method invocation", async function () {
         class TestState {
             count = 0;
         }
@@ -253,14 +268,15 @@ describe("Fassade", function () {
             }
         }
 
-        const store = new TestFassade(createTestMount(new TestState()));
-        let collected = collect(store.select(s => s.count).unbounded());
-        store.action();
+        const fassade = new TestFassade(createTestMount(new TestState()));
+        let collected = collect(fassade.select(s => s.count).unbounded());
+        fassade.action();
 
+        await untilNoBufferedStateChanges(fassade);
         collected.assert(0, 1, 2, 1);
     });
 
-    it("keeps state between action invocations", function () {
+    it("keeps state between action invocations", async function () {
         class TestState {
             list: number[] = [];
             value?: number;
@@ -291,12 +307,13 @@ describe("Fassade", function () {
         }
 
 
-        const store = new TestFasade(createTestMount(new TestState()));
-        store.setList();
-        store.setValue();
+        const fassade = new TestFasade(createTestMount(new TestState()));
+        fassade.setList();
+        fassade.setValue();
 
-        assert.deepEqual(store.state.list, [1, 2, 3]);
-        assert.equal(store.state.value, 99);
+        await untilNoBufferedStateChanges(fassade);
+        assert.deepEqual(fassade.getState.list, [1, 2, 3]);
+        assert.equal(fassade.getState.value, 99);
     });
 
     it("keeps state between async invocations", async function () {
@@ -336,20 +353,17 @@ describe("Fassade", function () {
         await store.setList();
         await store.setValue();
 
-        assert.deepEqual(store.state.list, [1, 2, 3]);
-        assert.equal(store.state.value, 99);
+        assert.deepEqual(store.getState.list, [1, 2, 3]);
+        assert.equal(store.getState.value, 99);
     });
 
-    it("emits CommandsEvents in the correct order when re-entrant code exists", async function () {
-
+    it("emits CommandsEvents in the correct order when re-entrant code exists", function (done) {
         const initialState = {
             list1: [] as number[],
             list2: [] as number[]
         };
 
-        let events: any[] = [];
-        function plainReducer(state = initialState, action: any) {
-            events.push([action.type, state]);
+        function plainReducer(state = initialState) {
             return state;
         }
 
@@ -377,13 +391,13 @@ describe("Fassade", function () {
                 this.select()
                     .unbounded()
                     .pipe(
-                        map(() => this.state.list1),
+                        map(() => this.getState.list1),
 
                         // only trigger when list1 was changed
                         distinctUntilChanged((val1, val2) => areArraysShallowEquals(val1, val2))
                     )
                     .subscribe(list1 => {
-                        this.commands.setList2([...this.state.list2, list1.length]);
+                        this.commands.setList2([...this.getState.list2, list1.length]);
                     });
             }
 
@@ -405,18 +419,21 @@ describe("Fassade", function () {
         const fassade = new TestFassade();
         fassade.action();
 
-        await dispatchedAllActions(fassade);
+        let states: any[] = [];
+        fassade.select().unbounded()
+            .subscribe(state => {
+                states.push(state);
+            });
 
-        events = events.slice(1);
-        console.log(JSON.stringify(events));
-
-
-        assert.deepEqual(events, [
-        //     ["@@INIT", {list1: [], list2: []}],
-            [" / setList1", {list1: [0], list2: []}],
-        //     ["setList2", {list1: [0], list2: [0]}],
-        //     ["setList2", {list1: [0], list2: [0, 1]}],
-        ]);
+        setTimeout(() => {
+            assert.deepEqual(states, [
+                {list1: [], list2: []},
+                {list1: [], list2: [0]},
+                {list1: [0], list2: [0]},
+                {list1: [0], list2: [0, 1]},
+            ]);
+            done();
+        }, 0);
     });
     /*
 

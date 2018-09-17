@@ -131,7 +131,7 @@ const renderApp = () => {
             </button>
         
             <ol>
-                ${store.state.todos!.map(t => {
+                ${store.getState.todos!.map(t => {
         return `<li class=''>${t.name}</li>`;
     }).join("") }
             </ol>

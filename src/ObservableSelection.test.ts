@@ -8,7 +8,7 @@ import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {ObservableSelection} from "./ObservableSelection";
 import {Fassade} from "./Fassade";
-import {dispatchedAllActions, collect} from "./test-utils";
+import {untilNoBufferedStateChanges, collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
 
@@ -54,12 +54,12 @@ describe("ObservableSelection", function () {
         store.action();
         store.action();
 
-        await dispatchedAllActions(store);
+        await untilNoBufferedStateChanges(store);
 
         stopTrigger.next(true);
         store.action();
 
-        await dispatchedAllActions(store);
+        await untilNoBufferedStateChanges(store);
 
         collected.assert(
             0,
@@ -114,7 +114,7 @@ describe("ObservableSelection", function () {
         store.action();
         store.action();
 
-        await dispatchedAllActions(store);
+        await untilNoBufferedStateChanges(store);
 
         assert.deepEqual(events, [
             "pre-0",
@@ -161,7 +161,7 @@ describe("ObservableSelection", function () {
         store.action();
         store.action();
 
-        await dispatchedAllActions(store);
+        await untilNoBufferedStateChanges(store);
 
         assert.deepEqual(events, [
             "a:100",

@@ -1,9 +1,9 @@
 import {assert} from "chai";
-import {enableTyduxDevelopmentMode} from "./development";
-import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
+import {enableTyduxDevelopmentMode} from "./development";
 import {Fassade} from "./Fassade";
-import {dispatchedAllActions, collect} from "./test-utils";
+import {createTyduxStore} from "./store";
+import {collect, untilNoBufferedStateChanges} from "./test-utils";
 import {View} from "./view";
 
 // Store 1
@@ -11,16 +11,15 @@ class State1 {
     value1 = 10;
 }
 
-class Mutators1 extends Commands<State1> {
+class Commands1 extends Commands<State1> {
     mut1() {
         this.state.value1++;
     }
 }
 
-class Store1 extends Fassade<Mutators1, State1> {
-
-    constructor() {
-        super("store1", new Mutators1(), new State1());
+class Fassade1 extends Fassade<State1, Commands1> {
+    createCommands(): Commands1 {
+        return new Commands1();
     }
 
     action1() {
@@ -33,16 +32,15 @@ class State2 {
     value2 = 20;
 }
 
-class Mutators2 extends Commands<State2> {
+class Commands2 extends Commands<State2> {
     mut2() {
         this.state.value2++;
     }
 }
 
-class Store2 extends Fassade<Mutators2, State2> {
-
-    constructor() {
-        super("store2", new Mutators2(), new State2());
+class Fassade2 extends Fassade<State2, Commands2> {
+    createCommands(): Commands2 {
+        return new Commands2();
     }
 
     action2() {
@@ -52,21 +50,24 @@ class Store2 extends Fassade<Mutators2, State2> {
 
 describe("View", function () {
 
-    beforeEach(function () {
-        enableTyduxDevelopmentMode();
-    });
-
-    afterEach(() => resetTydux());
+    // beforeEach(function () {
+    //     enableTyduxDevelopmentMode();
+    // });
 
     it("StateObserver starts with the current values", async function () {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store = createTyduxStore({
+            state1: new State1(),
+            state2: new State2(),
+        });
+
+        const store1 = new Fassade1(store.createRootMountPoint("state1"));
+        const store2 = new Fassade2(store.createRootMountPoint("state2"));
 
         store1.action1();
-        await dispatchedAllActions(store1);
+        await untilNoBufferedStateChanges(store1);
 
         store2.action2();
-        await dispatchedAllActions(store2);
+        await untilNoBufferedStateChanges(store2);
 
         const view = new View({
             store1,
@@ -89,14 +90,14 @@ describe("View", function () {
     });
 
     it("StateObserver emits changes", async function () {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store1 = new Fassade1();
+        const store2 = new Fassade2();
 
         store1.action1();
-        await dispatchedAllActions(store1);
+        await untilNoBufferedStateChanges(store1);
 
         store2.action2();
-        await dispatchedAllActions(store2);
+        await untilNoBufferedStateChanges(store2);
 
         const view = new View({
             child1: {
@@ -113,8 +114,8 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        await dispatchedAllActions(store1);
-        await dispatchedAllActions(store2);
+        await untilNoBufferedStateChanges(store1);
+        await untilNoBufferedStateChanges(store2);
 
         collected.assert(
             {child1: {child2: {store1: {value1: 11}, store2: {value2: 21}}}},
@@ -125,9 +126,9 @@ describe("View", function () {
     });
 
     it("StateObserver always freezes the state", async function () {
-        const store1 = new Store1();
+        const store1 = new Fassade1();
         store1.action1();
-        await dispatchedAllActions(store1);
+        await untilNoBufferedStateChanges(store1);
 
         const view = new View({
             child1: {
@@ -152,8 +153,8 @@ describe("View", function () {
     });
 
     it("StateObserver#select() maps the event stream", async function () {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store1 = new Fassade1();
+        const store2 = new Fassade2();
 
         const view = new View({store1, store2});
 
@@ -173,19 +174,19 @@ describe("View", function () {
         store1.action1();
         store2.action2();
 
-        await dispatchedAllActions(store1);
-        await dispatchedAllActions(store2);
+        await untilNoBufferedStateChanges(store1);
+        await untilNoBufferedStateChanges(store2);
 
         assert.deepEqual(values, [
-           [10, 20],
-           [11, 20],
-           [11, 21],
+            [10, 20],
+            [11, 20],
+            [11, 21],
         ]);
     });
 
     it("StateObserver#select() filters the event stream", async function () {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store1 = new Fassade1();
+        const store2 = new Fassade2();
 
         const view = new View({store1, store2});
 
@@ -203,17 +204,17 @@ describe("View", function () {
 
         store2.action2();
 
-        await dispatchedAllActions(store1);
-        await dispatchedAllActions(store2);
+        await untilNoBufferedStateChanges(store1);
+        await untilNoBufferedStateChanges(store2);
 
         assert.deepEqual(values, [
-           [10],
+            [10],
         ]);
     });
 
     it("StateObserver#select() directly provides the structure to select from (1 observer)", function (done) {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store1 = new Fassade1();
+        const store2 = new Fassade2();
 
         const view = new View({store1, store2});
         view
@@ -227,8 +228,8 @@ describe("View", function () {
     });
 
     it("StateObserver#select() directly provides the structure to select from (2 observers)", function (done) {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store1 = new Fassade1();
+        const store2 = new Fassade2();
 
         const view = new View({store1, store2});
 
@@ -251,8 +252,8 @@ describe("View", function () {
     });
 
     it("correctly unsubscribes with 1 observer", function () {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store1 = new Fassade1();
+        const store2 = new Fassade2();
 
         const view = new View({store1, store2});
 
@@ -272,8 +273,8 @@ describe("View", function () {
     });
 
     it("correctly unsubscribes with 2 observers", function () {
-        const store1 = new Store1();
-        const store2 = new Store2();
+        const store1 = new Fassade1();
+        const store2 = new Fassade2();
 
         const view = new View({store1, store2});
 
