@@ -9,7 +9,7 @@ export type CommandReducer<S> = (state: S, action: FassadeAction) => S;
 export type CommandDispatcher = (action: FassadeAction) => void;
 
 export function createReducerFromCommands<S>(fassadeId: string, commands: Commands<S>): CommandReducer<S> {
-    const typePrefix = `${fassadeId} / `;
+    const typePrefix = `[${fassadeId}] `;
     return (state: S, action: FassadeAction) => {
         // check if this action is for this fassade
         if (action.type.indexOf(typePrefix) !== 0) {

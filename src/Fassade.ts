@@ -71,6 +71,8 @@ export abstract class Fassade<S, M extends Commands<S>> {
         mountPoint.subscribe(() => {
             const currentState = Object.assign({}, mountPoint.getState());
             this.bufferedStateChanges++;
+
+            // trigger micro task to ease reentrant code
             Promise.resolve().then(() => {
                 this.bufferedStateChanges--;
                 this.state = currentState;
@@ -163,17 +165,10 @@ export abstract class Fassade<S, M extends Commands<S>> {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
-                const actionType = `${self.fassadeId} / ${mutatorMethodName}`;
+                const actionType = `[${self.fassadeId}] ${mutatorMethodName}`;
                 const args = Array.prototype.slice.call(arguments);
                 const mutatorAction: FassadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
-
-                // trigger micro task to ease reentrant code
-                // self.bufferedStateChanges++;
-                // setTimeout(() => {
-                //     self.bufferedStateChanges--;
-                    return self.mountPoint.dispatch(mutatorAction);
-                // }, 0);
-                // self.mountPoint.dispatch(mutatorAction);
+                return self.mountPoint.dispatch(mutatorAction);
             };
         }
 
@@ -186,20 +181,12 @@ export abstract class Fassade<S, M extends Commands<S>> {
         return (state: any, action: FassadeAction) => {
             const preLocalState = createProxy(this.mountPoint.extractState(state));
 
-            console.log("pre  state", preLocalState);
-
             if (this.destroyed || !this.isActionForThisFassade(action)) {
                 return state;
             }
 
-            // const action = this.createActionWithoutStoreIdInType(action);
-            // if (action !== null) {
             const postLocalState = mutatorReducer(preLocalState, action);
             state = this.mountPoint.setState(state, postLocalState);
-
-            console.log("post state", state);
-            // }
-
             return state;
         };
     }
@@ -209,7 +196,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
             return;
         }
 
-        return action.type.indexOf(`${this.fassadeId} / `) === 0;
+        return action.type.indexOf(`[${this.fassadeId}] `) === 0;
     }
 
 }
