@@ -27,7 +27,7 @@ export class View<T> {
             const subscriptions: Subscription[] = [];
 
             for (const [path, store] of this.stores) {
-                this.mergeState(stateCell, path, store.getState);
+                this.mergeState(stateCell, path, store.state);
             }
 
             this.subscribeStores(stateCell, subscriber, this.stores, subscriptions);

@@ -44,7 +44,7 @@
     "tslint": "tslint --project tsconfig.json --config tslint.json",
     "compile": "tsc -p tsconfig.json",
     "compile-dist": "tsc -p tsconfig.dist.json && tsc -p tsconfig.dist.es2015.json",
-    "dist": "npm run clean ; npm run tslint ; npm run compile-dist",
+    "dist": "npm run clean && npm run tslint && npm run test && npm run compile-dist",
     "test": "mocha --opts spec/mocha.opts src/**/*test.ts",
     "test-watch": "mocha --opts spec/mocha.opts -w --watch-extensions ts src/**/*test.ts",
     "demos-raw": "webpack-dev-server --config src/demos/raw/webpack.config.js"

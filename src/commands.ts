@@ -19,7 +19,7 @@ export function createReducerFromCommands<S>(fassadeId: string, commands: Comman
         const mutatorThisProxy: { state: S; } = {state};
         Object.setPrototypeOf(mutatorThisProxy, commands);
         try {
-            (commands as any).getState = state;
+            (commands as any).state = state;
             let mutatorFn = (commands as any)[commandName];
             if (mutatorFn === undefined) {
                 return state;

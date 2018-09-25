@@ -46,7 +46,7 @@ describe("Fassade", function () {
 
         const values: any[] = [];
         fassade.select((currentState) => {
-            values.push([currentState, fassade.getState]);
+            values.push([currentState, fassade.state]);
         }).unbounded().subscribe();
 
         fassade.actionInc();
@@ -312,8 +312,8 @@ describe("Fassade", function () {
         fassade.setValue();
 
         await untilNoBufferedStateChanges(fassade);
-        assert.deepEqual(fassade.getState.list, [1, 2, 3]);
-        assert.equal(fassade.getState.value, 99);
+        assert.deepEqual(fassade.state.list, [1, 2, 3]);
+        assert.equal(fassade.state.value, 99);
     });
 
     it("keeps state between async invocations", async function () {
@@ -353,8 +353,8 @@ describe("Fassade", function () {
         await store.setList();
         await store.setValue();
 
-        assert.deepEqual(store.getState.list, [1, 2, 3]);
-        assert.equal(store.getState.value, 99);
+        assert.deepEqual(store.state.list, [1, 2, 3]);
+        assert.equal(store.state.value, 99);
     });
 
     it("emits CommandsEvents in the correct order when re-entrant code exists", function (done) {
@@ -391,13 +391,13 @@ describe("Fassade", function () {
                 this.select()
                     .unbounded()
                     .pipe(
-                        map(() => this.getState.list1),
+                        map(() => this.state.list1),
 
                         // only trigger when list1 was changed
                         distinctUntilChanged((val1, val2) => areArraysShallowEquals(val1, val2))
                     )
                     .subscribe(list1 => {
-                        this.commands.setList2([...this.getState.list2, list1.length]);
+                        this.commands.setList2([...this.state.list2, list1.length]);
                     });
             }
 

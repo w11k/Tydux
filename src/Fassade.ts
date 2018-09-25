@@ -1,6 +1,8 @@
 import {Action} from "redux";
 import {ReplaySubject, Subject} from "rxjs";
 import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands} from "./commands";
+import {deepFreeze} from "./deep-freeze";
+import {isTyduxDevelopmentModeEnabled} from "./development";
 import {mutatorHasInstanceMembers} from "./error-messages";
 import {
     ObservableSelection,
@@ -51,7 +53,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
-    private state: S;
+    private _state!: S;
 
     protected readonly commands: CommandsMethods<M>;
 
@@ -65,7 +67,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
         mountPoint.addReducer(this.createReducerFromCommands(commands));
         delete (this.commands as any).state;
 
-        this.state = mountPoint.getState();
+        this.setState(mountPoint.getState());
         this.reduxStoreStateSubject.next(this.state);
 
         mountPoint.subscribe(() => {
@@ -75,7 +77,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
             // trigger micro task to ease reentrant code
             Promise.resolve().then(() => {
                 this.bufferedStateChanges--;
-                this.state = currentState;
+                this.setState(currentState);
                 this.reduxStoreStateSubject.next(currentState);
             });
         });
@@ -87,8 +89,12 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     abstract createCommands(): M;
 
-    get getState(): Readonly<S> {
-        return this.state;
+    get state(): Readonly<S> {
+        return this._state;
+    }
+
+    setState(state: S) {
+        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
     /**

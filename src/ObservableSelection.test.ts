@@ -4,10 +4,10 @@ import {map, takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {Subscriber} from "rxjs";
 import {enableTyduxDevelopmentMode} from "./development";
-import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {ObservableSelection} from "./ObservableSelection";
 import {Fassade} from "./Fassade";
+import {createTyduxStore} from "./store";
 import {untilNoBufferedStateChanges, collect} from "./test-utils";
 import {operatorFactory} from "./utils";
 
@@ -16,24 +16,28 @@ describe("ObservableSelection", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    afterEach(() => resetTydux());
-
     it("bounded() can be used to complete the stream", async function () {
-        type State = { a: number };
+        type State = { count: number };
 
-        class TestMutator extends Commands<State> {
+        class TestCommands extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Fassade<TestMutator, State> {
+        class TestFassade extends Fassade<State, TestCommands> {
             action() {
                 this.commands.inc();
             }
+
+            createCommands() {
+                return new TestCommands();
+            }
         }
 
-        const store = new TestStore("", new TestMutator(), {count: 0});
+        const tyduxStore = createTyduxStore({count: 0});
+        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
+        const fassade = new TestFassade(mount);
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
@@ -49,17 +53,17 @@ describe("ObservableSelection", function () {
                 };
             });
 
-        let collected = collect(store.select(s => s.count).bounded(operator));
+        let collected = collect(fassade.select(s => s.count).bounded(operator));
 
-        store.action();
-        store.action();
+        fassade.action();
+        fassade.action();
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
         stopTrigger.next(true);
-        store.action();
+        fassade.action();
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
         collected.assert(
             0,
@@ -69,22 +73,27 @@ describe("ObservableSelection", function () {
     });
 
     it("bounded() can be used to wrap the stream", async function () {
+        type State = { count: number };
 
-        type State = { a: number };
-
-        class TestMutator extends Commands<State> {
+        class TestCommands extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Fassade<TestMutator, State> {
+        class TestFassade extends Fassade<State, TestCommands> {
             action() {
                 this.commands.inc();
             }
+
+            createCommands() {
+                return new TestCommands();
+            }
         }
 
-        const store = new TestStore("", new TestMutator(), {count: 0});
+        const tyduxStore = createTyduxStore({count: 0});
+        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
+        const fassade = new TestFassade(mount);
 
         const events: any[] = [];
 
@@ -106,15 +115,15 @@ describe("ObservableSelection", function () {
                 };
             });
 
-        store
+        fassade
             .select(s => s.count)
             .bounded(operator)
             .subscribe(s => events.push(s));
 
-        store.action();
-        store.action();
+        fassade.action();
+        fassade.action();
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
         assert.deepEqual(events, [
             "pre-0",
@@ -131,25 +140,30 @@ describe("ObservableSelection", function () {
 
     it("pipe() can be used to modify the stream", async function () {
 
-        type State = { a: number };
+        type State = { count: number };
 
-        class TestMutator extends Commands<State> {
+        class TestCommands extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Fassade<TestMutator, State> {
+        class TestFassade extends Fassade<State, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
             action() {
                 this.commands.inc();
             }
         }
 
-        const store = new TestStore("", new TestMutator(), {count: 0});
+        const tyduxStore = createTyduxStore({count: 0});
+        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
+        const fassade = new TestFassade(mount);
 
         const events: any[] = [];
 
-        store
+        fassade
             .select(s => s.count)
             .pipe(
                 map(x => x + 100),
@@ -158,10 +172,10 @@ describe("ObservableSelection", function () {
             .unbounded()
             .subscribe(s => events.push(s));
 
-        store.action();
-        store.action();
+        fassade.action();
+        fassade.action();
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
         assert.deepEqual(events, [
             "a:100",

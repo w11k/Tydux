@@ -6,6 +6,7 @@
     "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -27,7 +28,6 @@
       "dom"
     ],
     "rootDir": "src",
-    "target": "es5",
     "outDir": "dist",
     "baseUrl": "."
   },
