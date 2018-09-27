@@ -1,8 +1,8 @@
 import {assert} from "chai";
-import {Action, createStore, Store as ReduxStore} from "redux";
+import {Action, createStore, Store, Store as ReduxStore} from "redux";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {createTyduxStore, createTyduxStoreBridge} from "./store";
+import {createTyduxStore, TyduxStoreBridge} from "./store";
 
 
 describe("Store", function () {
@@ -82,13 +82,10 @@ describe("Store", function () {
 
         type ManagedByFassadeState = typeof initialState.managedByFassade;
 
-        function plainReducer(state = initialState) {
-            return state;
-        }
-
-        const tyduxBridge = createTyduxStoreBridge();
-        const reduxStore = createStore(tyduxBridge.wrapReducer(plainReducer));
-        const mount = tyduxBridge.createRootMountPoint(reduxStore, "managedByFassade");
+        const tyduxBridge = new TyduxStoreBridge();
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
+        const connected = tyduxBridge.connectStore(reduxStore);
+        const mount = connected.createRootMountPoint("managedByFassade");
 
         class MyCommands extends Commands<ManagedByFassadeState> {
             inc(by: number) {
@@ -132,7 +129,7 @@ describe("Store", function () {
         type AppState = typeof initialState;
         type ManagedByFassadeState = typeof initialState.managedByFassade;
 
-        function plainReducer(state = initialState, action: any) {
+        function plainReducer(state: AppState|undefined = initialState, action: any) {
             switch (action.type) {
                 case "inc":
                     return {
@@ -143,9 +140,10 @@ describe("Store", function () {
             return state;
         }
 
-        const tyduxBridge = createTyduxStoreBridge();
+        const tyduxBridge = new TyduxStoreBridge();
         const reduxStore: ReduxStore<AppState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
-        const mount = tyduxBridge.createRootMountPoint(reduxStore, "managedByFassade");
+        const connected = tyduxBridge.connectStore(reduxStore);
+        const mount = connected.createRootMountPoint("managedByFassade");
 
         reduxStore.dispatch({type: "inc", payload: 5});
 

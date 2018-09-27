@@ -1,7 +1,5 @@
 import {assert} from "chai";
 import {Observable} from "rxjs";
-import {filter, take} from "rxjs/operators";
-import {Fassade} from "./Fassade";
 import {createTyduxStore, MountPoint} from "./store";
 
 export function createTestMount<S>(initialState: S): MountPoint<S, S> {
@@ -35,15 +33,3 @@ export function createAsyncPromise<T>(returns: T): Promise<T> {
     });
 }
 
-export async function untilNoBufferedStateChanges(fassade: Fassade<any, any>): Promise<any> {
-    return new Promise(resolve => {
-            fassade.select()
-                .pipe(
-                    filter(() => fassade.hasBufferedStateChanges()),
-                    take(1)
-                )
-                .unbounded()
-                .subscribe(() => setTimeout(resolve, 0));
-        }
-    );
-}

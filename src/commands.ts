@@ -4,9 +4,7 @@ import {createFailingProxy, failIfNotUndefined} from "./utils";
 
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 export type CommandsMethods<T> = Pick<T, FunctionPropertyNames<T>>;
-
 export type CommandReducer<S> = (state: S, action: FassadeAction) => S;
-export type CommandDispatcher = (action: FassadeAction) => void;
 
 export function createReducerFromCommands<S>(fassadeId: string, commands: Commands<S>): CommandReducer<S> {
     const typePrefix = `[${fassadeId}] `;

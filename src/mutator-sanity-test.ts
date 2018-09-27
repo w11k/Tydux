@@ -1,167 +1,192 @@
-// import {assert} from "chai";
-// import {enableTyduxDevelopmentMode} from "./development";
-// import {resetTydux} from "./global-state";
-// import {createReducerFromMutator, Mutator} from "./mutator";
-// import {Store} from "./Store";
-// import {createAsyncPromise} from "./test-utils";
-//
-//
-// describe("Mutators - sanity tests", function () {
-//
-//     beforeEach(() => enableTyduxDevelopmentMode());
-//
-//     afterEach(() => resetTydux());
-//
-//     it("can not access the state asynchronously", function (done) {
-//         class TestMutator extends Mutator<{ n1: number }> {
-//             mut() {
-//                 setTimeout(() => {
-//                     assert.throws(() => this.state, /Illegal access.*this/);
-//                     done();
-//                 }, 0);
-//             }
-//         }
-//
-//         class MyStore extends Store<TestMutator, { n1: number }> {
-//             action() {
-//                 this.mutate.mut();
-//             }
-//         }
-//
-//         const store = new MyStore("", new TestMutator(), {n1: 0});
-//         store.action();
-//     });
-//
-//     it("can not modify the state asynchronously by keeping a reference to a nested state property", function (done) {
-//         class TestMutator extends Mutator<{ root: { child: number[] } }> {
-//             mut() {
-//                 const child = this.state.root.child;
-//                 setTimeout(() => {
-//                     assert.throws(() => child.push(3), /not extensible/);
-//                     done();
-//                 }, 0);
-//             }
-//         }
-//
-//         class MyStore extends Store<TestMutator, { root: { child: number[] } }> {
-//             action() {
-//                 this.mutate.mut();
-//             }
-//         }
-//
-//         const state = {root: {child: [1, 2]}};
-//         const store = new MyStore("", new TestMutator(), state);
-//         store.action();
-//     });
-//
-//     it("can not replace the state asynchronously", function (done) {
-//         class TestMutator extends Mutator<{ n1: number }> {
-//             mut() {
-//                 setTimeout(() => {
-//                     assert.throws(() => this.state = {n1: 99}, /Illegal access.*this/);
-//                     done();
-//                 }, 0);
-//             }
-//         }
-//
-//         class MyStore extends Store<TestMutator, { n1: number }> {
-//             action() {
-//                 this.mutate.mut();
-//             }
-//         }
-//
-//         const store = new MyStore("", new TestMutator(), {n1: 0});
-//         store.action();
-//     });
-//
-//     it("can not change the state in asynchronous promise callbacks", function (done) {
-//         class TestMutator extends Mutator<{ n1: number }> {
-//             mut1() {
-//                 createAsyncPromise(1).then(val => {
-//                     assert.throws(() => this.state.n1 = val);
-//                     done();
-//                 });
-//             }
-//         }
-//
-//         class MyStore extends Store<TestMutator, { n1: number }> {
-//             action() {
-//                 this.mutate.mut1();
-//             }
-//         }
-//
-//         const store = new MyStore("", new TestMutator(), {n1: 0});
-//         store.action();
-//     });
-//
-//     it("can not access other members asynchronously", function (done) {
-//         class TestMutator extends Mutator<{ n1: number }> {
-//             mut1() {
-//                 setTimeout(() => {
-//                     assert.throws(() => this.mut2(), /Illegal access.*this/);
-//                     done();
-//                 }, 0);
-//             }
-//
-//             mut2() {
-//                 // empty
-//             }
-//         }
-//
-//         class MyStore extends Store<TestMutator, { n1: number }> {
-//             action() {
-//                 this.mutate.mut1();
-//             }
-//         }
-//
-//         const store = new MyStore("", new TestMutator(), {n1: 0});
-//         store.action();
-//     });
-//
-//     it("can not access other members in an asynchronous promise resolve", function (done) {
-//         class TestMutator extends Mutator<{ n1: number }> {
-//             mut1() {
-//                 createAsyncPromise(1)
-//                     .then(() => {
-//                         this.mut2();
-//                     })
-//                     .catch((e) => {
-//                         assert.match(e, /Illegal access.*this/);
-//                         done();
-//                     });
-//             }
-//
-//             mut2() {
-//                 // empty
-//             }
-//         }
-//
-//         class MyStore extends Store<TestMutator, { n1: number }> {
-//             action() {
-//                 this.mutate.mut1();
-//             }
-//         }
-//
-//         const store = new MyStore("", new TestMutator(), {n1: 0});
-//         store.action();
-//     });
-//
-//     it("must not return a value", function () {
-//         class TestMutator extends Mutator<any> {
-//             mod1() {
-//                 return 1;
-//             }
-//         }
-//
-//         class MyStore extends Store<TestMutator, any> {
-//             action() {
-//                 assert.throws(() => this.mutate.mod1());
-//             }
-//         }
-//
-//         const store = new MyStore("", new TestMutator(), {});
-//         store.action();
-//     });
-//
-// });
-//
+import {assert} from "chai";
+import {Commands} from "./commands";
+import {enableTyduxDevelopmentMode} from "./development";
+import {Fassade} from "./Fassade";
+import {createAsyncPromise, createTestMount} from "./test-utils";
+
+
+describe("Commands - sanity tests", function () {
+
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    it("can not access the state asynchronously", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut() {
+                setTimeout(() => {
+                    assert.throws(() => this.state, /Illegal access.*this/);
+                    done();
+                }, 0);
+            }
+        }
+
+        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+            action() {
+                this.commands.mut();
+            }
+
+            createCommands() {
+                return new TestCommands();
+            }
+        }
+
+        const fassade = new TestFassade(createTestMount({n1: 0}));
+        fassade.action();
+    });
+
+    it("can not modify the state asynchronously by keeping a reference to a nested state property", function (done) {
+        class TestCommands extends Commands<{ root: { child: number[] } }> {
+            mut() {
+                const child = this.state.root.child;
+                setTimeout(() => {
+                    assert.throws(() => child.push(3), /not extensible/);
+                    done();
+                }, 0);
+            }
+        }
+
+        class TestFassade extends Fassade<{ root: { child: number[] } }, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            action() {
+                this.commands.mut();
+            }
+        }
+
+        const state = {root: {child: [1, 2]}};
+        const fassade = new TestFassade(createTestMount(state));
+        fassade.action();
+    });
+
+    it("can not replace the state asynchronously", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut() {
+                setTimeout(() => {
+                    assert.throws(() => this.state = {n1: 99}, /Illegal access.*this/);
+                    done();
+                }, 0);
+            }
+        }
+
+        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            action() {
+                this.commands.mut();
+            }
+        }
+
+        const fassade = new TestFassade(createTestMount({n1: 0}));
+        fassade.action();
+    });
+
+    it("can not change the state in asynchronous promise callbacks", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut1() {
+                createAsyncPromise(1).then(val => {
+                    assert.throws(() => this.state.n1 = val);
+                    done();
+                });
+            }
+        }
+
+        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            action() {
+                this.commands.mut1();
+            }
+        }
+
+        const fassade = new TestFassade(createTestMount({n1: 0}));
+        fassade.action();
+    });
+
+    it("can not access other members asynchronously", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut1() {
+                setTimeout(() => {
+                    assert.throws(() => this.mut2(), /Illegal access.*this/);
+                    done();
+                }, 0);
+            }
+
+            mut2() {
+                // empty
+            }
+        }
+
+        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            action() {
+                this.commands.mut1();
+            }
+        }
+
+        const fassade = new TestFassade(createTestMount({n1: 0}));
+        fassade.action();
+    });
+
+    it("can not access other members in an asynchronous promise resolve", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut1() {
+                createAsyncPromise(1)
+                    .then(() => {
+                        this.mut2();
+                    })
+                    .catch((e) => {
+                        assert.match(e, /Illegal access.*this/);
+                        done();
+                    });
+            }
+
+            mut2() {
+                // empty
+            }
+        }
+
+        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            action() {
+                this.commands.mut1();
+            }
+        }
+
+        const fassade = new TestFassade(createTestMount({n1: 0}));
+        fassade.action();
+    });
+
+    it("must not return a value", function () {
+        class TestCommands extends Commands<any> {
+            mod1() {
+                return 1;
+            }
+        }
+
+        class TestFassade extends Fassade<any, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            action() {
+                assert.throws(() => this.commands.mod1());
+            }
+        }
+
+        const fassade = new TestFassade(createTestMount({}));
+        fassade.action();
+    });
+
+});
+

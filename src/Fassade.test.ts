@@ -3,9 +3,9 @@ import {Action, createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {createTyduxStoreBridge} from "./store";
-import {collect, createAsyncPromise, createTestMount, untilNoBufferedStateChanges} from "./test-utils";
-import {areArraysShallowEquals, isNil} from "./utils";
+import {TyduxStoreBridge} from "./store";
+import {collect, createAsyncPromise, createTestMount} from "./test-utils";
+import {areArraysShallowEquals, isNil, untilNoBufferedStateChanges} from "./utils";
 
 
 describe("Fassade", function () {
@@ -367,9 +367,10 @@ describe("Fassade", function () {
             return state;
         }
 
-        const tyduxBridge = createTyduxStoreBridge();
+        const tyduxBridge = new TyduxStoreBridge();
         const reduxStore: ReduxStore<typeof initialState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
-        const mount = tyduxBridge.createMountPoint(reduxStore, s => s, (_, s) => ({...s}));
+        const connected = tyduxBridge.connectStore(reduxStore);
+        const mount = connected.createMountPoint(s => s, (_, s) => ({...s}));
 
         class TestCommands extends Commands<{ list1: number[], list2: number[] }> {
             setList1(list: number[]) {

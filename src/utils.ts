@@ -1,5 +1,7 @@
 import {Observable, Operator, Subscriber} from "rxjs";
+import {filter, take} from "rxjs/operators";
 import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
+import {Fassade} from "./Fassade";
 
 let hasProxySupport: boolean = false;
 try {
@@ -136,3 +138,19 @@ export function get(obj: any, path: string[]) {
     return target;
 }
 
+export async function untilNoBufferedStateChanges(fassade: Fassade<any, any>): Promise<any> {
+    if (!fassade.hasBufferedStateChanges()) {
+        return Promise.resolve();
+    }
+
+    return new Promise(resolve => {
+            fassade.select()
+                .pipe(
+                    filter(() => fassade.hasBufferedStateChanges()),
+                    take(1)
+                )
+                .unbounded()
+                .subscribe(() => setTimeout(resolve, 0));
+        }
+    );
+}

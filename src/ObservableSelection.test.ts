@@ -8,8 +8,8 @@ import {Commands} from "./commands";
 import {ObservableSelection} from "./ObservableSelection";
 import {Fassade} from "./Fassade";
 import {createTyduxStore} from "./store";
-import {untilNoBufferedStateChanges, collect} from "./test-utils";
-import {operatorFactory} from "./utils";
+import {collect} from "./test-utils";
+import {operatorFactory, untilNoBufferedStateChanges} from "./utils";
 
 
 describe("ObservableSelection", function () {

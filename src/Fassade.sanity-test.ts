@@ -4,7 +4,8 @@ import {NoCommands} from "./commands.test";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Fassade} from "./Fassade";
 import {createTyduxStore} from "./store";
-import {collect, createAsyncPromise, untilNoBufferedStateChanges} from "./test-utils";
+import {collect, createAsyncPromise} from "./test-utils";
+import {untilNoBufferedStateChanges} from "./utils";
 
 
 describe("Fassade - sanity tests", function () {

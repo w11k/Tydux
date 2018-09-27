@@ -1,36 +1,38 @@
 import {assert} from "chai";
 import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {untilNoBufferedStateChanges} from "./test-utils";
+import {createTestMount} from "./test-utils";
+import {untilNoBufferedStateChanges} from "./utils";
 
 
 describe("AngularJS integration", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    afterEach(() => resetTydux());
-
     it("wraps the delivery of events in scope.$apply()", async function () {
 
-        type State = { a: number };
+        type State = { count: number };
 
-        class TestMutator extends Commands<State> {
+        class TestCommands extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Fassade<TestMutator, State> {
+        class TestFassade extends Fassade<State, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
             action() {
                 this.commands.inc();
             }
         }
 
         const events: any[] = [];
-        const store = new TestStore("", new TestMutator(), {count: 0});
+        const fassade = new TestFassade(createTestMount({count: 0}));
 
         class DummyScope implements AngularJS1ScopeLike {
 
@@ -54,14 +56,14 @@ describe("AngularJS integration", function () {
         const rootScope = new DummyScope();
         const scope = new DummyScope(rootScope);
 
-        store
+        fassade
             .select(s => s.count)
             .bounded(toAngularJSScope(scope))
             .subscribe(a => events.push(a));
 
-        store.action();
+        fassade.action();
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
         assert.deepEqual(events, [
             "pre",

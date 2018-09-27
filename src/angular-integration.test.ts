@@ -1,36 +1,38 @@
 import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
 import {enableTyduxDevelopmentMode} from "./development";
-import {resetTydux} from "./global-state";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {untilNoBufferedStateChanges} from "./test-utils";
+import {createTestMount} from "./test-utils";
+import {untilNoBufferedStateChanges} from "./utils";
 
 
 describe("Angular integration", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    afterEach(() => resetTydux());
-
     it("completes all subscriptions when the component gets destroyed", async function () {
 
-        type State = { a: number };
+        type State = { count: number };
 
-        class TestMutator extends Commands<State> {
+        class TestCommands extends Commands<State> {
             inc() {
                 this.state.count++;
             }
         }
 
-        class TestStore extends Fassade<TestMutator, State> {
+        class TestFassade extends Fassade<State, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
             action() {
                 this.commands.inc();
             }
         }
 
         const events: any[] = [];
-        const store = new TestStore("", new TestMutator(), {count: 0});
+        const fassade = new TestFassade(createTestMount({count: 0}));
 
         class DummyComponent implements OnDestroyLike {
             ngOnDestroy() {
@@ -40,23 +42,23 @@ describe("Angular integration", function () {
 
         const component = new DummyComponent();
 
-        store
+        fassade
             .select(s => s.count)
             .bounded(toAngularComponent(component))
             .subscribe(a => events.push(a));
 
-        store.action(); // 1
-        store.action(); // 2
+        fassade.action(); // 1
+        fassade.action(); // 2
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
         component.ngOnDestroy();
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
-        store.action(); // 3
+        fassade.action(); // 3
 
-        await untilNoBufferedStateChanges(store);
+        await untilNoBufferedStateChanges(fassade);
 
         assert.deepEqual(events, [
             0,
