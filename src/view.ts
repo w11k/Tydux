@@ -12,7 +12,7 @@ import {get, last} from "./utils";
 
 export type ViewTreeState<T> = {
     [K in keyof T]
-    : T[K] extends Fassade<any, infer S> ? S
+    : T[K] extends Fassade<infer S, any> ? S
         : T[K] extends object ? ViewTreeState<T[K]>
             : never;
 };

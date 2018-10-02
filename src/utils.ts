@@ -118,6 +118,10 @@ export function functionsIn(object: any) {
 }
 
 export function keysIn(object: any) {
+    if (isNil(object)) {
+        return [];
+    }
+
     let keys: string[] = Object.keys(object);
     let proto = Object.getPrototypeOf(object);
     if (proto !== null) {

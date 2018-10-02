@@ -44,9 +44,9 @@ describe("Fassade", function () {
         const mount = createTestMount({n1: 0});
         const fassade = new TestFassade(mount);
 
-        const values: any[] = [];
+        const values: any = [];
         fassade.select((currentState) => {
-            values.push([currentState, fassade.state]);
+            values.push(currentState);
         }).unbounded().subscribe();
 
         fassade.actionInc();
@@ -55,9 +55,9 @@ describe("Fassade", function () {
         await untilNoBufferedStateChanges(fassade);
 
         assert.deepEqual(values, [
-            [{n1: 0}, {n1: 0}],
-            [{n1: 1}, {n1: 1}],
-            [{n1: 2}, {n1: 2}],
+            {n1: 0},
+            {n1: 1},
+            {n1: 2},
         ]);
     });
 
@@ -292,7 +292,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFasade extends Fassade<TestState, TestCommands> {
+        class TestFassade extends Fassade<TestState, TestCommands> {
             createCommands() {
                 return new TestCommands();
             }
@@ -307,13 +307,40 @@ describe("Fassade", function () {
         }
 
 
-        const fassade = new TestFasade(createTestMount(new TestState()));
+        const fassade = new TestFassade(createTestMount(new TestState()));
         fassade.setList();
         fassade.setValue();
 
         await untilNoBufferedStateChanges(fassade);
         assert.deepEqual(fassade.state.list, [1, 2, 3]);
         assert.equal(fassade.state.value, 99);
+    });
+
+    it("state changes are directly reflected in the fassade state", function (done) {
+        class TestState {
+            value = 0;
+        }
+
+        class TestCommands extends Commands<TestState> {
+            setValue(value: number) {
+                this.state.value = value;
+            }
+        }
+
+        class TestFassade extends Fassade<TestState, TestCommands> {
+            createCommands() {
+                return new TestCommands();
+            }
+
+            met1() {
+                this.commands.setValue(9);
+                assert.equal(this.state.value, 9);
+                done();
+            }
+        }
+
+        const fassade = new TestFassade(createTestMount(new TestState()));
+        fassade.met1();
     });
 
     it("keeps state between async invocations", async function () {
@@ -436,34 +463,5 @@ describe("Fassade", function () {
             done();
         }, 0);
     });
-    /*
-
-    it("destroy() completes processedActions$ observable", function (done) {
-        class TestFassade extends Fassade<Commands<any>, { n1: number }> {
-        }
-
-        const store = new TestFassade("", new Commands(), {n1: 0});
-        store.processedActions$.subscribe(NOOP, NOOP, done);
-        store.destroy();
-    });
-
-    it("destroy() completes observable returned by select()", function (done) {
-        class TestFassade extends Fassade<Commands<any>, { n1: number }> {
-        }
-
-        const store = new TestFassade("", new Commands(), {n1: 0});
-        store.select().unbounded().subscribe(NOOP, NOOP, done);
-        store.destroy();
-    });
-
-    it("destroy() completes observable returned by selectNonNil()", function (done) {
-        class TestFassade extends Fassade<Commands<any>, { n1: number }> {
-        }
-
-        const store = new TestFassade("", new Commands(), {n1: 0});
-        store.selectNonNil(s => s).unbounded().subscribe(NOOP, NOOP, done);
-        store.destroy();
-    });
-*/
 
 });

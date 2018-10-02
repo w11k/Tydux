@@ -2,7 +2,7 @@ import {Action, createStore, Dispatch, Reducer, Store, Unsubscribe} from "redux"
 import {CommandReducer} from "./commands";
 
 
-export interface MountPoint<S, L> {
+export interface MountPoint<L, S = any> {
     addReducer: (commandReducer: CommandReducer<any>) => void;
     dispatch: Dispatch<Action<string>>;
     getState: () => L;
@@ -13,12 +13,12 @@ export interface MountPoint<S, L> {
 
 export class ConnectedTyduxStoreBridge<S> {
 
-    constructor(private readonly store: Store<S>,
+    constructor(readonly store: Store<S>,
                 private readonly fassadeReducers: CommandReducer<any>[]) {
     }
 
     createMountPoint<L>(stateGetter: (globalState: S) => L,
-                        stateSetter: (globalState: S, localState: L) => S): MountPoint<S, L> {
+                        stateSetter: (globalState: S, localState: L) => S): MountPoint<L, S> {
         return {
             addReducer: (commandReducer: CommandReducer<any>) => this.fassadeReducers.push(commandReducer),
             dispatch: this.store.dispatch.bind(this.store),
@@ -29,7 +29,7 @@ export class ConnectedTyduxStoreBridge<S> {
         };
     }
 
-    createRootMountPoint<K extends keyof S>(slice: K): MountPoint<S, S[K]> {
+    createRootMountPoint<K extends keyof S>(slice: K): MountPoint<S[K], S> {
         return this.createMountPoint(
             s => s[slice],
             (s, l) => {
@@ -58,7 +58,7 @@ export class TyduxStoreBridge {
     }
 
     wrapReducer<S>(wrappedReducer: Reducer<S>): Reducer<S> {
-        return (state: S|undefined, action: Action) => wrappedReducer(this.reducer()(state, action), action);
+        return (state: S | undefined, action: Action) => wrappedReducer(this.reducer()(state, action), action);
     }
 
     connectStore<S>(store: Store<S>) {
@@ -74,7 +74,7 @@ export class TyduxStore<S> {
     private readonly connectedTyduxStoreBridge: ConnectedTyduxStoreBridge<S>;
     private readonly store: Store<S, Action>;
 
-    constructor(private readonly initialState: S|undefined) {
+    constructor(private readonly initialState: S | undefined) {
         function noopReducer(state = initialState) {
             return state;
         }

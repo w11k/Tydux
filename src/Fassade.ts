@@ -57,7 +57,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     protected readonly commands: CommandsMethods<M>;
 
-    constructor(readonly mountPoint: MountPoint<any, S>) {
+    constructor(readonly mountPoint: MountPoint<S, any>) {
         this.fassadeId = createUniqueFassadeId(this.getName().replace(" ", "_"));
         this.enrichInstanceMethods();
 
@@ -73,11 +73,11 @@ export abstract class Fassade<S, M extends Commands<S>> {
         mountPoint.subscribe(() => {
             const currentState = Object.assign({}, mountPoint.getState());
             this.bufferedStateChanges++;
+            this.setState(currentState);
 
             // trigger micro task to ease reentrant code
             Promise.resolve().then(() => {
                 this.bufferedStateChanges--;
-                this.setState(currentState);
                 this.reduxStoreStateSubject.next(currentState);
             });
         });
