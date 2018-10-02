@@ -1,7 +1,9 @@
-import {enableTyduxDevelopmentMode} from "../../../development";
-import {Middleware} from "../../../middleware";
+import {createStore, Store} from "redux";
+import {composeWithDevTools} from "redux-devtools-extension";
 import {Commands} from "../../../commands";
-import {ProcessedAction, Fassade} from "../../../Fassade";
+import {enableTyduxDevelopmentMode} from "../../../development";
+import {Fassade} from "../../../Fassade";
+import {createTyduxStore, TyduxStoreBridge} from "../../../store";
 import "./index.html";
 import {createTodoList} from "./mock";
 
@@ -22,7 +24,7 @@ class TodoState {
 }
 
 
-class TodoMutators extends Commands<TodoState> {
+class TodoCommands extends Commands<TodoState> {
 
     clearTodos() {
         this.state.todos = [];
@@ -33,7 +35,6 @@ class TodoMutators extends Commands<TodoState> {
     }
 
     addTodoToList(todo: Todo) {
-        console.log("addTodoToList", todo);
         this.state.todos = [
             ...this.state.todos,
             todo
@@ -42,13 +43,7 @@ class TodoMutators extends Commands<TodoState> {
 
 }
 
-class TodoStore extends Fassade<TodoMutators, TodoState> {
-
-    constructor() {
-        super("todos", new TodoMutators(), new TodoState());
-        // this.addTodo("Todo 1");
-        // this.addTodo("Todo 2");
-    }
+class TodoStore extends Fassade<TodoState, TodoCommands> {
 
     addTodo(name: string) {
         if (name.trim().length === 0) {
@@ -68,70 +63,38 @@ class TodoStore extends Fassade<TodoMutators, TodoState> {
         this.commands.setTodos(todos);
     }
 
-}
-
-const store: TodoStore = new TodoStore();
-
-class MyMiddlewareMutator extends Commands<TodoState> {
-    addRandomTodo(prefix = "mutator-") {
-        this.state.todos = [
-            ...this.state.todos,
-            {name: prefix + Math.random()}
-        ];
-    }
-}
-
-class MyMiddleware extends Middleware<TodoState, MyMiddlewareMutator, TodoStore> {
-
-    private firstCall = true;
-
-    getName() {
-        return "MyMiddleware";
-    }
-
-    getMutator() {
-        return new MyMiddlewareMutator();
-    }
-
-    afterActionProcessed(processedAction: ProcessedAction<TodoState>): void {
-        console.log("afterActionProcessed", processedAction.mutatorAction);
-        if (this.firstCall) {
-            setTimeout(() => {
-                console.log("calling mutatorDispatcher");
-                this.mutatorDispatcher(processedAction.mutatorAction);
-            }, 2000);
-        }
-
-
-        // this.mutate.addRandomTodo();
-
-        this.firstCall = false;
+    createCommands(): TodoCommands {
+        return new TodoCommands();
     }
 
 }
 
-store.installMiddleware(new MyMiddleware());
+const bridge = new TyduxStoreBridge();
+const store: Store<TodoState> = createStore(bridge.createTyduxReducer(new TodoState()), composeWithDevTools());
+const connectedBridge = bridge.connectStore(store);
+const mountPoint = connectedBridge.createMountPoint(s => s, (g, l) => ({...l}));
+const fassade: TodoStore = new TodoStore(mountPoint);
 
 
-(window as any).store = store;
+(window as any).fassade = fassade;
 
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
-            <button onclick="store.clearTodos()">
+            <button onclick="fassade.clearTodos()">
                 Clear
             </button>
         
-            <button onclick='(${() => store.addTodo("" + Date.now())})();'>
+            <button onclick="fassade.addTodo('' + Date.now())">
                 Add Todo
             </button>
         
-            <button onclick='(${() => store.loadTodos()})();'>
+            <button onclick="fassade.loadTodos()">
                 Load Todos
             </button>
         
             <ol>
-                ${store.state.todos!.map(t => {
+                ${fassade.state.todos!.map(t => {
         return `<li class=''>${t.name}</li>`;
     }).join("") }
             </ol>
@@ -139,10 +102,10 @@ const renderApp = () => {
         `;
 };
 
-store.select()
+fassade.select()
     .unbounded()
     .subscribe(() => {
         renderApp();
     });
 
-setTimeout(() => store.addTodo("test"), 500);
+setTimeout(() => fassade.addTodo("test"), 500);

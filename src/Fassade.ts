@@ -197,9 +197,9 @@ export abstract class Fassade<S, M extends Commands<S>> {
         };
     }
 
-    private isActionForThisFassade(action: Action) {
+    private isActionForThisFassade(action: Action): boolean {
         if (typeof action.type !== "string") {
-            return;
+            return false;
         }
 
         return action.type.indexOf(`[${this.fassadeId}] `) === 0;

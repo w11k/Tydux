@@ -98,7 +98,7 @@ export function isNil(obj: any): obj is null | undefined {
 
 export function last(array: any[]) {
     const length = array == null ? 0 : array.length;
-    return length ? array[length - 1] : undefined;
+    return length > 0 ? array[length - 1] : undefined;
 }
 
 export function functions(object: any): string[] {
