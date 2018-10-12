@@ -8,7 +8,7 @@
 
 **Your foreman library for writing Redux stores**
 
-Tydux is a TypeScript library to provide structure and type-safety when writing Redux stores (or other compatible frameworks). You can use Tydux as a complete wrapper around Redux or for only selected slices of your store along with your existing reducers and actions.  
+Tydux is a TypeScript library to provide structure and type-safety when writing Redux stores (or other compatible frameworks). You can use Tydux as a complete wrapper around Redux or along with your existing reducers and actions.  
 
 # How does it work?
 
