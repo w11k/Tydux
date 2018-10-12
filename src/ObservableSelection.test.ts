@@ -1,12 +1,10 @@
 import {assert} from "chai";
-import {Observable} from "rxjs";
+import {Observable, Subject, Subscriber} from "rxjs";
 import {map, takeUntil} from "rxjs/operators";
-import {Subject} from "rxjs";
-import {Subscriber} from "rxjs";
-import {enableTyduxDevelopmentMode} from "./development";
 import {Commands} from "./commands";
-import {ObservableSelection} from "./ObservableSelection";
+import {enableTyduxDevelopmentMode} from "./development";
 import {Fassade} from "./Fassade";
+import {ObservableSelection} from "./ObservableSelection";
 import {createTyduxStore} from "./store";
 import {collect} from "./test-utils";
 import {operatorFactory, untilNoBufferedStateChanges} from "./utils";
@@ -152,6 +150,7 @@ describe("ObservableSelection", function () {
             createCommands() {
                 return new TestCommands();
             }
+
             action() {
                 this.commands.inc();
             }

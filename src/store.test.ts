@@ -118,7 +118,7 @@ describe("Store", function () {
         });
     });
 
-    it("can be used along Redux reducer", async function () {
+    it("can be used with plain reducer", async function () {
         const initialState = {
             someValue: 0,
             managedByFassade: {
@@ -129,7 +129,66 @@ describe("Store", function () {
         type AppState = typeof initialState;
         type ManagedByFassadeState = typeof initialState.managedByFassade;
 
-        function plainReducer(state: AppState|undefined = initialState, action: any) {
+        function plainReducer(state: AppState | undefined = initialState, action: any) {
+            switch (action.type) {
+                case "inc":
+                    return {
+                        ...state,
+                        someValue: state.someValue + action.payload
+                    };
+            }
+            return state;
+        }
+
+        const store = createTyduxStore(initialState, undefined, plainReducer);
+        const mount = store.createRootMountPoint("managedByFassade");
+
+        store.store.dispatch({type: "inc", payload: 5});
+
+        class MyCommands extends Commands<ManagedByFassadeState> {
+            inc(by: number) {
+                this.state.val += by;
+            }
+        }
+
+        class MyFassade extends Fassade<ManagedByFassadeState, MyCommands> {
+
+            getName() {
+                return "MyFassade";
+            }
+
+            createCommands() {
+                return new MyCommands();
+            }
+
+            action() {
+                this.commands.inc(100);
+            }
+        }
+
+        const myFassade = new MyFassade(mount);
+        myFassade.action();
+
+        assert.deepEqual(store.store.getState(), {
+            someValue: 5,
+            managedByFassade: {
+                val: 110
+            }
+        });
+    });
+
+    it("can be used along Redux", async function () {
+        const initialState = {
+            someValue: 0,
+            managedByFassade: {
+                val: 10
+            }
+        };
+
+        type AppState = typeof initialState;
+        type ManagedByFassadeState = typeof initialState.managedByFassade;
+
+        function plainReducer(state: AppState | undefined = initialState, action: any) {
             switch (action.type) {
                 case "inc":
                     return {

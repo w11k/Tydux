@@ -3,7 +3,7 @@ import {composeWithDevTools} from "redux-devtools-extension";
 import {Commands} from "../../../commands";
 import {enableTyduxDevelopmentMode} from "../../../development";
 import {Fassade} from "../../../Fassade";
-import {createTyduxStore, TyduxStoreBridge} from "../../../store";
+import {TyduxStoreBridge} from "../../../store";
 import "./index.html";
 import {createTodoList} from "./mock";
 

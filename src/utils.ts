@@ -1,6 +1,6 @@
 import {Observable, Operator, Subscriber} from "rxjs";
 import {filter, take} from "rxjs/operators";
-import {illegalAccessToThis, mutatorWrongReturnType} from "./error-messages";
+import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
 import {Fassade} from "./Fassade";
 
 let hasProxySupport: boolean = false;
@@ -35,6 +35,13 @@ export function arePlainObjectsShallowEquals(obj1: any, obj2: any): boolean {
 export function failIfNotUndefined(value: any): void {
     if (value !== undefined) {
         throw new Error(mutatorWrongReturnType);
+    }
+}
+
+export function failIfInstanceMembersExistExceptState(obj: any) {
+    const members = Object.keys(obj).filter(key => key !== "state");
+    if (members.length > 0) {
+        throw new Error(mutatorHasInstanceMembers + ": " + members.join(", "));
     }
 }
 

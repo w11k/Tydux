@@ -1,23 +1,15 @@
 import {Action} from "redux";
 import {ReplaySubject, Subject} from "rxjs";
-import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands} from "./commands";
+import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands, FassadeAction} from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
-import {mutatorHasInstanceMembers} from "./error-messages";
 import {
     ObservableSelection,
     selectNonNilToObervableSelection,
     selectToObservableSelection
 } from "./ObservableSelection";
 import {MountPoint} from "./store";
-import {createProxy, functions, functionsIn} from "./utils";
-
-export function failIfInstanceMembersExistExceptState(obj: any) {
-    const members = Object.keys(obj).filter(key => key !== "state");
-    if (members.length > 0) {
-        throw new Error(mutatorHasInstanceMembers + ": " + members.join(", "));
-    }
-}
+import {createProxy, failIfInstanceMembersExistExceptState, functions, functionsIn} from "./utils";
 
 let uniqueFassadeIds: { [id: string]: number } = {};
 
@@ -34,11 +26,6 @@ function createUniqueFassadeId(name: string) {
     } else {
         return `${name}(${count})`;
     }
-}
-
-export interface FassadeAction extends Action<string> {
-    payload: any[];
-    debugContext?: string;
 }
 
 export abstract class Fassade<S, M extends Commands<S>> {

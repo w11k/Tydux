@@ -1,4 +1,4 @@
-import {Action, createStore, Dispatch, Reducer, Store, Unsubscribe} from "redux";
+import {Action, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
 import {CommandReducer} from "./commands";
 
 
@@ -11,10 +11,14 @@ export interface MountPoint<L, S = any> {
     subscribe: (listener: () => void) => Unsubscribe;
 }
 
-export class ConnectedTyduxStoreBridge<S> {
+export class TyduxStore<S> {
 
     constructor(readonly store: Store<S>,
                 private readonly fassadeReducers: CommandReducer<any>[]) {
+    }
+
+    getState() {
+        return this.store.getState();
     }
 
     createMountPoint<L>(stateGetter: (globalState: S) => L,
@@ -62,43 +66,20 @@ export class TyduxStoreBridge {
     }
 
     connectStore<S>(store: Store<S>) {
-        return new ConnectedTyduxStoreBridge<S>(store, this.fassadeReducers);
+        return new TyduxStore<S>(store, this.fassadeReducers);
     }
 
 }
 
-///////////////////////////////////////////////////////////////////////////////
+export function createTyduxStore<S>(initialState: S,
+                                    enhancer?: StoreEnhancer<any>,
+                                    reducer = (state: S | undefined, action: any) => state): TyduxStore<S> {
 
-export class TyduxStore<S> {
+    const bridge = new TyduxStoreBridge();
+    const reduxStore = createStore(
+        bridge.wrapReducer(reducer),
+        initialState as any /*cast due to strange TS error*/,
+        enhancer);
 
-    private readonly connectedTyduxStoreBridge: ConnectedTyduxStoreBridge<S>;
-    private readonly store: Store<S, Action>;
-
-    constructor(private readonly initialState: S | undefined) {
-        function noopReducer(state = initialState) {
-            return state;
-        }
-
-        const bridge = new TyduxStoreBridge();
-        this.store = createStore(bridge.wrapReducer(noopReducer));
-        this.connectedTyduxStoreBridge = bridge.connectStore(this.store);
-    }
-
-
-    getState() {
-        return this.store.getState();
-    }
-
-    createMountPoint<L>(stateGetter: (globalState: S) => L, stateSetter: (globalState: S, localState: L) => S) {
-        return this.connectedTyduxStoreBridge.createMountPoint(stateGetter, stateSetter);
-    }
-
-    createRootMountPoint<K extends keyof S>(slice: K) {
-        return this.connectedTyduxStoreBridge.createRootMountPoint(slice);
-    }
-
-}
-
-export function createTyduxStore<S>(initialState: S): TyduxStore<S> {
-    return new TyduxStore<S>(initialState);
+    return bridge.connectStore(reduxStore);
 }

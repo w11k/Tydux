@@ -1,10 +1,15 @@
+import {Action} from "redux";
 import {isTyduxDevelopmentModeEnabled} from "./development";
-import {failIfInstanceMembersExistExceptState, FassadeAction} from "./Fassade";
-import {createFailingProxy, failIfNotUndefined} from "./utils";
+import {createFailingProxy, failIfInstanceMembersExistExceptState, failIfNotUndefined} from "./utils";
 
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 export type CommandsMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 export type CommandReducer<S> = (state: S, action: FassadeAction) => S;
+
+export interface FassadeAction extends Action<string> {
+    payload: any[];
+    debugContext?: string;
+}
 
 export function createReducerFromCommands<S>(fassadeId: string, commands: Commands<S>): CommandReducer<S> {
     const typePrefix = `[${fassadeId}] `;
