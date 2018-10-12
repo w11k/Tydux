@@ -6,56 +6,66 @@
 
 # Tydux
 
-Tydux is a TypeScript library for predictable state management. It follows the [command-query separation pattern](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) and was influenced by [Redux](https://github.com/reactjs/redux). It is designed to be used in applications written in TypeScript. Other than Redux, it utilizes **types to structure the code** and **enforces immutability**.
+**Your foreman library for writing Redux stores**
+
+Tydux is a TypeScript library to provide structure and type-safety when writing Redux stores (or other compatible frameworks). You can use Tydux as a complete wrapper around Redux or for only selected slices of your store along with your existing reducers and actions.  
+
+# How does it work?
+
+- With Tydux you can combine a group of *reducers*, *actions* and *selectors*
+- Every group is encapsulated within a *fassade*
+- For each *fassade* you create a *mount point* to define in which slice of your store the *fassade* should operate.
+- In your *fassade* you expose an API which can be used to trigger actions 
+
 
 # Key benefits and philosophy
 
 - state management with enforced immutability
 - focus on code scalability
-- instance based stores to enable perfect integration with Angular's [hierarchical dependency injectors](https://angular.io/guide/hierarchical-dependency-injection)
 - utilizes pure TypeScript classes
 
 # Example
 
-    class MyState {
-        stateNumber = 0;
-    }
+        const initialState = {
+            valueA: 0,
+            managedByTydux: {
+                valueB: 10
+            }
+        };
 
-    class MyMutator extends Mutator<MyState> {
-        increment() {
-            this.state.stateNumber++;
-        }
-        decrement() {
-            this.state.stateNumber--;
-        }
-    }
+        const tyduxBridge = new TyduxStoreBridge();
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
+        const tyduxStore = tyduxBridge.connectStore(reduxStore);
 
-    class MyStore extends Store<MyMutator, MyState> {
-        constructor() {
-            super("myStore", new MyMutator(), new MyState());
-        }
-        
-        rollTheDice() {
-            if (Math.random() > 0.5) {
-                this.mutate.increment();
-            } else {
-                this.mutate.decrement();
+        type ManagedByTyduxState = {valueB: number};
+
+        class MyCommands extends Commands<ManagedByTyduxState> {
+            inc(by: number) {
+                this.state.valueB += by;
             }
         }
-    }
 
-    const store = new MyStore();
+        class MyFassade extends Fassade<ManagedByTyduxState, MyCommands> {
 
-    // directly query the state
-    console.log("query", store.state.stateNumber);
+            constructor(tyduxStore: TyduxStore<typeof initialState>) {
+                super(tyduxStore.createRootMountPoint("managedByTydux"));
+            }
 
-    // observe the state
-    store.select(s => s.stateNumber).unbounded().subscribe(count => {
-        console.log("observe", count);
-    });
+            getName() {
+                return "MyFassade";
+            }
 
-    // dispatch actions
-    store.rollTheDice();
+            createCommands() {
+                return new MyCommands();
+            }
+
+            action() {
+                this.commands.inc(100);
+            }
+        }
+
+        const myFassade = new MyFassade(tyduxStore);
+        myFassade.action();
 
 # Documentation
 
