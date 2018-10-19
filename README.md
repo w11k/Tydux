@@ -4,9 +4,7 @@
 
 ![Tydux Logo](https://raw.githubusercontent.com/w11k/Tydux/master/doc/tydux_logo.png)
 
-# Tydux
-
-**Your foreman  library for writing Redux stores**
+# Your foreman  library for writing Redux stores
 
 Tydux is a TypeScript library to provide structure and type-safety when writing Redux stores (or other compatible frameworks). You can use Tydux as a complete wrapper around Redux or along with your existing reducers and actions.  
 
