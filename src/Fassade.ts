@@ -74,7 +74,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
         return "UnnamedFassade";
     }
 
-    abstract createCommands(): M;
+    protected abstract createCommands(): M;
 
     get state(): Readonly<S> {
         return this._state;
@@ -105,12 +105,18 @@ export abstract class Fassade<S, M extends Commands<S>> {
         return this.bufferedStateChanges > 0;
     }
 
-    // select(): ObservableSelection<Readonly<S>>;
-
+    /**
+     * - operates on the micro-task queue
+     * - only emits values when they change (identity-based)
+     */
     select<R>(selector?: (state: Readonly<S>) => R): ObservableSelection<R> {
         return selectToObservableSelection(this.reduxStoreStateSubject, selector);
     }
 
+    /**
+     * - operates on the micro-task queue
+     * - only emits values when they change (identity-based)
+     */
     selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
         return selectNonNilToObervableSelection(this.reduxStoreStateSubject, selector);
     }

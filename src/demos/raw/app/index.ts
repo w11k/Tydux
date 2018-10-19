@@ -3,7 +3,7 @@ import {composeWithDevTools} from "redux-devtools-extension";
 import {Commands} from "../../../commands";
 import {enableTyduxDevelopmentMode} from "../../../development";
 import {Fassade} from "../../../Fassade";
-import {TyduxStoreBridge} from "../../../store";
+import {TyduxReducerBridge} from "../../../store";
 import "./index.html";
 import {createTodoList} from "./mock";
 
@@ -69,7 +69,7 @@ class TodoStore extends Fassade<TodoState, TodoCommands> {
 
 }
 
-const bridge = new TyduxStoreBridge();
+const bridge = new TyduxReducerBridge();
 const store: Store<TodoState> = createStore(bridge.createTyduxReducer(new TodoState()), composeWithDevTools());
 const connectedBridge = bridge.connectStore(store);
 const mountPoint = connectedBridge.createMountPoint(s => s, (g, l) => ({...l}));

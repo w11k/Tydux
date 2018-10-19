@@ -6,73 +6,90 @@
 
 # Tydux
 
-**Your foreman library for writing Redux stores**
+**Your foreman  library for writing Redux stores**
 
 Tydux is a TypeScript library to provide structure and type-safety when writing Redux stores (or other compatible frameworks). You can use Tydux as a complete wrapper around Redux or along with your existing reducers and actions.  
 
 # How does it work?
 
-- With Tydux you can combine a group of *reducers*, *actions* and *selectors*
+- With Tydux you combine a group of *reducers*, *actions* and *selectors*
 - Every group is encapsulated within a *fassade*
-- For each *fassade* you create a *mount point* to define in which slice of your store the *fassade* should operate.
-- In your *fassade* you expose an API which can be used to trigger actions 
+- For each *fassade* you create a *mount point* to define in which slice of your store the *fassade* should operate
+- In your *fassade* you expose an API to expose *action* triggers and *selectors* 
 
 
 # Key benefits and philosophy
 
-- state management with enforced immutability
-- focus on code scalability
-- utilizes pure TypeScript classes
+- implement "divide and conquer" 
+- type safety 
+- enforced immutability
+- class-based API works well with Angular's dependency injection
 
 # Example
 
-        const initialState = {
-            valueA: 0,
-            managedByTydux: {
-                valueB: 10
-            }
-        };
+    const initialState = {
+        valueA: 0,
+        managedByTydux: {
+            valueB: 10
+        }
+    };
 
-        const tyduxBridge = new TyduxStoreBridge();
-        const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
-        const tyduxStore = tyduxBridge.connectStore(reduxStore);
+    // bootstrap Redux
+    const tyduxBridge = new TyduxReducerBridge();
+    const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
+    const tyduxStore = tyduxBridge.connectStore(reduxStore);
 
-        type ManagedByTyduxState = {valueB: number};
+    type ManagedByTyduxState = { valueB: number };
 
-        class MyCommands extends Commands<ManagedByTyduxState> {
-            inc(by: number) {
-                this.state.valueB += by;
-            }
+    // combine actions and reducers
+    class MyCommands extends Commands<ManagedByTyduxState> {
+        inc(by: number) {
+            this.state.valueB += by;
+        }
+    }
+
+    // fassade to combine commands (actions & reducers) and selectors
+    class MyFassade extends Fassade<ManagedByTyduxState, MyCommands> {
+
+        constructor(tyduxStore: TyduxStore<typeof initialState>) {
+            super(tyduxStore.createRootMountPoint("managedByTydux"));
         }
 
-        class MyFassade extends Fassade<ManagedByTyduxState, MyCommands> {
-
-            constructor(tyduxStore: TyduxStore<typeof initialState>) {
-                super(tyduxStore.createRootMountPoint("managedByTydux"));
-            }
-
-            getName() {
-                return "MyFassade";
-            }
-
-            createCommands() {
-                return new MyCommands();
-            }
-
-            action() {
-                this.commands.inc(100);
-            }
+        getName() {
+            return "MyFassade";
         }
 
-        const myFassade = new MyFassade(tyduxStore);
-        myFassade.action();
+        protected createCommands() {
+            return new MyCommands();
+        }
+
+        trigger(incBy: number) {
+            this.commands.inc(incBy);
+        }
+
+        selectValueB() {
+            return this.select(s => s.valueB);
+        }
+    }
+
+    const myFassade = new MyFassade(tyduxStore);
+
+    // prints:
+    // 10 (start value)
+    // 11 (incremented by 1)
+    // 31 (incremented by 20)
+    myFassade.selectValueB().unbounded().subscribe(value => {
+        console.log(value);
+    });
+
+    myFassade.trigger(1);
+	myFassade.trigger(20);
 
 # Documentation
 
 ### [Installation](https://github.com/Tydux/Tydux/tree/master/doc/installation.md)
 ### [Tutorial](https://github.com/Tydux/Tydux/tree/master/doc/tutorial.md)
 ### [Redux Comparison](https://github.com/Tydux/Tydux/tree/master/doc/redux_comparison.md)
-### [Redux DevTools](https://github.com/Tydux/Tydux/tree/master/doc/redux-devtools.md)
 
 
 # Patron

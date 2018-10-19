@@ -46,7 +46,7 @@ export class TyduxStore<S> {
 
 }
 
-export class TyduxStoreBridge {
+export class TyduxReducerBridge {
 
     private readonly fassadeReducers: CommandReducer<any>[] = [];
 
@@ -71,11 +71,34 @@ export class TyduxStoreBridge {
 
 }
 
+// export interface TyduxMiddlewareBridge<S> {
+//     (): void;
+// }
+// function createTyduxStoreMiddleware<S>(store: { getState(): S, dispatch(action: any): void }) {
+//     const bridge = new TyduxReducerBridge();
+//     const subject = new Subject<S>();
+//     const subscribe = (listener: () => void) => {
+//         const subscription = subject.subscribe(() => {
+//             listener();
+//         });
+//         return () => {
+//             subscription.unsubscribe();
+//         }
+//     };
+//
+//     const storeWithSubscribe = Object.assign({subscribe}, store);
+//     let connected = bridge.connectStore(storeWithSubscribe);
+//
+//     return (next: any) => (action: any) => {
+//         return next(action);
+//     }
+// }
+
 export function createTyduxStore<S>(initialState: S,
                                     enhancer?: StoreEnhancer<any>,
                                     reducer = (state: S | undefined, action: any) => state): TyduxStore<S> {
 
-    const bridge = new TyduxStoreBridge();
+    const bridge = new TyduxReducerBridge();
     const reduxStore = createStore(
         bridge.wrapReducer(reducer),
         initialState as any /*cast due to strange TS error*/,

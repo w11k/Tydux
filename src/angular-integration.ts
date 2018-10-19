@@ -1,7 +1,7 @@
 import {Store, StoreEnhancer} from "redux";
 import {Observable, Operator, Subject, Subscriber} from "rxjs";
 import {takeUntil} from "rxjs/operators";
-import {createTyduxStore, TyduxStore, TyduxStoreBridge} from "./store";
+import {createTyduxStore, TyduxStore, TyduxReducerBridge} from "./store";
 import {operatorFactory} from "./utils";
 
 export type OnDestroyLike = {
@@ -45,24 +45,24 @@ export function provideTydux<S>(initialState: S, enhancer?: StoreEnhancer<any>):
     };
 }
 
-export type Provider = typeof TyduxStoreBridge | { provide: any, useFactory: Function, deps: any[] };
+export type Provider = typeof TyduxReducerBridge | { provide: any, useFactory: Function, deps: any[] };
 
 export const STORE = "TyduxStoreFactoryToken";
 
-export function provideTyduxWithStoreFactory(storeFactory: (bridge: TyduxStoreBridge) => Store, storeToken: any = STORE): Provider[] {
+export function provideTyduxWithStoreFactory(storeFactory: (bridge: TyduxReducerBridge) => Store, storeToken: any = STORE): Provider[] {
     return [
-        TyduxStoreBridge,
+        TyduxReducerBridge,
         {
             provide: storeToken,
             useFactory: storeFactory,
-            deps: [TyduxStoreBridge]
+            deps: [TyduxReducerBridge]
         },
         {
             provide: TyduxStore,
-            useFactory: (bridge: TyduxStoreBridge, store: Store) => {
+            useFactory: (bridge: TyduxReducerBridge, store: Store) => {
                 return bridge.connectStore(store);
             },
-            deps: [TyduxStoreBridge, storeToken]
+            deps: [TyduxReducerBridge, storeToken]
         },
     ]
 }

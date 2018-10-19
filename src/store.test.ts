@@ -2,7 +2,7 @@ import {assert} from "chai";
 import {Action, createStore, Store, Store as ReduxStore} from "redux";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {createTyduxStore, TyduxStoreBridge} from "./store";
+import {createTyduxStore, TyduxReducerBridge} from "./store";
 
 
 describe("Store", function () {
@@ -82,7 +82,7 @@ describe("Store", function () {
 
         type ManagedByFassadeState = typeof initialState.managedByFassade;
 
-        const tyduxBridge = new TyduxStoreBridge();
+        const tyduxBridge = new TyduxReducerBridge();
         const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
         const connected = tyduxBridge.connectStore(reduxStore);
         const mount = connected.createRootMountPoint("managedByFassade");
@@ -199,7 +199,7 @@ describe("Store", function () {
             return state;
         }
 
-        const tyduxBridge = new TyduxStoreBridge();
+        const tyduxBridge = new TyduxReducerBridge();
         const reduxStore: ReduxStore<AppState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
         const connected = tyduxBridge.connectStore(reduxStore);
         const mount = connected.createRootMountPoint("managedByFassade");
@@ -237,5 +237,5 @@ describe("Store", function () {
             }
         });
     });
-
+    
 });
