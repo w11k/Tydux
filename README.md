@@ -25,6 +25,7 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 
 # Example
 
+	// store's state
     const initialState = {
         valueA: 0,
         managedByTydux: {
@@ -32,7 +33,7 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
         }
     };
 
-    // bootstrap Redux
+    // bootstrap Redux & Tydux
     const tyduxBridge = new TyduxReducerBridge();
     const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
     const tyduxStore = tyduxBridge.connectStore(reduxStore);
