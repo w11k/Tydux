@@ -16,7 +16,7 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 - In your *fassade* you expose an API to expose *action* triggers and *selectors* 
 
 
-# Key benefits and philosophy
+# Key benefits
 
 - implement "divide and conquer" 
 - type safety 
