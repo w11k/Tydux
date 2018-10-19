@@ -42,8 +42,8 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 
     // combine actions and reducers
     class MyCommands extends Commands<ManagedByTyduxState> {
-        inc(by: number) {
-            this.state.valueB += by;
+        inc(by: number) {               // action + payload
+            this.state.valueB += by;    // reducer
         }
     }
 
