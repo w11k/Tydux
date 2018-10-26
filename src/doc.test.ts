@@ -7,6 +7,19 @@ import {TyduxReducerBridge, TyduxStore} from "./store";
 
 describe("Documentation", function () {
 
+    let oldLog: any;
+
+    beforeEach(() => {
+        oldLog = console.log;
+        console.log = function () {
+            // noop
+        }
+    });
+
+    afterEach(() => {
+        console.log = oldLog;
+    });
+
     it("readme", async function () {
         const initialState = {
             valueA: 0,
