@@ -63,17 +63,13 @@ class TodoStore extends Fassade<TodoState, TodoCommands> {
         this.commands.setTodos(todos);
     }
 
-    createCommands(): TodoCommands {
-        return new TodoCommands();
-    }
-
 }
 
 const bridge = new TyduxReducerBridge();
 const store: Store<TodoState> = createStore(bridge.createTyduxReducer(new TodoState()), composeWithDevTools());
 const connectedBridge = bridge.connectStore(store);
 const mountPoint = connectedBridge.createMountPoint(s => s, (g, l) => ({...l}));
-const fassade: TodoStore = new TodoStore(mountPoint);
+const fassade: TodoStore = new TodoStore(mountPoint, "TestFassade", new TodoCommands());
 
 
 (window as any).fassade = fassade;
