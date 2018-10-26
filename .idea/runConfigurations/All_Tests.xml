@@ -8,6 +8,6 @@
     <extra-mocha-options>--opts spec/mocha.opts</extra-mocha-options>
     <test-kind>PATTERN</test-kind>
     <test-pattern>src/**/*test.ts</test-pattern>
-    <method />
+    <method v="2" />
   </configuration>
 </component>
