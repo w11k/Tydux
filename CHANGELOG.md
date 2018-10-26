@@ -1,4 +1,10 @@
 
+# Version 9.0.1
+
+- new version
+- now based on Redux
+
+
 # Version 8.3.2
 
 - added es2015 modules to enable tree-shaking
