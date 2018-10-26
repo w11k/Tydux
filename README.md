@@ -51,15 +51,7 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
     class MyFassade extends Fassade<ManagedByTyduxState, MyCommands> {
 
         constructor(tyduxStore: TyduxStore<typeof initialState>) {
-            super(tyduxStore.createRootMountPoint("managedByTydux"));
-        }
-
-        getName() {
-            return "MyFassade";
-        }
-
-        protected createCommands() {
-            return new MyCommands();
+            super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFassade", new MyCommands());
         }
 
         trigger(incBy: number) {
