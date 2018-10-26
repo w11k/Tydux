@@ -27,15 +27,11 @@ describe("ObservableSelection", function () {
             action() {
                 this.commands.inc();
             }
-
-            createCommands() {
-                return new TestCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore({count: 0});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
@@ -83,15 +79,11 @@ describe("ObservableSelection", function () {
             action() {
                 this.commands.inc();
             }
-
-            createCommands() {
-                return new TestCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore({count: 0});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
 
         const events: any[] = [];
 
@@ -147,10 +139,6 @@ describe("ObservableSelection", function () {
         }
 
         class TestFassade extends Fassade<State, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.inc();
             }
@@ -158,7 +146,7 @@ describe("ObservableSelection", function () {
 
         const tyduxStore = createTyduxStore({count: 0});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
 
         const events: any[] = [];
 

@@ -19,10 +19,6 @@ describe("Store", function () {
         }
 
         class MyFassade extends Fassade<typeof initialState, MyCommands> {
-            createCommands() {
-                return new MyCommands();
-            }
-
             action() {
                 this.commands.inc(100);
             }
@@ -30,7 +26,7 @@ describe("Store", function () {
 
         const tyduxStore = createTyduxStore(initialState);
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const myFassade = new MyFassade(mount);
+        const myFassade = new MyFassade(mount, "TestFassade", new MyCommands());
         myFassade.action();
 
         assert.deepEqual(tyduxStore.getState(), {
@@ -52,10 +48,6 @@ describe("Store", function () {
         }
 
         class MyFassade extends Fassade<typeof initialState.fassade, MyCommands> {
-            createCommands() {
-                return new MyCommands();
-            }
-
             action() {
                 this.commands.inc(100);
             }
@@ -63,7 +55,7 @@ describe("Store", function () {
 
         const tyduxStore = createTyduxStore(initialState);
         const mount = tyduxStore.createMountPoint(s => s.fassade, (state, fassade) => ({...state, fassade}));
-        const myFassade = new MyFassade(mount);
+        const myFassade = new MyFassade(mount, "TestFassade", new MyCommands());
         myFassade.action();
 
         assert.deepEqual(tyduxStore.getState(), {
@@ -94,21 +86,12 @@ describe("Store", function () {
         }
 
         class MyFassade extends Fassade<ManagedByFassadeState, MyCommands> {
-
-            getName() {
-                return "MyFassade";
-            }
-
-            createCommands() {
-                return new MyCommands();
-            }
-
             action() {
                 this.commands.inc(100);
             }
         }
 
-        const myFassade = new MyFassade(mount);
+        const myFassade = new MyFassade(mount, "MyFassade", new MyCommands());
         myFassade.action();
 
         assert.deepEqual(reduxStore.getState(), {
@@ -152,21 +135,12 @@ describe("Store", function () {
         }
 
         class MyFassade extends Fassade<ManagedByFassadeState, MyCommands> {
-
-            getName() {
-                return "MyFassade";
-            }
-
-            createCommands() {
-                return new MyCommands();
-            }
-
             action() {
                 this.commands.inc(100);
             }
         }
 
-        const myFassade = new MyFassade(mount);
+        const myFassade = new MyFassade(mount, "MyFassade", new MyCommands());
         myFassade.action();
 
         assert.deepEqual(store.store.getState(), {
@@ -213,21 +187,12 @@ describe("Store", function () {
         }
 
         class MyFassade extends Fassade<ManagedByFassadeState, MyCommands> {
-
-            getName() {
-                return "MyFassade";
-            }
-
-            createCommands() {
-                return new MyCommands();
-            }
-
             action() {
                 this.commands.inc(100);
             }
         }
 
-        const myFassade = new MyFassade(mount);
+        const myFassade = new MyFassade(mount, "TestFassade", new MyCommands());
         myFassade.action();
 
         assert.deepEqual(reduxStore.getState(), {

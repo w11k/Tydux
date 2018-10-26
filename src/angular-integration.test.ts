@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
-import {enableTyduxDevelopmentMode} from "./development";
 import {Commands} from "./commands";
+import {enableTyduxDevelopmentMode} from "./development";
 import {Fassade} from "./Fassade";
 import {createTestMount} from "./test-utils";
 import {untilNoBufferedStateChanges} from "./utils";
@@ -22,17 +22,13 @@ describe("Angular integration", function () {
         }
 
         class TestFassade extends Fassade<State, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.inc();
             }
         }
 
         const events: any[] = [];
-        const fassade = new TestFassade(createTestMount({count: 0}));
+        const fassade = new TestFassade(createTestMount({count: 0}), "TestFassade", new TestCommands());
 
         class DummyComponent implements OnDestroyLike {
             ngOnDestroy() {

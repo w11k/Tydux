@@ -44,11 +44,10 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     protected readonly commands: CommandsMethods<M>;
 
-    constructor(readonly mountPoint: MountPoint<S, any>) {
-        this.fassadeId = createUniqueFassadeId(this.getName().replace(" ", "_"));
+    constructor(readonly mountPoint: MountPoint<S, any>, name: String, commands: M) {
+        this.fassadeId = createUniqueFassadeId(name.replace(" ", "_"));
         this.enrichInstanceMethods();
 
-        const commands = this.createCommands();
         failIfInstanceMembersExistExceptState(commands);
         this.commands = this.createCommandsProxy(commands);
         mountPoint.addReducer(this.createReducerFromCommands(commands));
@@ -69,12 +68,6 @@ export abstract class Fassade<S, M extends Commands<S>> {
             });
         });
     }
-
-    getName() {
-        return "UnnamedFassade";
-    }
-
-    protected abstract createCommands(): M;
 
     get state(): Readonly<S> {
         return this._state;

@@ -1,6 +1,5 @@
 import {assert} from "chai";
 import {Commands} from "./commands";
-import {NoCommands} from "./commands.test";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Fassade} from "./Fassade";
 import {createTyduxStore} from "./store";
@@ -14,39 +13,27 @@ describe("Fassade - sanity tests", function () {
 
     it("can not modify the state directly", function () {
         class TestFassade extends Fassade<any, any> {
-
             action() {
                 (this.state as any).count = 1;
             }
-
-            createCommands() {
-                return new NoCommands();
-            }
-
         }
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new Commands());
         assert.throws(() => fassade.action());
     });
 
     it("can not assign the state", function () {
         class TestFassade extends Fassade<any, any> {
-
             action() {
                 (this.state as any) = {};
             }
-
-            createCommands() {
-                return new NoCommands();
-            }
-
         }
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new Commands());
         assert.throws(() => fassade.action());
     });
 
@@ -71,15 +58,11 @@ describe("Fassade - sanity tests", function () {
 
                 collected.assert(0, 1, 11);
             }
-
-            createCommands() {
-                return new TestCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore(new MyState());
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
         let collected = collect(fassade.select(s => s.count).unbounded());
         fassade.action();
     });
@@ -99,15 +82,11 @@ describe("Fassade - sanity tests", function () {
             private innerAction() {
                 this.counterB = 20;
             }
-
-            createCommands(): any {
-                return new NoCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new Commands());
         fassade.action();
         assert.equal(fassade.counterA, 10);
         assert.equal(fassade.counterB, 20);
@@ -129,15 +108,11 @@ describe("Fassade - sanity tests", function () {
                 }, 0);
 
             }
-
-            createCommands(): any {
-                return new NoCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const store = new TestFassade(mount);
+        const store = new TestFassade(mount, "TestFassade", new Commands());
         store.action();
     });
 
@@ -154,15 +129,11 @@ describe("Fassade - sanity tests", function () {
             private check() {
                 assert.equal(this.counter, 10);
             }
-
-            createCommands(): any {
-                return new NoCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const store = new TestFassade(mount);
+        const store = new TestFassade(mount, "TestFassade", new Commands());
         store.action();
     });
 
@@ -188,15 +159,11 @@ describe("Fassade - sanity tests", function () {
             private append() {
                 this.chars += "X";
             }
-
-            createCommands(): any {
-                return new NoCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new Commands());
         fassade.action();
     });
 
@@ -209,16 +176,11 @@ describe("Fassade - sanity tests", function () {
                 this.chars = "A";
                 throw new Error();
             }
-
-            createCommands(): any {
-                return new NoCommands();
-            }
-
         }
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new Commands());
 
         try {
             fassade.action();

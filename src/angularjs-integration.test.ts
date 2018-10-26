@@ -22,17 +22,13 @@ describe("AngularJS integration", function () {
         }
 
         class TestFassade extends Fassade<State, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.inc();
             }
         }
 
         const events: any[] = [];
-        const fassade = new TestFassade(createTestMount({count: 0}));
+        const fassade = new TestFassade(createTestMount({count: 0}), "TestFassade", new TestCommands());
 
         class DummyScope implements AngularJS1ScopeLike {
 

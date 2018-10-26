@@ -46,15 +46,7 @@ describe("Documentation", function () {
         class MyFassade extends Fassade<ManagedByTyduxState, MyCommands> {
 
             constructor(tyduxStore: TyduxStore<typeof initialState>) {
-                super(tyduxStore.createRootMountPoint("managedByTydux"));
-            }
-
-            getName() {
-                return "MyFassade";
-            }
-
-            protected createCommands() {
-                return new MyCommands();
+                super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFassade", new MyCommands());
             }
 
             trigger(incBy: number) {

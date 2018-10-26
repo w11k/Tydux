@@ -6,9 +6,6 @@ import {createTyduxStore} from "./store";
 import {collect, createTestMount} from "./test-utils";
 import {untilNoBufferedStateChanges} from "./utils";
 
-export class NoCommands extends Commands<any> {
-}
-
 describe("Commands", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
@@ -24,15 +21,11 @@ describe("Commands", function () {
             action() {
                 this.commands.mut1();
             }
-
-            createCommands() {
-                return new TestCommands();
-            }
         }
 
         const tyduxStore = createTyduxStore({n1: 0});
         const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
 
         fassade.action();
         await untilNoBufferedStateChanges(fassade);
@@ -56,10 +49,6 @@ describe("Commands", function () {
         }
 
         class TestFassade extends Fassade<State, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action1() {
                 this.commands.mut1();
             }
@@ -69,7 +58,7 @@ describe("Commands", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount(new State()));
+        const fassade = new TestFassade(createTestMount(new State()), "TestFassade", new TestCommands());
 
         fassade.selectNonNil(s => s.list1)
             .unbounded()
@@ -95,16 +84,12 @@ describe("Commands", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}));
+        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
         fassade.action();
         await untilNoBufferedStateChanges(fassade);
         assert.deepEqual(fassade.state, {n1: 99});
@@ -118,16 +103,12 @@ describe("Commands", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number[] }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: [1, 2]}));
+        const fassade = new TestFassade(createTestMount({n1: [1, 2]}), "TestFassade", new TestCommands());
         fassade.action();
     });
 
@@ -149,16 +130,12 @@ describe("Commands", function () {
         }
 
         class TestStore extends Fassade<{ n1: string }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action1() {
                 this.commands.mod1();
             }
         }
 
-        const fassade = new TestStore(createTestMount({n1: ""}));
+        const fassade = new TestStore(createTestMount({n1: ""}), "TestFassade", new TestCommands());
         let collected = collect(fassade.select(s => s.n1).unbounded());
         fassade.action1();
         await untilNoBufferedStateChanges(fassade);
@@ -177,16 +154,12 @@ describe("Commands", function () {
         }
 
         class TestFassade extends Fassade<{ a: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({a: 0}));
+        const fassade = new TestFassade(createTestMount({a: 0}), "TestFassade", new TestCommands());
         assert.throws(() => fassade.action());
         assert.equal(fassade.state.a, 0);
     });
@@ -198,13 +171,10 @@ describe("Commands", function () {
         }
 
         class TestFassade extends Fassade<any, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
         }
 
         assert.throws(
-            () => new TestFassade(createTestMount({})),
+            () => new TestFassade(createTestMount({}), "TestFassade", new TestCommands()),
             /abc/
         );
     });
@@ -219,16 +189,12 @@ describe("Commands", function () {
         }
 
         class TestFassade extends Fassade<any, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 assert.throws(() => this.commands.mut(), /abc/);
             }
         }
 
-        const fassade = new TestFassade(createTestMount({}));
+        const fassade = new TestFassade(createTestMount({}), "TestFassade", new TestCommands());
         fassade.action();
     });
 

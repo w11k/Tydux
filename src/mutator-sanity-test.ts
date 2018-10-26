@@ -23,13 +23,9 @@ describe("Commands - sanity tests", function () {
             action() {
                 this.commands.mut();
             }
-
-            createCommands() {
-                return new TestCommands();
-            }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}));
+        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
         fassade.action();
     });
 
@@ -45,17 +41,13 @@ describe("Commands - sanity tests", function () {
         }
 
         class TestFassade extends Fassade<{ root: { child: number[] } }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut();
             }
         }
 
         const state = {root: {child: [1, 2]}};
-        const fassade = new TestFassade(createTestMount(state));
+        const fassade = new TestFassade(createTestMount(state), "TestFassade", new TestCommands());
         fassade.action();
     });
 
@@ -70,16 +62,12 @@ describe("Commands - sanity tests", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}));
+        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
         fassade.action();
     });
 
@@ -94,16 +82,12 @@ describe("Commands - sanity tests", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}));
+        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
         fassade.action();
     });
 
@@ -122,16 +106,12 @@ describe("Commands - sanity tests", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}));
+        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
         fassade.action();
     });
 
@@ -154,16 +134,12 @@ describe("Commands - sanity tests", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}));
+        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
         fassade.action();
     });
 
@@ -175,16 +151,12 @@ describe("Commands - sanity tests", function () {
         }
 
         class TestFassade extends Fassade<any, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 assert.throws(() => this.commands.mod1());
             }
         }
 
-        const fassade = new TestFassade(createTestMount({}));
+        const fassade = new TestFassade(createTestMount({}), "TestFassade", new TestCommands());
         fassade.action();
     });
 

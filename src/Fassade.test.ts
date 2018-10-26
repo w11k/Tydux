@@ -14,13 +14,10 @@ describe("Fassade", function () {
         const mount = createTestMount({});
 
         class TestFassade extends Fassade<any, any> {
-            createCommands() {
-                return new Commands();
-            }
         }
 
-        const tf1 = new TestFassade(mount);
-        const tf2 = new TestFassade(mount);
+        const tf1 = new TestFassade(mount, "TestFassade", new Commands());
+        const tf2 = new TestFassade(mount, "TestFassade", new Commands());
         assert.notEqual(tf1.fassadeId, tf2.fassadeId);
     });
 
@@ -32,17 +29,13 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             actionInc() {
                 this.commands.inc();
             }
         }
 
         const mount = createTestMount({n1: 0});
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
 
         const values: any = [];
         fassade.select((currentState) => {
@@ -69,16 +62,12 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<{ n1: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             actionInc() {
                 this.commands.inc();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}));
+        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
         let collected = collect(fassade.select(s => s.n1).unbounded());
         fassade.actionInc();
         fassade.actionInc();
@@ -103,10 +92,6 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<TestState, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             actionInc() {
                 this.commands.inc();
             }
@@ -117,7 +102,7 @@ describe("Fassade", function () {
         }
 
         const mount = createTestMount<TestState>({n1: undefined});
-        const fassade = new TestFassade(mount);
+        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
         let collected = collect(fassade.selectNonNil(s => s.n1).unbounded());
         fassade.actionInc(); // 1
         fassade.actionClear();
@@ -143,10 +128,6 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<{ a: number; b: number; c: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -156,7 +137,7 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}));
+        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}), "TestFassade", new TestCommands());
         let collected = collect(fassade.select(s => [s.a, s.b]).unbounded());
         fassade.actionIncAB();
         fassade.actionIncC();
@@ -180,10 +161,6 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<{ a: number; b: number; c: number }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -193,7 +170,7 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}));
+        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}), "TestFassade", new TestCommands());
         let collected = collect(fassade.select(s => {
             return {
                 a: s.a,
@@ -220,17 +197,13 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<{ root: { child: { val1: number } } }, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.dummy();
             }
         }
 
         const state = {root: {child: {val1: 1}}};
-        const store = new TestFassade(createTestMount(state));
+        const store = new TestFassade(createTestMount(state), "TestFassade", new TestCommands());
         let collected = collect(store.select(s => s.root).unbounded());
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
@@ -257,10 +230,6 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<TestState, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             action() {
                 this.commands.increment();
                 this.commands.increment();
@@ -268,7 +237,7 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount(new TestState()));
+        const fassade = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
         let collected = collect(fassade.select(s => s.count).unbounded());
         fassade.action();
 
@@ -293,10 +262,6 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<TestState, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             setList() {
                 this.commands.setList([1, 2, 3]);
             }
@@ -307,7 +272,7 @@ describe("Fassade", function () {
         }
 
 
-        const fassade = new TestFassade(createTestMount(new TestState()));
+        const fassade = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
         fassade.setList();
         fassade.setValue();
 
@@ -328,10 +293,6 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<TestState, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             met1() {
                 this.commands.setValue(9);
                 assert.equal(this.state.value, 9);
@@ -339,7 +300,7 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount(new TestState()));
+        const fassade = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
         fassade.met1();
     });
 
@@ -361,10 +322,6 @@ describe("Fassade", function () {
         }
 
         class TestFassade extends Fassade<TestState, TestCommands> {
-            createCommands() {
-                return new TestCommands();
-            }
-
             async setList() {
                 const list = await createAsyncPromise([1, 2, 3]);
                 this.commands.setList(list);
@@ -376,7 +333,7 @@ describe("Fassade", function () {
             }
         }
 
-        const store = new TestFassade(createTestMount(new TestState()));
+        const store = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
         await store.setList();
         await store.setValue();
 
@@ -414,7 +371,7 @@ describe("Fassade", function () {
             private counter = 0;
 
             constructor() {
-                super(mount);
+                super(mount, "", new TestCommands());
 
                 this.select()
                     .unbounded()
@@ -427,14 +384,6 @@ describe("Fassade", function () {
                     .subscribe(list1 => {
                         this.commands.setList2([...this.state.list2, list1.length]);
                     });
-            }
-
-            getName() {
-                return "";
-            }
-
-            createCommands() {
-                return new TestCommands();
             }
 
             action() {
