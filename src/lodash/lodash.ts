@@ -46,7 +46,7 @@ function baseGetTag(value: any) {
         return value === undefined ? "[object Undefined]" : "[object Null]";
     }
     if (!(symToStringTag && symToStringTag in Object(value))) {
-        return toString.call(value);
+        return Object.prototype.toString.call(value);
     }
     const isOwn = value.hasOwnProperty(symToStringTag);
     const tag = value[symToStringTag];
@@ -57,7 +57,7 @@ function baseGetTag(value: any) {
     } catch (e) {
     }
 
-    const result = toString.call(value);
+    const result = Object.prototype.toString.call(value);
     if (unmasked) {
         if (isOwn) {
             value[symToStringTag] = tag;

@@ -1,4 +1,9 @@
 
+# Version 9.1.2
+
+- fixed IE bug regarding `toString`
+
+
 # Version 9.0.1
 
 - new version
