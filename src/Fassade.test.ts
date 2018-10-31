@@ -3,7 +3,7 @@ import {Action, createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {Commands} from "./commands";
 import {Fassade} from "./Fassade";
-import {TyduxReducerBridge} from "./store";
+import {TyduxReducerBridge, TyduxStore} from "./store";
 import {collect, createAsyncPromise, createTestMount} from "./test-utils";
 import {areArraysShallowEquals, isNil, untilNoBufferedStateChanges} from "./utils";
 
@@ -302,6 +302,47 @@ describe("Fassade", function () {
 
         const fassade = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
         fassade.met1();
+    });
+
+    it("can set their initial state during super call", function () {
+        class AppState {
+            // noinspection JSUnusedGlobalSymbols
+            global = true;
+        }
+
+        class TestState {
+            value = 0;
+        }
+
+        class TestCommands extends Commands<TestState> {
+        }
+
+        class TestFassade extends Fassade<TestState, TestCommands> {
+            constructor(tydux: TyduxStore<any>) {
+                super(tydux.createRootMountPoint("test"), "test", new TestCommands(), new TestState());
+
+            }
+        }
+
+        const tyduxBridge = new TyduxReducerBridge();
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer(new AppState()));
+        const tydux = tyduxBridge.connectStore(reduxStore);
+        const fassade = new TestFassade(tydux);
+
+        assert.deepEqual(
+            reduxStore.getState(),
+            {
+                global: true,
+                test: {
+                    value: 0
+                }
+            } as any);
+
+        assert.deepEqual(
+            fassade.state,
+            {
+                value: 0
+            });
     });
 
     it("keeps state between async invocations", async function () {

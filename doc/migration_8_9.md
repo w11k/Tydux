@@ -26,7 +26,7 @@ constructor(tydux: TyduxStore<AppState>) {
 ## Mutators -> Commands
 
 - global "search/replace"
-	- from: `extends Fassade<`
+	- from: `extends Mutator<`
 	- to: `extends Commands<`
 
 - add import statement `import {Commands} from '@w11k/tydux';`

@@ -44,7 +44,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
     protected readonly commands: CommandsMethods<M>;
 
-    constructor(readonly mountPoint: MountPoint<S, any>, name: String, commands: M) {
+    constructor(readonly mountPoint: MountPoint<S, any>, name: String, commands: M, initialState?: S) {
         this.fassadeId = createUniqueFassadeId(name.replace(" ", "_"));
         this.enrichInstanceMethods();
 
@@ -55,6 +55,22 @@ export abstract class Fassade<S, M extends Commands<S>> {
 
         this.setState(mountPoint.getState());
         this.reduxStoreStateSubject.next(this.state);
+
+        if (initialState !== undefined) {
+            const initialFassadeStateAction = this.fassadeId + "@@INIT";
+
+            mountPoint.addReducer((state: S, action: Action) => {
+                if (action.type === initialFassadeStateAction) {
+                    this.setState(initialState);
+                    this.reduxStoreStateSubject.next(this.state);
+                    return mountPoint.setState(state, initialState);
+                }
+
+                return state;
+            });
+
+            mountPoint.dispatch({type: initialFassadeStateAction, initialFassadeState: initialState});
+        }
 
         mountPoint.subscribe(() => {
             const currentState = Object.assign({}, mountPoint.getState());

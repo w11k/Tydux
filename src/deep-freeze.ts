@@ -1,3 +1,5 @@
+import {isNil} from "./utils";
+
 function weCareAbout(val: any): boolean {
     return val !== null && (Array.isArray(val) || isObjectLike(val));
 }
@@ -15,7 +17,7 @@ function forKeys(obj: any, iter: any) {
         }
         return;
     }
-    keys = Object.keys(obj);
+    keys = isNil(obj) ? [] : Object.keys(obj);
     idx = keys.length;
     while (idx-- > 0) {
         iter(keys[idx]);

@@ -1,3 +1,7 @@
+# Version 9.2.0
+
+- fassades can now provide their initial state during the super call
+
 
 # Version 9.1.2
 
