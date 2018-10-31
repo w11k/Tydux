@@ -79,6 +79,8 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 # Documentation
 
 ### [Installation](https://github.com/Tydux/Tydux/tree/master/doc/installation.md)
+### [Migration guide version 8 -> 9](https://github.com/Tydux/Tydux/tree/master/doc/migration_8_9.md)
+### [Angular integration](https://github.com/Tydux/Tydux/tree/master/doc/angular.md)
 ### (OUTDATED, will be updated soon) [Tutorial](https://github.com/Tydux/Tydux/tree/master/doc/tutorial.md)
 ### (OUTDATED, will be updated soon) [Redux Comparison](https://github.com/Tydux/Tydux/tree/master/doc/redux_comparison.md)
 
