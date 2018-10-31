@@ -27,7 +27,7 @@ export function selectToObservableSelection<S, R>(input$: Observable<S>,
 
 
 export function selectNonNilToObervableSelection<S, R>(input$: Observable<S>,
-                                                       selector: (state: Readonly<S>) => R | null | undefined) {
+                                                       selector?: (state: Readonly<S>) => R | null | undefined) {
     const output$ = selectToObservableSelection(input$, selector)
         .unbounded()
         .pipe(

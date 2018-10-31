@@ -345,6 +345,42 @@ describe("Fassade", function () {
             });
     });
 
+    // it("can use a NamedMountPoint", function () {
+    //     class TestState {
+    //         value = 0;
+    //     }
+    //
+    //     class TestCommands extends Commands<TestState> {
+    //     }
+    //
+    //     class TestFassade extends Fassade<TestState, TestCommands> {
+    //         constructor(tydux: TyduxStore<any>) {
+    //             super(tydux.createRootMountPoint("test"), new TestCommands());
+    //
+    //         }
+    //     }
+    //
+    //     const tyduxBridge = new TyduxReducerBridge();
+    //     const reduxStore = createStore(tyduxBridge.createTyduxReducer(new TestState()));
+    //     const tydux = tyduxBridge.connectStore(reduxStore);
+    //     const fassade = new TestFassade(tydux);
+    //
+    //     assert.deepEqual(
+    //         reduxStore.getState(),
+    //         {
+    //             global: true,
+    //             test: {
+    //                 value: 0
+    //             }
+    //         } as any);
+    //
+    //     assert.deepEqual(
+    //         fassade.state,
+    //         {
+    //             value: 0
+    //         });
+    // });
+
     it("keeps state between async invocations", async function () {
         class TestState {
             list: number[] = [];

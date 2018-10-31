@@ -1,3 +1,8 @@
+# Version 9.2.1
+
+- selector for selectNonNil is now optional
+
+
 # Version 9.2.0
 
 - fassades can now provide their initial state during the super call

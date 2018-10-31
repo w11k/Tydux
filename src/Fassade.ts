@@ -126,7 +126,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
      * - operates on the micro-task queue
      * - only emits values when they change (identity-based)
      */
-    selectNonNil<R>(selector: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
+    selectNonNil<R>(selector?: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
         return selectNonNilToObervableSelection(this.reduxStoreStateSubject, selector);
     }
 

@@ -11,6 +11,10 @@ export interface MountPoint<L, S = any> {
     subscribe: (listener: () => void) => Unsubscribe;
 }
 
+export interface NamedMountPoint<L, S = any> extends MountPoint<L, S> {
+    sliceName: string;
+}
+
 export class TyduxStore<S> {
 
     constructor(readonly store: Store<S>,
@@ -33,13 +37,17 @@ export class TyduxStore<S> {
         };
     }
 
-    createRootMountPoint<K extends keyof S>(slice: K): MountPoint<S[K], S> {
-        return this.createMountPoint(
-            s => s[slice],
-            (s, l) => {
-                const state = Object.assign({}, s);
-                state[slice] = l;
-                return state;
+    createRootMountPoint<K extends keyof S>(slice: K): NamedMountPoint<S[K], S> {
+        return ({
+                sliceName: slice.toString(),
+                ...this.createMountPoint(
+                    s => s[slice],
+                    (s, l) => {
+                        const state = Object.assign({}, s);
+                        state[slice] = l;
+                        return state;
+                    }
+                )
             }
         );
     }
