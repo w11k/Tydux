@@ -2,7 +2,7 @@
   "name": "@w11k/tydux",
   "version": "9.2.2",
   "main": "./dist/index.js",
-  "module": "./dist/es2015/index.js",
+  "module": "./dist/_esm5/index.js",
   "typings": "dist/index.d.ts",
   "license": "Apache-2.0",
   "repository": "https://github.com/w11k/Tydux",

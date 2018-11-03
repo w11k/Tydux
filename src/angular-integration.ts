@@ -1,7 +1,5 @@
-import {Store, StoreEnhancer} from "redux";
 import {Observable, Operator, Subject, Subscriber} from "rxjs";
 import {takeUntil} from "rxjs/operators";
-import {createTyduxStore, TyduxStore, TyduxReducerBridge} from "./store";
 import {operatorFactory} from "./utils";
 
 export type OnDestroyLike = {
@@ -38,35 +36,35 @@ export function toAngularComponent<T>(component: OnDestroyLike): Operator<T, T> 
     );
 }
 
-export function provideTydux<S>(initialState: S, enhancer?: StoreEnhancer<any>): { provide: typeof TyduxStore, useValue: TyduxStore<S> } {
-    return {
-        provide: TyduxStore,
-        useValue: createTyduxStore(initialState, enhancer)
-    };
-}
-
-export type Provider = typeof TyduxReducerBridge | { provide: any, useFactory: Function, deps: any[] };
-
-export const STORE = "TyduxStoreFactoryToken";
-
-export function provideTyduxWithStoreFactory(storeFactory: (bridge: TyduxReducerBridge) => Store, storeToken: any = STORE): Provider[] {
-    return [
-        TyduxReducerBridge,
-        {
-            provide: storeToken,
-            useFactory: storeFactory,
-            deps: [TyduxReducerBridge]
-        },
-        {
-            provide: TyduxStore,
-            useFactory: (bridge: TyduxReducerBridge, store: Store) => {
-                return bridge.connectStore(store);
-            },
-            deps: [TyduxReducerBridge, storeToken]
-        },
-    ]
-}
-
+// export function provideTydux<S>(initialState: S, enhancer?: StoreEnhancer<any>): { provide: typeof TyduxStore, useValue: TyduxStore<S> } {
+//     return {
+//         provide: TyduxStore,
+//         useValue: createTyduxStore(initialState, enhancer)
+//     };
+// }
+//
+// export type Provider = typeof TyduxReducerBridge | { provide: any, useFactory: Function, deps: any[] };
+//
+// export const STORE = "TyduxStoreFactoryToken";
+//
+// export function provideTyduxWithStoreFactory(storeFactory: (bridge: TyduxReducerBridge) => Store, storeToken: any = STORE): Provider[] {
+//     return [
+//         TyduxReducerBridge,
+//         {
+//             provide: storeToken,
+//             useFactory: storeFactory,
+//             deps: [TyduxReducerBridge]
+//         },
+//         {
+//             provide: TyduxStore,
+//             useFactory: (bridge: TyduxReducerBridge, store: Store) => {
+//                 return bridge.connectStore(store);
+//             },
+//             deps: [TyduxReducerBridge, storeToken]
+//         },
+//     ]
+// }
+//
 
 
 
