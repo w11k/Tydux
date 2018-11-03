@@ -1,6 +1,6 @@
 {
   "name": "@w11k/tydux",
-  "version": "9.2.2",
+  "version": "9.2.3",
   "main": "./dist/index.js",
   "module": "./dist/_esm5/index.js",
   "typings": "dist/index.d.ts",
