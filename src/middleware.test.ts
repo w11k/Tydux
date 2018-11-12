@@ -4,7 +4,7 @@ import {enableTyduxDevelopmentMode} from "./development";
 import {resetTydux} from "./global-state";
 import {Middleware} from "./middleware";
 import {Commands, MutatorAction} from "./commands";
-import {ProcessedAction, Fassade} from "./Fassade";
+import {ProcessedAction, Facade} from "./Facade";
 
 
 class TestState {
@@ -17,7 +17,7 @@ class TestMutator extends Commands<TestState> {
     }
 }
 
-class TestStore extends Fassade<TestMutator, TestState> {
+class TestStore extends Facade<TestMutator, TestState> {
     action(val: number) {
         this.commands.addToN1(val);
     }

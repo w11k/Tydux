@@ -1,6 +1,6 @@
 /*
 import {Commands, MutatorAction, CommandDispatcher, CommandsMethods} from "./commands";
-import {ProcessedAction, Fassade, StoreConnector} from "./Fassade";
+import {ProcessedAction, Facade, StoreConnector} from "./Facade";
 import {isNil} from "./utils";
 
 
@@ -10,7 +10,7 @@ export class MiddlewareInit<S> {
     }
 }
 
-export abstract class Middleware<S, M extends Commands<S>, T extends Fassade<any, S>> {
+export abstract class Middleware<S, M extends Commands<S>, T extends Facade<any, S>> {
 
     mutate!: CommandsMethods<M>;
 

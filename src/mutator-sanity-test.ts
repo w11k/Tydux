@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {createAsyncPromise, createTestMount} from "./test-utils";
 
 
@@ -19,14 +19,14 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<{ n1: number }, TestCommands> {
             action() {
                 this.commands.mut();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
-        fassade.action();
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        facade.action();
     });
 
     it("can not modify the state asynchronously by keeping a reference to a nested state property", function (done) {
@@ -40,15 +40,15 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ root: { child: number[] } }, TestCommands> {
+        class TestFacade extends Facade<{ root: { child: number[] } }, TestCommands> {
             action() {
                 this.commands.mut();
             }
         }
 
         const state = {root: {child: [1, 2]}};
-        const fassade = new TestFassade(createTestMount(state), "TestFassade", new TestCommands());
-        fassade.action();
+        const facade = new TestFacade(createTestMount(state), "TestFacade", new TestCommands());
+        facade.action();
     });
 
     it("can not replace the state asynchronously", function (done) {
@@ -61,14 +61,14 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<{ n1: number }, TestCommands> {
             action() {
                 this.commands.mut();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
-        fassade.action();
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        facade.action();
     });
 
     it("can not change the state in asynchronous promise callbacks", function (done) {
@@ -81,14 +81,14 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<{ n1: number }, TestCommands> {
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
-        fassade.action();
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        facade.action();
     });
 
     it("can not access other members asynchronously", function (done) {
@@ -105,14 +105,14 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<{ n1: number }, TestCommands> {
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
-        fassade.action();
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        facade.action();
     });
 
     it("can not access other members in an asynchronous promise resolve", function (done) {
@@ -133,14 +133,14 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<{ n1: number }, TestCommands> {
             action() {
                 this.commands.mut1();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
-        fassade.action();
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        facade.action();
     });
 
     it("must not return a value", function () {
@@ -150,14 +150,14 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<any, TestCommands> {
+        class TestFacade extends Facade<any, TestCommands> {
             action() {
                 assert.throws(() => this.commands.mod1());
             }
         }
 
-        const fassade = new TestFassade(createTestMount({}), "TestFassade", new TestCommands());
-        fassade.action();
+        const facade = new TestFacade(createTestMount({}), "TestFacade", new TestCommands());
+        facade.action();
     });
 
 });

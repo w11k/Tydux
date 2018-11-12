@@ -1,40 +1,40 @@
 import {assert} from "chai";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {createTyduxStore} from "./store";
 import {collect, createAsyncPromise} from "./test-utils";
 import {untilNoBufferedStateChanges} from "./utils";
 
 
-describe("Fassade - sanity tests", function () {
+describe("Facade - sanity tests", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
     it("can not modify the state directly", function () {
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
             action() {
                 (this.state as any).count = 1;
             }
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new Commands());
-        assert.throws(() => fassade.action());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        assert.throws(() => facade.action());
     });
 
     it("can not assign the state", function () {
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
             action() {
                 (this.state as any) = {};
             }
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new Commands());
-        assert.throws(() => fassade.action());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        assert.throws(() => facade.action());
     });
 
     it("member method can use async/await", async function () {
@@ -48,27 +48,27 @@ describe("Fassade - sanity tests", function () {
             }
         }
 
-        class TestFassade extends Fassade<MyState, TestCommands> {
+        class TestFacade extends Facade<MyState, TestCommands> {
             async action() {
                 this.commands.incrementBy(1);
                 const by = await createAsyncPromise(10);
                 this.commands.incrementBy(by);
 
-                await untilNoBufferedStateChanges(fassade);
+                await untilNoBufferedStateChanges(facade);
 
                 collected.assert(0, 1, 11);
             }
         }
 
         const tyduxStore = createTyduxStore(new MyState());
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
-        let collected = collect(fassade.select(s => s.count).unbounded());
-        fassade.action();
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
+        let collected = collect(facade.select(s => s.count).unbounded());
+        facade.action();
     });
 
     it("member method can use member variables", function () {
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
 
             counterA?: number;
 
@@ -85,15 +85,15 @@ describe("Fassade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new Commands());
-        fassade.action();
-        assert.equal(fassade.counterA, 10);
-        assert.equal(fassade.counterB, 20);
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        facade.action();
+        assert.equal(facade.counterA, 10);
+        assert.equal(facade.counterB, 20);
     });
 
     it("member method can use async/await and instance variables", function (done) {
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
 
             counter = 0;
 
@@ -111,13 +111,13 @@ describe("Fassade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const store = new TestFassade(mount, "TestFassade", new Commands());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const store = new TestFacade(mount, "TestFacade", new Commands());
         store.action();
     });
 
     it("member methods and invoked sibling methods access the same instance variables", function () {
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
 
             counter = 0;
 
@@ -132,13 +132,13 @@ describe("Fassade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const store = new TestFassade(mount, "TestFassade", new Commands());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const store = new TestFacade(mount, "TestFacade", new Commands());
         store.action();
     });
 
     it("member method can use async/await and call sibling methods", function (done) {
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
 
             chars = "A";
 
@@ -162,13 +162,13 @@ describe("Fassade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new Commands());
-        fassade.action();
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        facade.action();
     });
 
     it("exception in action method does not revert changes to instance variables", function () {
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
 
             chars = "";
 
@@ -179,15 +179,15 @@ describe("Fassade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new Commands());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new Commands());
 
         try {
-            fassade.action();
+            facade.action();
         } catch (e) {
             // ignore
         }
-        assert.equal(fassade.chars, "A");
+        assert.equal(facade.chars, "A");
     });
 
 });

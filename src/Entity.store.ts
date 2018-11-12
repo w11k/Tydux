@@ -2,7 +2,7 @@
 import {map} from "rxjs/operators";
 import {Commands} from "./commands";
 import {ObservableSelection} from "./ObservableSelection";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 
 export interface EntityMap<T> {
     [id: string]: T;
@@ -67,7 +67,7 @@ export type Constructor<T> = {
     new(...args: any[]): T;
 };
 
-export class EntityStore<T, I extends keyof T> extends Fassade<EntityMutators<T>, EntityState<T>> {
+export class EntityStore<T, I extends keyof T> extends Facade<EntityMutators<T>, EntityState<T>> {
 
     constructor(storeId: string, readonly constructor: Constructor<T>, readonly entityIdField: I) {
         super(storeId, new EntityMutators(), {

@@ -1,4 +1,4 @@
-export * from "./Fassade";
+export * from "./Facade";
 export * from "./ObservableSelection";
 export {Commands} from "./commands";
 export * from "./view";

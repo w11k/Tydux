@@ -2,7 +2,7 @@ import {assert} from "chai";
 import {OnDestroyLike, toAngularComponent} from "./angular-integration";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {createTestMount} from "./test-utils";
 import {untilNoBufferedStateChanges} from "./utils";
 
@@ -21,14 +21,14 @@ describe("Angular integration", function () {
             }
         }
 
-        class TestFassade extends Fassade<State, TestCommands> {
+        class TestFacade extends Facade<State, TestCommands> {
             action() {
                 this.commands.inc();
             }
         }
 
         const events: any[] = [];
-        const fassade = new TestFassade(createTestMount({count: 0}), "TestFassade", new TestCommands());
+        const facade = new TestFacade(createTestMount({count: 0}), "TestFacade", new TestCommands());
 
         class DummyComponent implements OnDestroyLike {
             ngOnDestroy() {
@@ -38,23 +38,23 @@ describe("Angular integration", function () {
 
         const component = new DummyComponent();
 
-        fassade
+        facade
             .select(s => s.count)
             .bounded(toAngularComponent(component))
             .subscribe(a => events.push(a));
 
-        fassade.action(); // 1
-        fassade.action(); // 2
+        facade.action(); // 1
+        facade.action(); // 2
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         component.ngOnDestroy();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
-        fassade.action(); // 3
+        facade.action(); // 3
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         assert.deepEqual(events, [
             0,

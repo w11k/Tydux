@@ -1,15 +1,15 @@
 
 # Migration guide version 8 -> 9
 
-## Store -> Fassade
+## Store -> Facade
 
 - global "search/replace"
 	- from: `extends Store<`
-	- to: `extends Fassade<`
+	- to: `extends Facade<`
 	
-- add import statement `import {Fassade} from '@w11k/tydux';`
+- add import statement `import {Facade} from '@w11k/tydux';`
 
-- swap the type parameter `Fassade<A, B>` -> `Fassade<B, A>`
+- swap the type parameter `Facade<A, B>` -> `Facade<B, A>`
 
 - global "search/replace"
 	- from: `this.mutate.`
@@ -18,7 +18,7 @@
 - change constructor super call
 ```
 constructor(tydux: TyduxStore<AppState>) {
-	super(tydux.createRootMountPoint('myFassade'), 'MyFassade', new MyCommands());
+	super(tydux.createRootMountPoint('myFacade'), 'MyFacade', new MyCommands());
 }
 ```
 	

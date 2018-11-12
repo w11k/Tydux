@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import {createStore} from "redux";
 import {Commands} from "./commands";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {TyduxReducerBridge, TyduxStore} from "./store";
 
 
@@ -42,11 +42,11 @@ describe("Documentation", function () {
             }
         }
 
-        // fassade to combine commands (actions & reducers) and selectors
-        class MyFassade extends Fassade<ManagedByTyduxState, MyCommands> {
+        // facade to combine commands (actions & reducers) and selectors
+        class MyFacade extends Facade<ManagedByTyduxState, MyCommands> {
 
             constructor(tyduxStore: TyduxStore<typeof initialState>) {
-                super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFassade", new MyCommands());
+                super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFacade", new MyCommands());
             }
 
             trigger(incBy: number) {
@@ -58,18 +58,18 @@ describe("Documentation", function () {
             }
         }
 
-        const myFassade = new MyFassade(tyduxStore);
+        const myFacade = new MyFacade(tyduxStore);
 
         // prints:
         // 10 (start value)
         // 11 (incremented by 1)
         // 31 (incremented by 20)
-        myFassade.selectValueB().unbounded().subscribe(value => {
+        myFacade.selectValueB().unbounded().subscribe(value => {
             console.log(value);
         });
 
-        myFassade.trigger(1);
-        myFassade.trigger(20);
+        myFacade.trigger(1);
+        myFacade.trigger(20);
 
         assert.deepEqual(reduxStore.getState(), {
             valueA: 0,

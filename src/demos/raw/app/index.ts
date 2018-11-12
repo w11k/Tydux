@@ -2,7 +2,7 @@ import {createStore, Store} from "redux";
 import {composeWithDevTools} from "redux-devtools-extension";
 import {Commands} from "../../../commands";
 import {enableTyduxDevelopmentMode} from "../../../development";
-import {Fassade} from "../../../Fassade";
+import {Facade} from "../../../Facade";
 import {TyduxReducerBridge} from "../../../store";
 import "./index.html";
 import {createTodoList} from "./mock";
@@ -43,7 +43,7 @@ class TodoCommands extends Commands<TodoState> {
 
 }
 
-class TodoStore extends Fassade<TodoState, TodoCommands> {
+class TodoStore extends Facade<TodoState, TodoCommands> {
 
     addTodo(name: string) {
         if (name.trim().length === 0) {
@@ -69,28 +69,28 @@ const bridge = new TyduxReducerBridge();
 const store: Store<TodoState> = createStore(bridge.createTyduxReducer(new TodoState()), composeWithDevTools());
 const connectedBridge = bridge.connectStore(store);
 const mountPoint = connectedBridge.createMountPoint(s => s, (g, l) => ({...l}));
-const fassade: TodoStore = new TodoStore(mountPoint, "TestFassade", new TodoCommands());
+const facade: TodoStore = new TodoStore(mountPoint, "TestFacade", new TodoCommands());
 
 
-(window as any).fassade = fassade;
+(window as any).facade = facade;
 
 const renderApp = () => {
     document.body.innerHTML = `
         <div>
-            <button onclick="fassade.clearTodos()">
+            <button onclick="facade.clearTodos()">
                 Clear
             </button>
         
-            <button onclick="fassade.addTodo('' + Date.now())">
+            <button onclick="facade.addTodo('' + Date.now())">
                 Add Todo
             </button>
         
-            <button onclick="fassade.loadTodos()">
+            <button onclick="facade.loadTodos()">
                 Load Todos
             </button>
         
             <ol>
-                ${fassade.state.todos!.map(t => {
+                ${facade.state.todos!.map(t => {
         return `<li class=''>${t.name}</li>`;
     }).join("") }
             </ol>
@@ -98,10 +98,10 @@ const renderApp = () => {
         `;
 };
 
-fassade.select()
+facade.select()
     .unbounded()
     .subscribe(() => {
         renderApp();
     });
 
-setTimeout(() => fassade.addTodo("test"), 500);
+setTimeout(() => facade.addTodo("test"), 500);

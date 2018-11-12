@@ -2,23 +2,23 @@ import {assert} from "chai";
 import {Action, createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {Commands} from "./commands";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {TyduxReducerBridge, TyduxStore} from "./store";
 import {collect, createAsyncPromise, createTestMount} from "./test-utils";
 import {areArraysShallowEquals, isNil, untilNoBufferedStateChanges} from "./utils";
 
 
-describe("Fassade", function () {
+describe("Facade", function () {
 
     it("ID must be unique", function () {
         const mount = createTestMount({});
 
-        class TestFassade extends Fassade<any, any> {
+        class TestFacade extends Facade<any, any> {
         }
 
-        const tf1 = new TestFassade(mount, "TestFassade", new Commands());
-        const tf2 = new TestFassade(mount, "TestFassade", new Commands());
-        assert.notEqual(tf1.fassadeId, tf2.fassadeId);
+        const tf1 = new TestFacade(mount, "TestFacade", new Commands());
+        const tf2 = new TestFacade(mount, "TestFacade", new Commands());
+        assert.notEqual(tf1.facadeId, tf2.facadeId);
     });
 
     it("select()", async function () {
@@ -28,24 +28,24 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<{ n1: number }, TestCommands> {
             actionInc() {
                 this.commands.inc();
             }
         }
 
         const mount = createTestMount({n1: 0});
-        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
+        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
 
         const values: any = [];
-        fassade.select((currentState) => {
+        facade.select((currentState) => {
             values.push(currentState);
         }).unbounded().subscribe();
 
-        fassade.actionInc();
-        fassade.actionInc();
+        facade.actionInc();
+        facade.actionInc();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         assert.deepEqual(values, [
             {n1: 0},
@@ -61,18 +61,18 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<{ n1: number }, TestCommands> {
             actionInc() {
                 this.commands.inc();
             }
         }
 
-        const fassade = new TestFassade(createTestMount({n1: 0}), "TestFassade", new TestCommands());
-        let collected = collect(fassade.select(s => s.n1).unbounded());
-        fassade.actionInc();
-        fassade.actionInc();
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        let collected = collect(facade.select(s => s.n1).unbounded());
+        facade.actionInc();
+        facade.actionInc();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
         collected.assert(0, 1, 2);
     });
 
@@ -91,7 +91,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestState, TestCommands> {
             actionInc() {
                 this.commands.inc();
             }
@@ -102,16 +102,16 @@ describe("Fassade", function () {
         }
 
         const mount = createTestMount<TestState>({n1: undefined});
-        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
-        let collected = collect(fassade.selectNonNil(s => s.n1).unbounded());
-        fassade.actionInc(); // 1
-        fassade.actionClear();
-        fassade.actionInc(); // 1
-        fassade.actionInc(); // 2
-        fassade.actionClear();
-        fassade.actionInc(); // 1
+        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
+        let collected = collect(facade.selectNonNil(s => s.n1).unbounded());
+        facade.actionInc(); // 1
+        facade.actionClear();
+        facade.actionInc(); // 1
+        facade.actionInc(); // 2
+        facade.actionClear();
+        facade.actionInc(); // 1
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
         collected.assert(1, 1, 2, 1);
     });
 
@@ -127,7 +127,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ a: number; b: number; c: number }, TestCommands> {
+        class TestFacade extends Facade<{ a: number; b: number; c: number }, TestCommands> {
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -137,14 +137,14 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}), "TestFassade", new TestCommands());
-        let collected = collect(fassade.select(s => [s.a, s.b]).unbounded());
-        fassade.actionIncAB();
-        fassade.actionIncC();
-        fassade.actionIncAB();
-        fassade.actionIncC();
+        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), "TestFacade", new TestCommands());
+        let collected = collect(facade.select(s => [s.a, s.b]).unbounded());
+        facade.actionIncAB();
+        facade.actionIncC();
+        facade.actionIncAB();
+        facade.actionIncC();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
         collected.assert([0, 10], [1, 11], [2, 12]);
     });
 
@@ -160,7 +160,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ a: number; b: number; c: number }, TestCommands> {
+        class TestFacade extends Facade<{ a: number; b: number; c: number }, TestCommands> {
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -170,19 +170,19 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount({a: 0, b: 10, c: 100}), "TestFassade", new TestCommands());
-        let collected = collect(fassade.select(s => {
+        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), "TestFacade", new TestCommands());
+        let collected = collect(facade.select(s => {
             return {
                 a: s.a,
                 b: s.b
             };
         }).unbounded());
-        fassade.actionIncAB();
-        fassade.actionIncC(); // should not trigger select()
-        fassade.actionIncAB();
-        fassade.actionIncC(); // should not trigger select()
+        facade.actionIncAB();
+        facade.actionIncC(); // should not trigger select()
+        facade.actionIncAB();
+        facade.actionIncC(); // should not trigger select()
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
         collected.assert(
             {a: 0, b: 10},
             {a: 1, b: 11},
@@ -196,14 +196,14 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ root: { child: { val1: number } } }, TestCommands> {
+        class TestFacade extends Facade<{ root: { child: { val1: number } } }, TestCommands> {
             action() {
                 this.commands.dummy();
             }
         }
 
         const state = {root: {child: {val1: 1}}};
-        const store = new TestFassade(createTestMount(state), "TestFassade", new TestCommands());
+        const store = new TestFacade(createTestMount(state), "TestFacade", new TestCommands());
         let collected = collect(store.select(s => s.root).unbounded());
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
@@ -229,7 +229,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestState, TestCommands> {
             action() {
                 this.commands.increment();
                 this.commands.increment();
@@ -237,11 +237,11 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
-        let collected = collect(fassade.select(s => s.count).unbounded());
-        fassade.action();
+        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        let collected = collect(facade.select(s => s.count).unbounded());
+        facade.action();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
         collected.assert(0, 1, 2, 1);
     });
 
@@ -261,7 +261,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestState, TestCommands> {
             setList() {
                 this.commands.setList([1, 2, 3]);
             }
@@ -272,16 +272,16 @@ describe("Fassade", function () {
         }
 
 
-        const fassade = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
-        fassade.setList();
-        fassade.setValue();
+        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        facade.setList();
+        facade.setValue();
 
-        await untilNoBufferedStateChanges(fassade);
-        assert.deepEqual(fassade.state.list, [1, 2, 3]);
-        assert.equal(fassade.state.value, 99);
+        await untilNoBufferedStateChanges(facade);
+        assert.deepEqual(facade.state.list, [1, 2, 3]);
+        assert.equal(facade.state.value, 99);
     });
 
-    it("state changes are directly reflected in the fassade state", function (done) {
+    it("state changes are directly reflected in the facade state", function (done) {
         class TestState {
             value = 0;
         }
@@ -292,7 +292,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestState, TestCommands> {
             met1() {
                 this.commands.setValue(9);
                 assert.equal(this.state.value, 9);
@@ -300,8 +300,8 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
-        fassade.met1();
+        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        facade.met1();
     });
 
     it("can set their initial state during super call", function () {
@@ -317,7 +317,7 @@ describe("Fassade", function () {
         class TestCommands extends Commands<TestState> {
         }
 
-        class TestFassade extends Fassade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestState, TestCommands> {
             constructor(tydux: TyduxStore<any>) {
                 super(tydux.createRootMountPoint("test"), "test", new TestCommands(), new TestState());
 
@@ -327,7 +327,7 @@ describe("Fassade", function () {
         const tyduxBridge = new TyduxReducerBridge();
         const reduxStore = createStore(tyduxBridge.createTyduxReducer(new AppState()));
         const tydux = tyduxBridge.connectStore(reduxStore);
-        const fassade = new TestFassade(tydux);
+        const facade = new TestFacade(tydux);
 
         assert.deepEqual(
             reduxStore.getState(),
@@ -339,7 +339,7 @@ describe("Fassade", function () {
             } as any);
 
         assert.deepEqual(
-            fassade.state,
+            facade.state,
             {
                 value: 0
             });
@@ -353,7 +353,7 @@ describe("Fassade", function () {
     //     class TestCommands extends Commands<TestState> {
     //     }
     //
-    //     class TestFassade extends Fassade<TestState, TestCommands> {
+    //     class TestFacade extends Facade<TestState, TestCommands> {
     //         constructor(tydux: TyduxStore<any>) {
     //             super(tydux.createRootMountPoint("test"), new TestCommands());
     //
@@ -363,7 +363,7 @@ describe("Fassade", function () {
     //     const tyduxBridge = new TyduxReducerBridge();
     //     const reduxStore = createStore(tyduxBridge.createTyduxReducer(new TestState()));
     //     const tydux = tyduxBridge.connectStore(reduxStore);
-    //     const fassade = new TestFassade(tydux);
+    //     const facade = new TestFacade(tydux);
     //
     //     assert.deepEqual(
     //         reduxStore.getState(),
@@ -375,7 +375,7 @@ describe("Fassade", function () {
     //         } as any);
     //
     //     assert.deepEqual(
-    //         fassade.state,
+    //         facade.state,
     //         {
     //             value: 0
     //         });
@@ -398,7 +398,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestState, TestCommands> {
             async setList() {
                 const list = await createAsyncPromise([1, 2, 3]);
                 this.commands.setList(list);
@@ -410,7 +410,7 @@ describe("Fassade", function () {
             }
         }
 
-        const store = new TestFassade(createTestMount(new TestState()), "TestFassade", new TestCommands());
+        const store = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
         await store.setList();
         await store.setValue();
 
@@ -443,7 +443,7 @@ describe("Fassade", function () {
             }
         }
 
-        class TestFassade extends Fassade<{ list1: number[], list2: number[] }, TestCommands> {
+        class TestFacade extends Facade<{ list1: number[], list2: number[] }, TestCommands> {
 
             private counter = 0;
 
@@ -470,11 +470,11 @@ describe("Fassade", function () {
             }
         }
 
-        const fassade = new TestFassade();
-        fassade.action();
+        const facade = new TestFacade();
+        facade.action();
 
         let states: any[] = [];
-        fassade.select().unbounded()
+        facade.select().unbounded()
             .subscribe(state => {
                 states.push(state);
             });

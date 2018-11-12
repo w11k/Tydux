@@ -11,9 +11,9 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 # How does it work?
 
 - With Tydux you combine a group of *reducers*, *actions* and *selectors*
-- Every group is encapsulated within a *fassade*
-- For each *fassade* you create a *mount point* to define in which slice of your store the *fassade* should operate
-- In your *fassade* you expose an API to expose *action* triggers and *selectors* 
+- Every group is encapsulated within a *facade*
+- For each *facade* you create a *mount point* to define in which slice of your store the *facade* should operate
+- In your *facade* you expose an API to expose *action* triggers and *selectors* 
 
 
 # Key benefits
@@ -47,11 +47,11 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
         }
     }
 
-    // fassade to combine commands (actions & reducers) and selectors
-    class MyFassade extends Fassade<ManagedByTyduxState, MyCommands> {
+    // facade to combine commands (actions & reducers) and selectors
+    class MyFacade extends Facade<ManagedByTyduxState, MyCommands> {
 
         constructor(tyduxStore: TyduxStore<typeof initialState>) {
-            super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFassade", new MyCommands());
+            super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFacade", new MyCommands());
         }
 
         trigger(incBy: number) {
@@ -63,18 +63,18 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
         }
     }
 
-    const myFassade = new MyFassade(tyduxStore);
+    const myFacade = new MyFacade(tyduxStore);
 
     // prints:
     // 10 (start value)
     // 11 (incremented by 1)
     // 31 (incremented by 20)
-    myFassade.selectValueB().unbounded().subscribe(value => {
+    myFacade.selectValueB().unbounded().subscribe(value => {
         console.log(value);
     });
 
-    myFassade.trigger(1);
-	myFassade.trigger(20);
+    myFacade.trigger(1);
+	myFacade.trigger(20);
 
 # Documentation
 

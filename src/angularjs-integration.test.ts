@@ -2,7 +2,7 @@ import {assert} from "chai";
 import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Commands} from "./commands";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {createTestMount} from "./test-utils";
 import {untilNoBufferedStateChanges} from "./utils";
 
@@ -21,14 +21,14 @@ describe("AngularJS integration", function () {
             }
         }
 
-        class TestFassade extends Fassade<State, TestCommands> {
+        class TestFacade extends Facade<State, TestCommands> {
             action() {
                 this.commands.inc();
             }
         }
 
         const events: any[] = [];
-        const fassade = new TestFassade(createTestMount({count: 0}), "TestFassade", new TestCommands());
+        const facade = new TestFacade(createTestMount({count: 0}), "TestFacade", new TestCommands());
 
         class DummyScope implements AngularJS1ScopeLike {
 
@@ -52,14 +52,14 @@ describe("AngularJS integration", function () {
         const rootScope = new DummyScope();
         const scope = new DummyScope(rootScope);
 
-        fassade
+        facade
             .select(s => s.count)
             .bounded(toAngularJSScope(scope))
             .subscribe(a => events.push(a));
 
-        fassade.action();
+        facade.action();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         assert.deepEqual(events, [
             "pre",

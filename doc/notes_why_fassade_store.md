@@ -23,6 +23,6 @@ konkurrenz zwischen store und mutators:
 - orchestrierung der mutator methoden, besonders im async fall
 - in simplen fällen können "delegates" hinzugefügt werden
 - methoden für komplexere selects bzw gängige "select use cases" einen namen geben
-- klassisches fassaden muster ? 
+- klassisches facaden muster ? 
 
 

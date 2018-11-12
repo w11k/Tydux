@@ -1,6 +1,6 @@
 import {Action} from "redux";
 import {ReplaySubject, Subject} from "rxjs";
-import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands, FassadeAction} from "./commands";
+import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands, FacadeAction} from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {
@@ -11,16 +11,16 @@ import {
 import {MountPoint} from "./store";
 import {createProxy, failIfInstanceMembersExistExceptState, functions, functionsIn} from "./utils";
 
-let uniqueFassadeIds: { [id: string]: number } = {};
+let uniqueFacadeIds: { [id: string]: number } = {};
 
-function createUniqueFassadeId(name: string) {
-    if (uniqueFassadeIds[name] === undefined) {
-        uniqueFassadeIds[name] = 1;
+function createUniqueFacadeId(name: string) {
+    if (uniqueFacadeIds[name] === undefined) {
+        uniqueFacadeIds[name] = 1;
     } else {
-        uniqueFassadeIds[name] += 1;
+        uniqueFacadeIds[name] += 1;
     }
 
-    const count = uniqueFassadeIds[name];
+    const count = uniqueFacadeIds[name];
     if (count === 1) {
         return name;
     } else {
@@ -28,9 +28,9 @@ function createUniqueFassadeId(name: string) {
     }
 }
 
-export abstract class Fassade<S, M extends Commands<S>> {
+export abstract class Facade<S, M extends Commands<S>> {
 
-    readonly fassadeId: string;
+    readonly facadeId: string;
 
     private destroyed = false;
 
@@ -45,7 +45,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
     protected readonly commands: CommandsMethods<M>;
 
     constructor(readonly mountPoint: MountPoint<S, any>, name: String, commands: M, initialState?: S) {
-        this.fassadeId = createUniqueFassadeId(name.replace(" ", "_"));
+        this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
         this.enrichInstanceMethods();
 
         failIfInstanceMembersExistExceptState(commands);
@@ -57,10 +57,10 @@ export abstract class Fassade<S, M extends Commands<S>> {
         this.reduxStoreStateSubject.next(this.state);
 
         if (initialState !== undefined) {
-            const initialFassadeStateAction = this.fassadeId + "@@INIT";
+            const initialFacadeStateAction = this.facadeId + "@@INIT";
 
             mountPoint.addReducer((state: S, action: Action) => {
-                if (action.type === initialFassadeStateAction) {
+                if (action.type === initialFacadeStateAction) {
                     this.setState(initialState);
                     this.reduxStoreStateSubject.next(this.state);
                     return mountPoint.setState(state, initialState);
@@ -69,7 +69,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
                 return state;
             });
 
-            mountPoint.dispatch({type: initialFassadeStateAction, initialFassadeState: initialState});
+            mountPoint.dispatch({type: initialFacadeStateAction, initialFacadeState: initialState});
         }
 
         mountPoint.subscribe(() => {
@@ -133,7 +133,7 @@ export abstract class Fassade<S, M extends Commands<S>> {
     private enrichInstanceMethods() {
         const methodNamesUntilStoreParent: string[] = [];
         let level: any = this;
-        while (level instanceof Fassade) {
+        while (level instanceof Facade) {
             methodNamesUntilStoreParent.push(...functions(level));
             level = Object.getPrototypeOf(level);
         }
@@ -173,9 +173,9 @@ export abstract class Fassade<S, M extends Commands<S>> {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
-                const actionType = `[${self.fassadeId}] ${mutatorMethodName}`;
+                const actionType = `[${self.facadeId}] ${mutatorMethodName}`;
                 const args = Array.prototype.slice.call(arguments);
-                const mutatorAction: FassadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
+                const mutatorAction: FacadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
                 return self.mountPoint.dispatch(mutatorAction);
             };
         }
@@ -184,12 +184,12 @@ export abstract class Fassade<S, M extends Commands<S>> {
     }
 
     private createReducerFromCommands(commands: any): CommandReducer<S> {
-        const mutatorReducer = createReducerFromCommands<S>(this.fassadeId, commands);
+        const mutatorReducer = createReducerFromCommands<S>(this.facadeId, commands);
 
-        return (state: any, action: FassadeAction) => {
+        return (state: any, action: FacadeAction) => {
             const preLocalState = createProxy(this.mountPoint.extractState(state));
 
-            if (this.destroyed || !this.isActionForThisFassade(action)) {
+            if (this.destroyed || !this.isActionForThisFacade(action)) {
                 return state;
             }
 
@@ -199,12 +199,12 @@ export abstract class Fassade<S, M extends Commands<S>> {
         };
     }
 
-    private isActionForThisFassade(action: Action): boolean {
+    private isActionForThisFacade(action: Action): boolean {
         if (typeof action.type !== "string") {
             return false;
         }
 
-        return action.type.indexOf(`[${this.fassadeId}] `) === 0;
+        return action.type.indexOf(`[${this.facadeId}] `) === 0;
     }
 
 }

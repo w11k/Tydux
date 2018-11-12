@@ -2,7 +2,7 @@
 import {assert} from "chai";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {createTyduxStore} from "./store";
 import {collect, untilNoBufferedStateChanges} from "./test-utils";
 import {View} from "./view";
@@ -18,7 +18,7 @@ class Commands1 extends Commands<State1> {
     }
 }
 
-class Fassade1 extends Fassade<State1, Commands1> {
+class Facade1 extends Facade<State1, Commands1> {
     createCommands(): Commands1 {
         return new Commands1();
     }
@@ -39,7 +39,7 @@ class Commands2 extends Commands<State2> {
     }
 }
 
-class Fassade2 extends Fassade<State2, Commands2> {
+class Facade2 extends Facade<State2, Commands2> {
     createCommands(): Commands2 {
         return new Commands2();
     }
@@ -61,8 +61,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const store1 = new Fassade1(store.createRootMountPoint("state1"));
-        const store2 = new Fassade2(store.createRootMountPoint("state2"));
+        const store1 = new Facade1(store.createRootMountPoint("state1"));
+        const store2 = new Facade2(store.createRootMountPoint("state2"));
 
         store1.action1();
         await untilNoBufferedStateChanges(store1);
@@ -91,8 +91,8 @@ describe("View", function () {
     });
 
     it("StateObserver emits changes", async function () {
-        const store1 = new Fassade1();
-        const store2 = new Fassade2();
+        const store1 = new Facade1();
+        const store2 = new Facade2();
 
         store1.action1();
         await untilNoBufferedStateChanges(store1);
@@ -127,7 +127,7 @@ describe("View", function () {
     });
 
     it("StateObserver always freezes the state", async function () {
-        const store1 = new Fassade1();
+        const store1 = new Facade1();
         store1.action1();
         await untilNoBufferedStateChanges(store1);
 
@@ -154,8 +154,8 @@ describe("View", function () {
     });
 
     it("StateObserver#select() maps the event stream", async function () {
-        const store1 = new Fassade1();
-        const store2 = new Fassade2();
+        const store1 = new Facade1();
+        const store2 = new Facade2();
 
         const view = new View({store1, store2});
 
@@ -186,8 +186,8 @@ describe("View", function () {
     });
 
     it("StateObserver#select() filters the event stream", async function () {
-        const store1 = new Fassade1();
-        const store2 = new Fassade2();
+        const store1 = new Facade1();
+        const store2 = new Facade2();
 
         const view = new View({store1, store2});
 
@@ -214,8 +214,8 @@ describe("View", function () {
     });
 
     it("StateObserver#select() directly provides the structure to select from (1 observer)", function (done) {
-        const store1 = new Fassade1();
-        const store2 = new Fassade2();
+        const store1 = new Facade1();
+        const store2 = new Facade2();
 
         const view = new View({store1, store2});
         view
@@ -229,8 +229,8 @@ describe("View", function () {
     });
 
     it("StateObserver#select() directly provides the structure to select from (2 observers)", function (done) {
-        const store1 = new Fassade1();
-        const store2 = new Fassade2();
+        const store1 = new Facade1();
+        const store2 = new Facade2();
 
         const view = new View({store1, store2});
 
@@ -253,8 +253,8 @@ describe("View", function () {
     });
 
     it("correctly unsubscribes with 1 observer", function () {
-        const store1 = new Fassade1();
-        const store2 = new Fassade2();
+        const store1 = new Facade1();
+        const store2 = new Facade2();
 
         const view = new View({store1, store2});
 
@@ -274,8 +274,8 @@ describe("View", function () {
     });
 
     it("correctly unsubscribes with 2 observers", function () {
-        const store1 = new Fassade1();
-        const store2 = new Fassade2();
+        const store1 = new Facade1();
+        const store2 = new Facade2();
 
         const view = new View({store1, store2});
 

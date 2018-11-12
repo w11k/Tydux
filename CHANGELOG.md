@@ -1,3 +1,11 @@
+# Version 9.3.0
+
+**breaking change**
+
+- renamed fassade to facade :-/
+
+
+
 # Version 9.2.1
 
 - selector for selectNonNil is now optional
@@ -5,7 +13,7 @@
 
 # Version 9.2.0
 
-- fassades can now provide their initial state during the super call
+- facades can now provide their initial state during the super call
 
 
 # Version 9.1.2

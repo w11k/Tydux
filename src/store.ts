@@ -18,7 +18,7 @@ export interface NamedMountPoint<L, S = any> extends MountPoint<L, S> {
 export class TyduxStore<S> {
 
     constructor(readonly store: Store<S>,
-                private readonly fassadeReducers: CommandReducer<any>[]) {
+                private readonly facadeReducers: CommandReducer<any>[]) {
     }
 
     getState() {
@@ -28,7 +28,7 @@ export class TyduxStore<S> {
     createMountPoint<L>(stateGetter: (globalState: S) => L,
                         stateSetter: (globalState: S, localState: L) => S): MountPoint<L, S> {
         return {
-            addReducer: (commandReducer: CommandReducer<any>) => this.fassadeReducers.push(commandReducer),
+            addReducer: (commandReducer: CommandReducer<any>) => this.facadeReducers.push(commandReducer),
             dispatch: this.store.dispatch.bind(this.store),
             getState: () => stateGetter(this.store.getState()),
             extractState: (state: S) => stateGetter(state),
@@ -56,10 +56,10 @@ export class TyduxStore<S> {
 
 export class TyduxReducerBridge {
 
-    private readonly fassadeReducers: CommandReducer<any>[] = [];
+    private readonly facadeReducers: CommandReducer<any>[] = [];
 
     private readonly reducer = (initialState?: any) => (state: any = initialState, action: any) => {
-        for (let reducer of this.fassadeReducers) {
+        for (let reducer of this.facadeReducers) {
             state = reducer(state, action);
         }
         return state;
@@ -74,7 +74,7 @@ export class TyduxReducerBridge {
     }
 
     connectStore<S>(store: Store<S>) {
-        return new TyduxStore<S>(store, this.fassadeReducers);
+        return new TyduxStore<S>(store, this.facadeReducers);
     }
 
 }

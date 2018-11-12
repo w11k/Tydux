@@ -3,7 +3,7 @@ import {Observable, Subject, Subscriber} from "rxjs";
 import {map, takeUntil} from "rxjs/operators";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
-import {Fassade} from "./Fassade";
+import {Facade} from "./Facade";
 import {ObservableSelection} from "./ObservableSelection";
 import {createTyduxStore} from "./store";
 import {collect} from "./test-utils";
@@ -23,15 +23,15 @@ describe("ObservableSelection", function () {
             }
         }
 
-        class TestFassade extends Fassade<State, TestCommands> {
+        class TestFacade extends Facade<State, TestCommands> {
             action() {
                 this.commands.inc();
             }
         }
 
         const tyduxStore = createTyduxStore({count: 0});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
 
         const stopTrigger = new Subject<true>();
         const operator = operatorFactory(
@@ -47,17 +47,17 @@ describe("ObservableSelection", function () {
                 };
             });
 
-        let collected = collect(fassade.select(s => s.count).bounded(operator));
+        let collected = collect(facade.select(s => s.count).bounded(operator));
 
-        fassade.action();
-        fassade.action();
+        facade.action();
+        facade.action();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         stopTrigger.next(true);
-        fassade.action();
+        facade.action();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         collected.assert(
             0,
@@ -75,15 +75,15 @@ describe("ObservableSelection", function () {
             }
         }
 
-        class TestFassade extends Fassade<State, TestCommands> {
+        class TestFacade extends Facade<State, TestCommands> {
             action() {
                 this.commands.inc();
             }
         }
 
         const tyduxStore = createTyduxStore({count: 0});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
 
         const events: any[] = [];
 
@@ -105,15 +105,15 @@ describe("ObservableSelection", function () {
                 };
             });
 
-        fassade
+        facade
             .select(s => s.count)
             .bounded(operator)
             .subscribe(s => events.push(s));
 
-        fassade.action();
-        fassade.action();
+        facade.action();
+        facade.action();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         assert.deepEqual(events, [
             "pre-0",
@@ -138,19 +138,19 @@ describe("ObservableSelection", function () {
             }
         }
 
-        class TestFassade extends Fassade<State, TestCommands> {
+        class TestFacade extends Facade<State, TestCommands> {
             action() {
                 this.commands.inc();
             }
         }
 
         const tyduxStore = createTyduxStore({count: 0});
-        const mount = tyduxStore.createMountPoint(s => s, (state, fassade) => ({...fassade}));
-        const fassade = new TestFassade(mount, "TestFassade", new TestCommands());
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
 
         const events: any[] = [];
 
-        fassade
+        facade
             .select(s => s.count)
             .pipe(
                 map(x => x + 100),
@@ -159,10 +159,10 @@ describe("ObservableSelection", function () {
             .unbounded()
             .subscribe(s => events.push(s));
 
-        fassade.action();
-        fassade.action();
+        facade.action();
+        facade.action();
 
-        await untilNoBufferedStateChanges(fassade);
+        await untilNoBufferedStateChanges(facade);
 
         assert.deepEqual(events, [
             "a:100",

@@ -4,17 +4,17 @@ import {createFailingProxy, failIfInstanceMembersExistExceptState, failIfNotUnde
 
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 export type CommandsMethods<T> = Pick<T, FunctionPropertyNames<T>>;
-export type CommandReducer<S> = (state: S, action: FassadeAction) => S;
+export type CommandReducer<S> = (state: S, action: FacadeAction) => S;
 
-export interface FassadeAction extends Action<string> {
+export interface FacadeAction extends Action<string> {
     payload: any[];
     debugContext?: string;
 }
 
-export function createReducerFromCommands<S>(fassadeId: string, commands: Commands<S>): CommandReducer<S> {
-    const typePrefix = `[${fassadeId}] `;
-    return (state: S, action: FassadeAction) => {
-        // check if this action is for this fassade
+export function createReducerFromCommands<S>(facadeId: string, commands: Commands<S>): CommandReducer<S> {
+    const typePrefix = `[${facadeId}] `;
+    return (state: S, action: FacadeAction) => {
+        // check if this action is for this facade
         if (action.type.indexOf(typePrefix) !== 0) {
             return state;
         }

@@ -63,16 +63,16 @@ export class AppModule {
 }
 ```
 
-# Create fassades
+# Create facades
 
-**e.g. in `myfassade.ts`** 
+**e.g. in `myfacade.ts`** 
 
 ```
 @Injectable()
-export class MyFassade extends Fassade<State1, MyCommands> {
+export class MyFacade extends Facade<State1, MyCommands> {
 
   constructor(tydux: TyduxStore<AppState>) {         // inject TyduxStore
-    super(tydux.createRootMountPoint('state1'),      // the fassade's mount point
+    super(tydux.createRootMountPoint('state1'),      // the facade's mount point
           'State1',  
           new MyCommands());
   }
@@ -80,13 +80,13 @@ export class MyFassade extends Fassade<State1, MyCommands> {
 }
 ```
 
-**provide the fassade:**
+**provide the facade:**
 
 ```
 @NgModule({
   providers: [
     ...,
-    MyFassade                                        // add a provider for your fassade
+    MyFacade                                        // add a provider for your facade
   ],
   ...
 })
