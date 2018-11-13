@@ -119,21 +119,19 @@ export function functions(object: any): string[] {
         return [];
     }
     return Object.keys(object).filter((key) => {
-
+        console.log("key", key);
 
         return object.hasOwnProperty(key) && typeof object[key] === "function";
     });
 }
 
 export function functionsIn(object: any) {
-    console.log(5);
-    console.log("object", object);
     let fnMembers: string[] = functions(object);
-    let proto = Object.getPrototypeOf(object);
-    console.log("proto", proto);
-    if (proto !== null) {
-        fnMembers = [...fnMembers, ...functionsIn(proto)];
-    }
+    // TODO TODO TODO
+    // let proto = Object.getPrototypeOf(object);
+    // if (proto !== null) {
+    //     fnMembers = [...fnMembers, ...functionsIn(proto)];
+    // }
     return fnMembers;
 }
 
