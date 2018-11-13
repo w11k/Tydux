@@ -113,15 +113,24 @@ export function last(array: any[]) {
 }
 
 export function functions(object: any): string[] {
+    console.log("functions");
+    console.log("object", object);
     if (object == null) {
         return [];
     }
-    return Object.keys(object).filter((key) => typeof object[key] === "function");
+    return Object.keys(object).filter((key) => {
+
+
+        return object.hasOwnProperty(key) && typeof object[key] === "function";
+    });
 }
 
 export function functionsIn(object: any) {
+    console.log(5);
+    console.log("object", object);
     let fnMembers: string[] = functions(object);
     let proto = Object.getPrototypeOf(object);
+    console.log("proto", proto);
     if (proto !== null) {
         fnMembers = [...fnMembers, ...functionsIn(proto)];
     }

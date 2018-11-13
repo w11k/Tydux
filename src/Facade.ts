@@ -1,6 +1,14 @@
 import {Action} from "redux";
 import {ReplaySubject, Subject} from "rxjs";
-import {CommandReducer, Commands, CommandsMethods, createReducerFromCommands, FacadeAction} from "./commands";
+import {
+    CommandReducer,
+    Commands,
+    CommandsConstructor,
+    CommandsInvoker,
+    CommandsMethods,
+    createReducerFromCommands,
+    FacadeAction
+} from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {
@@ -9,7 +17,7 @@ import {
     selectToObservableSelection
 } from "./ObservableSelection";
 import {MountPoint} from "./store";
-import {createProxy, failIfInstanceMembersExistExceptState, functions, functionsIn} from "./utils";
+import {createProxy, functions, functionsIn} from "./utils";
 
 let uniqueFacadeIds: { [id: string]: number } = {};
 
@@ -28,7 +36,7 @@ function createUniqueFacadeId(name: string) {
     }
 }
 
-export abstract class Facade<S, M extends Commands<S>> {
+export abstract class Facade<S, C extends Commands<S>> {
 
     readonly facadeId: string;
 
@@ -42,15 +50,20 @@ export abstract class Facade<S, M extends Commands<S>> {
 
     private _state!: S;
 
-    protected readonly commands: CommandsMethods<M>;
+    protected readonly commands: CommandsMethods<C>;
 
-    constructor(readonly mountPoint: MountPoint<S, any>, name: String, commands: M, initialState?: S) {
+    constructor(readonly mountPoint: MountPoint<S, any>,
+                name: String,
+                commandsClass: CommandsConstructor<C>,
+                initialState?: S) {
+
         this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
         this.enrichInstanceMethods();
 
-        failIfInstanceMembersExistExceptState(commands);
-        this.commands = this.createCommandsProxy(commands);
-        mountPoint.addReducer(this.createReducerFromCommands(commands));
+        const [commandsInvoker, proxyObj] = this.createCommandsProxy(commandsClass);
+        this.commands = proxyObj;
+
+        mountPoint.addReducer(this.createReducerFromCommandsInvoker(commandsInvoker));
         delete (this.commands as any).state;
 
         this.setState(mountPoint.getState());
@@ -167,9 +180,12 @@ export abstract class Facade<S, M extends Commands<S>> {
         };
     }
 
-    private createCommandsProxy(mutatorInstance: any): any {
+    private createCommandsProxy(commandsClass: CommandsConstructor<C>): [CommandsInvoker<C>, C] {
+        const commandsInvoker = new CommandsInvoker(commandsClass);
+
         const proxyObj = {} as any;
-        for (let mutatorMethodName of functionsIn(mutatorInstance)) {
+        console.log("commandsInvoker.commands", commandsInvoker.commands);
+        for (let mutatorMethodName of functionsIn(commandsInvoker.commands)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
@@ -180,11 +196,11 @@ export abstract class Facade<S, M extends Commands<S>> {
             };
         }
 
-        return proxyObj;
+        return [commandsInvoker, proxyObj];
     }
 
-    private createReducerFromCommands(commands: any): CommandReducer<S> {
-        const mutatorReducer = createReducerFromCommands<S>(this.facadeId, commands);
+    private createReducerFromCommandsInvoker(commandsInvoker: CommandsInvoker<C>): CommandReducer<S> {
+        const mutatorReducer = createReducerFromCommands<S>(this.facadeId, commandsInvoker);
 
         return (state: any, action: FacadeAction) => {
             const preLocalState = createProxy(this.mountPoint.extractState(state));

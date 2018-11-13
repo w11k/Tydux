@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {Commands} from "./commands";
+import {Commands, CommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 import {createTyduxStore} from "./store";
@@ -9,6 +9,18 @@ import {untilNoBufferedStateChanges} from "./utils";
 describe("Commands", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
+
+    it("CommandsInvoker", function () {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut1() {
+                this.state.n1++;
+            }
+        }
+
+        const ci = new CommandsInvoker(TestCommands);
+        const state = ci.invoke({n1: 1}, c => c.mut1());
+        assert.deepEqual(state, {n1: 2});
+    });
 
     it("methods can assign state properties", async function () {
         class TestCommands extends Commands<{ n1: number }> {
@@ -25,7 +37,7 @@ describe("Commands", function () {
 
         const tyduxStore = createTyduxStore({n1: 0});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
+        const facade = new TestFacade(mount, "TestFacade", TestCommands);
 
         facade.action();
         await untilNoBufferedStateChanges(facade);
@@ -58,7 +70,7 @@ describe("Commands", function () {
             }
         }
 
-        const facade = new TestFacade(createTestMount(new State()), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount(new State()), "TestFacade", TestCommands);
 
         facade.selectNonNil(s => s.list1)
             .unbounded()
@@ -89,7 +101,7 @@ describe("Commands", function () {
             }
         }
 
-        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", TestCommands);
         facade.action();
         await untilNoBufferedStateChanges(facade);
         assert.deepEqual(facade.state, {n1: 99});
@@ -108,7 +120,7 @@ describe("Commands", function () {
             }
         }
 
-        const facade = new TestFacade(createTestMount({n1: [1, 2]}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({n1: [1, 2]}), "TestFacade", TestCommands);
         facade.action();
     });
 
@@ -135,7 +147,7 @@ describe("Commands", function () {
             }
         }
 
-        const facade = new TestStore(createTestMount({n1: ""}), "TestFacade", new TestCommands());
+        const facade = new TestStore(createTestMount({n1: ""}), "TestFacade", TestCommands);
         let collected = collect(facade.select(s => s.n1).unbounded());
         facade.action1();
         await untilNoBufferedStateChanges(facade);
@@ -159,7 +171,7 @@ describe("Commands", function () {
             }
         }
 
-        const facade = new TestFacade(createTestMount({a: 0}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({a: 0}), "TestFacade", TestCommands);
         assert.throws(() => facade.action());
         assert.equal(facade.state.a, 0);
     });
@@ -174,7 +186,7 @@ describe("Commands", function () {
         }
 
         assert.throws(
-            () => new TestFacade(createTestMount({}), "TestFacade", new TestCommands()),
+            () => new TestFacade(createTestMount({}), "TestFacade", TestCommands),
             /abc/
         );
     });
@@ -194,7 +206,7 @@ describe("Commands", function () {
             }
         }
 
-        const facade = new TestFacade(createTestMount({}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({}), "TestFacade", TestCommands);
         facade.action();
     });
 
