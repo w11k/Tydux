@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {Commands, createReducerFromCommands} from "./commands";
+import {Commands, CommandsInvoker, createReducerFromCommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 
 describe("ReducerFromCommands", function () {
@@ -17,7 +17,7 @@ describe("ReducerFromCommands", function () {
             }
         }
 
-        const reducer = createReducerFromCommands("f", new TestCommands());
+        const reducer = createReducerFromCommandsInvoker("f", new CommandsInvoker(new TestCommands()));
         let state = {n1: 0};
 
         state = reducer(state, {type: "[f] cmd1", payload: []});
@@ -33,7 +33,7 @@ describe("ReducerFromCommands", function () {
             }
         }
 
-        const reducer = createReducerFromCommands("f", new TestCommands());
+        const reducer = createReducerFromCommandsInvoker("f", new CommandsInvoker(new TestCommands()));
         let state = {n1: 0};
 
         state = reducer(state, {type: "invalid", payload: []});
@@ -47,7 +47,7 @@ describe("ReducerFromCommands", function () {
             }
         }
 
-        const reducer = createReducerFromCommands("f", new TestCommands());
+        const reducer = createReducerFromCommandsInvoker("f", new CommandsInvoker(new TestCommands()));
         let state = {n1: 0};
 
         state = reducer(state, {type: "[f] cmd1", payload: [10]});
@@ -68,7 +68,7 @@ describe("ReducerFromCommands", function () {
             }
         }
 
-        const reducer = createReducerFromCommands("f", new TestCommands());
+        const reducer = createReducerFromCommandsInvoker("f", new CommandsInvoker(new TestCommands()));
         const state = {n1: 0};
         reducer(state, {type: "[f] cmd1", payload: []});
     });
@@ -89,7 +89,7 @@ describe("ReducerFromCommands", function () {
             }
         }
 
-        const reducer = createReducerFromCommands("f", new TestCommands());
+        const reducer = createReducerFromCommandsInvoker("f", new CommandsInvoker(new TestCommands()));
         const state = {n1: 0};
         reducer(state, {type: "[f] cmd1", payload: []});
     });

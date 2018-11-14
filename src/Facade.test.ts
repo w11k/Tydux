@@ -21,7 +21,7 @@ describe("Facade", function () {
         assert.notEqual(tf1.facadeId, tf2.facadeId);
     });
 
-   /* it("select()", async function () {
+   it("select()", async function () {
         class TestCommands extends Commands<{ n1: number }> {
             inc() {
                 this.state.n1++;
@@ -355,7 +355,7 @@ describe("Facade", function () {
     //
     //     class TestFacade extends Facade<TestState, TestCommands> {
     //         constructor(tydux: TyduxStore<any>) {
-    //             super(tydux.createRootMountPoint("test"), new TestCommands());
+    //             super(tydux.createRootMountPoint("test"), TestCommands);
     //
     //         }
     //     }
@@ -489,5 +489,5 @@ describe("Facade", function () {
             done();
         }, 0);
     });
-*/
+
 });

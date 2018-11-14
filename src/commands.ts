@@ -11,7 +11,7 @@ export interface FacadeAction extends Action<string> {
     debugContext?: string;
 }
 
-export function createReducerFromCommands<S>(facadeId: string, commandsInvoker: CommandsInvoker<Commands<S>>): CommandReducer<S> {
+export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsInvoker: CommandsInvoker<Commands<S>>): CommandReducer<S> {
     const typePrefix = `[${facadeId}] `;
     return (state: S, action: FacadeAction) => {
         // check if this action is for this facade
@@ -19,11 +19,8 @@ export function createReducerFromCommands<S>(facadeId: string, commandsInvoker: 
             return state;
         }
         const commandName = action.type.substr(typePrefix.length);
-        // const mutatorThisProxy: { state: S; } = {state};
-        // Object.setPrototypeOf(mutatorThisProxy, commands);
         try {
-            // (commands as any).state = state;
-            const stateAfterRun = commandsInvoker.invoke(state, commands => {
+            return commandsInvoker.invoke(state, commands => {
                 let mutatorFn = (commands as any)[commandName];
                 if (mutatorFn === undefined) {
                     return;
@@ -33,63 +30,35 @@ export function createReducerFromCommands<S>(facadeId: string, commandsInvoker: 
                 failIfNotUndefined(result);
                 failIfInstanceMembersExistExceptState(commands);
             });
-
-            // const stateAfterRun = mutatorThisProxy.state;
-            // delete mutatorThisProxy.state;
-            // failIfInstanceMembersExistExceptState(mutatorThisProxy);
-            return stateAfterRun;
         } finally {
-            if (isTyduxDevelopmentModeEnabled()) {
-                // Object.setPrototypeOf(mutatorThisProxy, createFailingProxy());
-            }
         }
     };
 }
 
 type StateType<T extends Commands<any>> = T extends Commands<infer S> ? S : any;
 
-export interface CommandsConstructor<C extends Commands<any>> {
-    new(setState: (state: any) => void, getState: () => any): C
-}
-
 export class CommandsInvoker<C extends Commands<any>> {
 
-    private state: StateType<C> | undefined;
-
-    readonly commands: C;
-
-    constructor(commandsType: CommandsConstructor<C>) {
-        this.commands = new commandsType(
-            state => {
-                if (this.state === undefined) {
-                    throw new Error("Commands' methods must be invoked via a CommandsInvoker!")
-                }
-                return this.state = state;
-            },
-            () => {
-                if (this.state === undefined) {
-                    throw new Error("Commands' methods must be invoked via a CommandsInvoker!")
-                }
-                return this.state;
-            }
-        );
-
-        console.log("this.commands", this.commands);
+    constructor(readonly commands: C) {
+        failIfInstanceMembersExistExceptState(this.commands);
     }
 
     invoke(state: StateType<C>,
            withStateOp: (command: C) => void): StateType<C> {
 
-        this.state = state;
+        (this.commands as any).state = state;
         let postState: any;
+        const mutatorThisProxy: { state: StateType<C>; } = {state};
         try {
-
-
-
-            withStateOp(this.commands);
-            postState = this.state;
+            Object.setPrototypeOf(mutatorThisProxy, this.commands);
+            withStateOp(mutatorThisProxy as any);
+            postState = (mutatorThisProxy as any).state;
+            delete mutatorThisProxy.state;
+            failIfInstanceMembersExistExceptState(mutatorThisProxy);
         } finally {
-            this.state = undefined;
+            if (isTyduxDevelopmentModeEnabled()) {
+                Object.setPrototypeOf(mutatorThisProxy, createFailingProxy());
+            }
         }
 
         return postState;
@@ -98,19 +67,36 @@ export class CommandsInvoker<C extends Commands<any>> {
 }
 
 export class Commands<S> {
-
-    constructor(private setState: (state: S) => void,
-                private getState: () => S) {
-    }
-
-    protected get state(): S {
-        console.log("this.setState", this.setState);
-        console.log("this.getState", this.getState);
-        return this.getState();
-    }
-
-    protected set state(newState: S) {
-        this.setState(newState);
-    }
-
+    protected state: S = undefined as any;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+// type FunctionWithVoid<F> = F extends (...args: infer U) => any ? (...args: U) => void : never;
+//
+// type FunctionsWithVoid<T> = { [K in keyof T]: FunctionWithVoid<T[K]> };
+//
+// type CommandsType<TF> = TF extends (arr: string[]) => infer R ? FunctionsWithVoid<R> : never;
+//
+//
+// const commandsFactory = (arr: string[]) => ({
+//
+//     add: (stringToAdd: string) => {
+//         return arr.push(stringToAdd);
+//     },
+//
+//     pop: () => arr.pop(),
+//
+// });
+//
+//
+// const commands: CommandsType<typeof commandsFactory> = null as any;
+//
+// commands.add("bla");
+// const last1: string = commands.pop()!;
+// const last2: string = commands.pop(2)!;
+// commands.error();
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+

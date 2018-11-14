@@ -20,7 +20,7 @@ describe("Facade - sanity tests", function () {
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        const facade = new TestFacade(mount, "TestFacade", Commands);
         assert.throws(() => facade.action());
     });
 
@@ -33,7 +33,7 @@ describe("Facade - sanity tests", function () {
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        const facade = new TestFacade(mount, "TestFacade", Commands);
         assert.throws(() => facade.action());
     });
 
@@ -86,7 +86,7 @@ describe("Facade - sanity tests", function () {
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        const facade = new TestFacade(mount, "TestFacade", Commands);
         facade.action();
         assert.equal(facade.counterA, 10);
         assert.equal(facade.counterB, 20);
@@ -112,7 +112,7 @@ describe("Facade - sanity tests", function () {
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const store = new TestFacade(mount, "TestFacade", new Commands());
+        const store = new TestFacade(mount, "TestFacade", Commands);
         store.action();
     });
 
@@ -133,7 +133,7 @@ describe("Facade - sanity tests", function () {
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const store = new TestFacade(mount, "TestFacade", new Commands());
+        const store = new TestFacade(mount, "TestFacade", Commands);
         store.action();
     });
 
@@ -163,7 +163,7 @@ describe("Facade - sanity tests", function () {
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        const facade = new TestFacade(mount, "TestFacade", Commands);
         facade.action();
     });
 
@@ -180,7 +180,7 @@ describe("Facade - sanity tests", function () {
 
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const facade = new TestFacade(mount, "TestFacade", new Commands());
+        const facade = new TestFacade(mount, "TestFacade", Commands);
 
         try {
             facade.action();

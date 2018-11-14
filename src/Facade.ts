@@ -3,10 +3,9 @@ import {ReplaySubject, Subject} from "rxjs";
 import {
     CommandReducer,
     Commands,
-    CommandsConstructor,
     CommandsInvoker,
     CommandsMethods,
-    createReducerFromCommands,
+    createReducerFromCommandsInvoker,
     FacadeAction
 } from "./commands";
 import {deepFreeze} from "./deep-freeze";
@@ -54,13 +53,13 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     constructor(readonly mountPoint: MountPoint<S, any>,
                 name: String,
-                commandsClass: CommandsConstructor<C>,
+                commands: C,
                 initialState?: S) {
 
         this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
         this.enrichInstanceMethods();
 
-        const [commandsInvoker, proxyObj] = this.createCommandsProxy(commandsClass);
+        const [commandsInvoker, proxyObj] = this.createCommandsProxy(commands);
         this.commands = proxyObj;
 
         mountPoint.addReducer(this.createReducerFromCommandsInvoker(commandsInvoker));
@@ -180,12 +179,14 @@ export abstract class Facade<S, C extends Commands<S>> {
         };
     }
 
-    private createCommandsProxy(commandsClass: CommandsConstructor<C>): [CommandsInvoker<C>, C] {
-        const commandsInvoker = new CommandsInvoker(commandsClass);
+    private createCommandsProxy(commands: C): [CommandsInvoker<C>, C] {
+        const commandsInvoker = new CommandsInvoker(commands);
 
         const proxyObj = {} as any;
-        console.log("commandsInvoker.commands", commandsInvoker.commands);
-        for (let mutatorMethodName of functionsIn(commandsInvoker.commands)) {
+
+        const protoOfCommandsInstance = Object.getPrototypeOf(commandsInvoker.commands);
+
+        for (let mutatorMethodName of functionsIn(protoOfCommandsInstance)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
@@ -200,7 +201,7 @@ export abstract class Facade<S, C extends Commands<S>> {
     }
 
     private createReducerFromCommandsInvoker(commandsInvoker: CommandsInvoker<C>): CommandReducer<S> {
-        const mutatorReducer = createReducerFromCommands<S>(this.facadeId, commandsInvoker);
+        const mutatorReducer = createReducerFromCommandsInvoker<S>(this.facadeId, commandsInvoker);
 
         return (state: any, action: FacadeAction) => {
             const preLocalState = createProxy(this.mountPoint.extractState(state));

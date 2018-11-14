@@ -1,3 +1,8 @@
+# Version 9.3.1
+
+- introduced CommandsInvoker (used internally and useful for testing)
+
+
 # Version 9.3.0
 
 **breaking change**
