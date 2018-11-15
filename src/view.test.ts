@@ -1,11 +1,11 @@
-/*
-import {assert} from "chai";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 import {createTyduxStore} from "./store";
-import {collect, untilNoBufferedStateChanges} from "./test-utils";
+import {collect} from "./test-utils";
+import {untilNoBufferedStateChanges} from "./utils";
 import {View} from "./view";
+import {assert} from "chai";
 
 // Store 1
 class State1 {
@@ -19,10 +19,6 @@ class Commands1 extends Commands<State1> {
 }
 
 class Facade1 extends Facade<State1, Commands1> {
-    createCommands(): Commands1 {
-        return new Commands1();
-    }
-
     action1() {
         this.commands.mut1();
     }
@@ -40,10 +36,6 @@ class Commands2 extends Commands<State2> {
 }
 
 class Facade2 extends Facade<State2, Commands2> {
-    createCommands(): Commands2 {
-        return new Commands2();
-    }
-
     action2() {
         this.commands.mut2();
     }
@@ -51,151 +43,122 @@ class Facade2 extends Facade<State2, Commands2> {
 
 describe("View", function () {
 
-    // beforeEach(function () {
-    //     enableTyduxDevelopmentMode();
-    // });
+    beforeEach(function () {
+        enableTyduxDevelopmentMode();
+    });
 
-    it("StateObserver starts with the current values", async function () {
+    it("starts with the current values", async function () {
         const store = createTyduxStore({
             state1: new State1(),
             state2: new State2(),
         });
 
-        const store1 = new Facade1(store.createRootMountPoint("state1"));
-        const store2 = new Facade2(store.createRootMountPoint("state2"));
-
-        store1.action1();
-        await untilNoBufferedStateChanges(store1);
-
-        store2.action2();
-        await untilNoBufferedStateChanges(store2);
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
 
         const view = new View({
-            store1,
+            fac1: fac1,
             child1: {
                 child2: {
-                    store1
+                    store2: fac2
                 }
             }
         });
 
-        view.select(s => ({
-            v1: s.store1.value1,
-            v2: s.child1.child2.store1.value1
-        }));
+        let collected = collect(view.select(s => ({
+            v1: s.fac1.value1,
+            v2: s.child1.child2.store2.value2
+        })).unbounded());
 
-        let collected = collect(view.select().unbounded());
         collected.assert(
-            {store1: {value1: 11}, child1: {child2: {store1: {value1: 11}}}}
+            {v1: 10, v2: 20}
         );
     });
 
-    it("StateObserver emits changes", async function () {
-        const store1 = new Facade1();
-        const store2 = new Facade2();
+    it("emits changes", async function () {
+        const store = createTyduxStore({
+            state1: new State1(),
+            state2: new State2(),
+        });
 
-        store1.action1();
-        await untilNoBufferedStateChanges(store1);
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
 
-        store2.action2();
-        await untilNoBufferedStateChanges(store2);
+        fac1.action1();
+        await untilNoBufferedStateChanges(fac1);
+
+        fac2.action2();
+        await untilNoBufferedStateChanges(fac2);
 
         const view = new View({
             child1: {
                 child2: {
-                    store1,
-                    store2
+                    fac1,
+                    fac2
                 }
             }
         });
 
         let collected = collect(view.select().unbounded());
 
-        store1.action1();
-        store1.action1();
-        store2.action2();
+        fac1.action1();
+        fac1.action1();
+        fac2.action2();
 
-        await untilNoBufferedStateChanges(store1);
-        await untilNoBufferedStateChanges(store2);
+        await untilNoBufferedStateChanges(fac1);
+        await untilNoBufferedStateChanges(fac2);
 
         collected.assert(
-            {child1: {child2: {store1: {value1: 11}, store2: {value2: 21}}}},
-            {child1: {child2: {store1: {value1: 12}, store2: {value2: 21}}}},
-            {child1: {child2: {store1: {value1: 13}, store2: {value2: 21}}}},
-            {child1: {child2: {store1: {value1: 13}, store2: {value2: 22}}}},
+            {child1: {child2: {fac1: {value1: 11}, fac2: {value2: 21}}}},
+            {child1: {child2: {fac1: {value1: 12}, fac2: {value2: 21}}}},
+            {child1: {child2: {fac1: {value1: 13}, fac2: {value2: 21}}}},
+            {child1: {child2: {fac1: {value1: 13}, fac2: {value2: 22}}}},
         );
     });
 
-    it("StateObserver always freezes the state", async function () {
-        const store1 = new Facade1();
-        store1.action1();
-        await untilNoBufferedStateChanges(store1);
+    it("always freezes the state", async function () {
+        const store = createTyduxStore({
+            state1: new State1()
+        });
+
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
 
         const view = new View({
             child1: {
                 child2: {
-                    store1
+                    fac1: fac1
                 }
             }
         });
 
         let called = false;
         view.select().unbounded().subscribe(s => {
-            console.log(1);
             assert.throws(() => {
                 (s.child1 as any)["a"] = "a";
             });
             assert.throws(() => {
-                s.child1.child2.store1.value1 = 10;
+                s.child1.child2.fac1.value1 = 10;
             });
             called = true;
         });
         assert.isTrue(called);
     });
 
-    it("StateObserver#select() maps the event stream", async function () {
-        const store1 = new Facade1();
-        const store2 = new Facade2();
+    it("select() filters the event stream", async function () {
+        const store = createTyduxStore({
+            state1: new State1(),
+            state2: new State2(),
+        });
 
-        const view = new View({store1, store2});
-
-        const values: any[] = [];
-        view
-            .select(s => {
-                return {
-                    v1: s.store1.value1,
-                    v2: s.store2.value2
-                };
-            })
-            .unbounded()
-            .subscribe(v => {
-                values.push([v.v1, v.v2]);
-            });
-
-        store1.action1();
-        store2.action2();
-
-        await untilNoBufferedStateChanges(store1);
-        await untilNoBufferedStateChanges(store2);
-
-        assert.deepEqual(values, [
-            [10, 20],
-            [11, 20],
-            [11, 21],
-        ]);
-    });
-
-    it("StateObserver#select() filters the event stream", async function () {
-        const store1 = new Facade1();
-        const store2 = new Facade2();
-
-        const view = new View({store1, store2});
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const view = new View({fac1, fac2});
 
         const values: any[] = [];
         view
             .select(s => {
                 return {
-                    v1: s.store1.value1
+                    v1: s.fac1.value1
                 };
             })
             .unbounded()
@@ -203,10 +166,10 @@ describe("View", function () {
                 values.push([v.v1]);
             });
 
-        store2.action2();
+        fac2.action2();
 
-        await untilNoBufferedStateChanges(store1);
-        await untilNoBufferedStateChanges(store2);
+        await untilNoBufferedStateChanges(fac1);
+        await untilNoBufferedStateChanges(fac2);
 
         assert.deepEqual(values, [
             [10],
@@ -214,14 +177,19 @@ describe("View", function () {
     });
 
     it("StateObserver#select() directly provides the structure to select from (1 observer)", function (done) {
-        const store1 = new Facade1();
-        const store2 = new Facade2();
+        const store = createTyduxStore({
+            state1: new State1(),
+            state2: new State2(),
+        });
 
-        const view = new View({store1, store2});
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const view = new View({fac1, fac2});
+
         view
             .select(vs => {
-                assert.equal(vs.store1.value1, 10);
-                assert.equal(vs.store2.value2, 20);
+                assert.equal(vs.fac1.value1, 10);
+                assert.equal(vs.fac2.value2, 20);
                 done();
             })
             .unbounded()
@@ -229,23 +197,30 @@ describe("View", function () {
     });
 
     it("StateObserver#select() directly provides the structure to select from (2 observers)", function (done) {
-        const store1 = new Facade1();
-        const store2 = new Facade2();
+        const store = createTyduxStore({
+            state1: new State1(),
+            state2: new State2(),
+        });
 
-        const view = new View({store1, store2});
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const view = new View({fac1, fac2});
 
+        let firstCalled = false;
         view
             .select(vs => {
-                assert.equal(vs.store1.value1, 10);
-                assert.equal(vs.store2.value2, 20);
+                assert.equal(vs.fac1.value1, 10);
+                assert.equal(vs.fac2.value2, 20);
+                firstCalled = true;
             })
             .unbounded()
             .subscribe();
 
         view
             .select(vs => {
-                assert.equal(vs.store1.value1, 10);
-                assert.equal(vs.store2.value2, 20);
+                assert.isTrue(firstCalled);
+                assert.equal(vs.fac1.value1, 10);
+                assert.equal(vs.fac2.value2, 20);
                 done();
             })
             .unbounded()
@@ -253,17 +228,20 @@ describe("View", function () {
     });
 
     it("correctly unsubscribes with 1 observer", function () {
-        const store1 = new Facade1();
-        const store2 = new Facade2();
+        const store = createTyduxStore({
+            state1: new State1(),
+            state2: new State2(),
+        });
 
-        const view = new View({store1, store2});
-
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const view = new View({fac1, fac2});
         assert.equal(view.internalSubscriptionCount, 0);
 
         let sub1 = view
             .select(vs => {
-                assert.equal(vs.store1.value1, 10);
-                assert.equal(vs.store2.value2, 20);
+                assert.equal(vs.fac1.value1, 10);
+                assert.equal(vs.fac2.value2, 20);
             })
             .unbounded()
             .subscribe();
@@ -274,25 +252,29 @@ describe("View", function () {
     });
 
     it("correctly unsubscribes with 2 observers", function () {
-        const store1 = new Facade1();
-        const store2 = new Facade2();
+        const store = createTyduxStore({
+            state1: new State1(),
+            state2: new State2(),
+        });
 
-        const view = new View({store1, store2});
+        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const view = new View({fac1, fac2});
 
         assert.equal(view.internalSubscriptionCount, 0);
 
         let sub1 = view
             .select(vs => {
-                assert.equal(vs.store1.value1, 10);
-                assert.equal(vs.store2.value2, 20);
+                assert.equal(vs.fac1.value1, 10);
+                assert.equal(vs.fac2.value2, 20);
             })
             .unbounded()
             .subscribe();
 
         let sub2 = view
             .select(vs => {
-                assert.equal(vs.store1.value1, 10);
-                assert.equal(vs.store2.value2, 20);
+                assert.equal(vs.fac1.value1, 10);
+                assert.equal(vs.fac2.value2, 20);
             })
             .unbounded()
             .subscribe();
@@ -305,4 +287,3 @@ describe("View", function () {
     });
 
 });
-*/
