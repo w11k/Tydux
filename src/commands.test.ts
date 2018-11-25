@@ -73,7 +73,7 @@ describe("Commands", function () {
         const facade = new TestFacade(createTestMount(new State()), "TestFacade", new TestCommands());
 
         facade.selectNonNil(s => s.list1)
-            .unbounded()
+
             .subscribe(() => {
                 facade.action2();
             });
@@ -148,7 +148,7 @@ describe("Commands", function () {
         }
 
         const facade = new TestStore(createTestMount({n1: ""}), "TestFacade", new TestCommands());
-        let collected = collect(facade.select(s => s.n1).unbounded());
+        let collected = collect(facade.select(s => s.n1));
         facade.action1();
         await untilNoBufferedStateChanges(facade);
         collected.assert("", "123");

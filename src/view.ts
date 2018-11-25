@@ -1,13 +1,8 @@
 import {Observable, Observer, Subscriber, Subscription} from "rxjs";
 import {skip} from "rxjs/operators";
 import {forEachIn, isPlainObject} from "./lodash/lodash";
-import {
-    ObservableSelection,
-    selectNonNilToObervableSelection,
-    selectToObservableSelection
-} from "./ObservableSelection";
 import {Facade} from "./Facade";
-import {get, last} from "./utils";
+import {get, last, selectNonNilToObervable, selectToObservable} from "./utils";
 
 
 export type ViewTreeState<T> = {
@@ -73,7 +68,6 @@ export class View<T> {
             this._internalSubscriptionCount++;
             const sub = child
                 .select()
-                .unbounded()
                 .pipe(
                     // skip the first state value because the initial view state
                     // gets created manually
@@ -107,16 +101,16 @@ export class View<T> {
         return this.mergeState(stateCell, parentPath, newParentState);
     }
 
-    select(): ObservableSelection<ViewTreeState<Readonly<T>>>;
+    select(): Observable<ViewTreeState<Readonly<T>>>;
 
-    select<R>(selector: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R>;
+    select<R>(selector: (state: ViewTreeState<Readonly<T>>) => R): Observable<R>;
 
-    select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): ObservableSelection<R> {
-        return selectToObservableSelection(this.stateChanges$, selector);
+    select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): Observable<R> {
+        return selectToObservable(this.stateChanges$, selector);
     }
 
-    selectNonNil<R>(selector: (state: ViewTreeState<Readonly<T>>) => R | null | undefined): ObservableSelection<R> {
-        return selectNonNilToObervableSelection(this.stateChanges$, selector);
+    selectNonNil<R>(selector: (state: ViewTreeState<Readonly<T>>) => R | null | undefined): Observable<R> {
+        return selectNonNilToObervable(this.stateChanges$, selector);
     }
 
 }

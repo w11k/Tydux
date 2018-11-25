@@ -99,7 +99,7 @@ const renderApp = () => {
 };
 
 facade.select()
-    .unbounded()
+
     .subscribe(() => {
         renderApp();
     });

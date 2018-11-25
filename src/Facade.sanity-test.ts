@@ -63,7 +63,7 @@ describe("Facade - sanity tests", function () {
         const tyduxStore = createTyduxStore(new MyState());
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", new TestCommands());
-        let collected = collect(facade.select(s => s.count).unbounded());
+        let collected = collect(facade.select(s => s.count));
         facade.action();
     });
 

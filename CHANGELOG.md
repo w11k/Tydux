@@ -1,3 +1,8 @@
+# Version 10.0.0
+
+- removed `ObservableSelection` due to this [TSLint rule](https://github.com/w11k/rx-utils#w11k-rxjs-subscribe-takeuntil)
+
+
 # Version 9.3.1
 
 - introduced CommandsInvoker (used internally and useful for testing)

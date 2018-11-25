@@ -31,7 +31,7 @@ describe("EntityStore", function () {
 
         await afterAllStoreEvents(es);
 
-        let changes = collect(es.selectById("1").unbounded());
+        let changes = collect(es.selectById("1"));
 
         changes.assert(
             new MyEnt(1, "a")
@@ -40,7 +40,7 @@ describe("EntityStore", function () {
 
     it("selectById() emits undefined until ID exists", async function () {
         let es = new EntityStore("es1", MyEnt, "id");
-        let changes = collect(es.selectById("1").unbounded());
+        let changes = collect(es.selectById("1"));
         es.add(new MyEnt(1, "a"));
 
         await afterAllStoreEvents(es);
@@ -53,7 +53,7 @@ describe("EntityStore", function () {
 
     it("selectAll()", async function () {
         let es = new EntityStore("es1", MyEnt, "id");
-        let changes = collect(es.selectAll().unbounded());
+        let changes = collect(es.selectAll());
 
         es.add(new MyEnt(1, "a"));
         es.add(new MyEnt(2, "b"));

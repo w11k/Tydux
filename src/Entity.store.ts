@@ -123,7 +123,7 @@ export class EntityStore<T, I extends keyof T> extends Facade<EntityMutators<T>,
 
     selectAll() {
         return new ObservableSelection(this.select()
-            .unbounded()
+
             .pipe(
                 map(state => {
                     return state.ids.map((id) => state.entities[id]);

@@ -40,7 +40,7 @@ describe("Facade", function () {
         const values: any = [];
         facade.select((currentState) => {
             values.push(currentState);
-        }).unbounded().subscribe();
+        }).subscribe();
 
         facade.actionInc();
         facade.actionInc();
@@ -68,7 +68,7 @@ describe("Facade", function () {
         }
 
         const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
-        let collected = collect(facade.select(s => s.n1).unbounded());
+        let collected = collect(facade.select(s => s.n1));
         facade.actionInc();
         facade.actionInc();
 
@@ -103,7 +103,7 @@ describe("Facade", function () {
 
         const mount = createTestMount<TestState>({n1: undefined});
         const facade = new TestFacade(mount, "TestFacade", new TestCommands());
-        let collected = collect(facade.selectNonNil(s => s.n1).unbounded());
+        let collected = collect(facade.selectNonNil(s => s.n1));
         facade.actionInc(); // 1
         facade.actionClear();
         facade.actionInc(); // 1
@@ -138,7 +138,7 @@ describe("Facade", function () {
         }
 
         const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), "TestFacade", new TestCommands());
-        let collected = collect(facade.select(s => [s.a, s.b]).unbounded());
+        let collected = collect(facade.select(s => [s.a, s.b]));
         facade.actionIncAB();
         facade.actionIncC();
         facade.actionIncAB();
@@ -176,7 +176,7 @@ describe("Facade", function () {
                 a: s.a,
                 b: s.b
             };
-        }).unbounded());
+        }));
         facade.actionIncAB();
         facade.actionIncC(); // should not trigger select()
         facade.actionIncAB();
@@ -204,7 +204,7 @@ describe("Facade", function () {
 
         const state = {root: {child: {val1: 1}}};
         const store = new TestFacade(createTestMount(state), "TestFacade", new TestCommands());
-        let collected = collect(store.select(s => s.root).unbounded());
+        let collected = collect(store.select(s => s.root));
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
@@ -238,7 +238,7 @@ describe("Facade", function () {
         }
 
         const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
-        let collected = collect(facade.select(s => s.count).unbounded());
+        let collected = collect(facade.select(s => s.count));
         facade.action();
 
         await untilNoBufferedStateChanges(facade);
@@ -451,7 +451,7 @@ describe("Facade", function () {
                 super(mount, "", new TestCommands());
 
                 this.select()
-                    .unbounded()
+
                     .pipe(
                         map(() => this.state.list1),
 
@@ -474,7 +474,7 @@ describe("Facade", function () {
         facade.action();
 
         let states: any[] = [];
-        facade.select().unbounded()
+        facade.select()
             .subscribe(state => {
                 states.push(state);
             });

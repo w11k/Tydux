@@ -68,7 +68,7 @@ describe("View", function () {
         let collected = collect(view.select(s => ({
             v1: s.fac1.value1,
             v2: s.child1.child2.store2.value2
-        })).unbounded());
+        })));
 
         collected.assert(
             {v1: 10, v2: 20}
@@ -99,7 +99,7 @@ describe("View", function () {
             }
         });
 
-        let collected = collect(view.select().unbounded());
+        let collected = collect(view.select());
 
         fac1.action1();
         fac1.action1();
@@ -132,7 +132,7 @@ describe("View", function () {
         });
 
         let called = false;
-        view.select().unbounded().subscribe(s => {
+        view.select().subscribe(s => {
             assert.throws(() => {
                 (s.child1 as any)["a"] = "a";
             });
@@ -161,7 +161,7 @@ describe("View", function () {
                     v1: s.fac1.value1
                 };
             })
-            .unbounded()
+
             .subscribe(v => {
                 values.push([v.v1]);
             });
@@ -192,7 +192,7 @@ describe("View", function () {
                 assert.equal(vs.fac2.value2, 20);
                 done();
             })
-            .unbounded()
+
             .subscribe();
     });
 
@@ -213,7 +213,7 @@ describe("View", function () {
                 assert.equal(vs.fac2.value2, 20);
                 firstCalled = true;
             })
-            .unbounded()
+
             .subscribe();
 
         view
@@ -223,7 +223,7 @@ describe("View", function () {
                 assert.equal(vs.fac2.value2, 20);
                 done();
             })
-            .unbounded()
+
             .subscribe();
     });
 
@@ -243,7 +243,7 @@ describe("View", function () {
                 assert.equal(vs.fac1.value1, 10);
                 assert.equal(vs.fac2.value2, 20);
             })
-            .unbounded()
+
             .subscribe();
 
         assert.equal(view.internalSubscriptionCount, 2);
@@ -268,7 +268,7 @@ describe("View", function () {
                 assert.equal(vs.fac1.value1, 10);
                 assert.equal(vs.fac2.value2, 20);
             })
-            .unbounded()
+
             .subscribe();
 
         let sub2 = view
@@ -276,7 +276,7 @@ describe("View", function () {
                 assert.equal(vs.fac1.value1, 10);
                 assert.equal(vs.fac2.value2, 20);
             })
-            .unbounded()
+
             .subscribe();
 
         assert.equal(view.internalSubscriptionCount, 4);

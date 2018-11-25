@@ -1,7 +1,7 @@
 import {assert} from "chai";
-import {AngularJS1ScopeLike, IAngularEvent, toAngularJSScope} from "./angularjs-integration";
-import {enableTyduxDevelopmentMode} from "./development";
+import {AngularJS1ScopeLike, IAngularEvent, scoped} from "./angularjs-integration";
 import {Commands} from "./commands";
+import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 import {createTestMount} from "./test-utils";
 import {untilNoBufferedStateChanges} from "./utils";
@@ -54,7 +54,7 @@ describe("AngularJS integration", function () {
 
         facade
             .select(s => s.count)
-            .bounded(toAngularJSScope(scope))
+            .lift(scoped(scope))
             .subscribe(a => events.push(a));
 
         facade.action();

@@ -1,7 +1,8 @@
 import {Observable, Operator, Subscriber} from "rxjs";
-import {filter, take} from "rxjs/operators";
+import {distinctUntilChanged, filter, map, take} from "rxjs/operators";
 import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
 import {Facade} from "./Facade";
+import {isPlainObject} from "./lodash/lodash";
 
 let hasProxySupport: boolean = false;
 try {
@@ -166,8 +167,36 @@ export async function untilNoBufferedStateChanges(facade: Facade<any, any>): Pro
                     filter(() => facade.hasBufferedStateChanges()),
                     take(1)
                 )
-                .unbounded()
                 .subscribe(() => setTimeout(resolve, 0));
         }
     );
+}
+
+
+export function selectToObservable<S, R>(input$: Observable<S>,
+                                         selector?: (state: Readonly<S>) => R) {
+    return input$
+        .pipe(
+            map(stateChange => {
+                return !isNil(selector) ? selector(stateChange) : stateChange as any;
+            }),
+            distinctUntilChanged((oldVal, newVal) => {
+                if (Array.isArray(oldVal) && Array.isArray(newVal)) {
+                    return areArraysShallowEquals(oldVal, newVal);
+                } else if (isPlainObject(newVal) && isPlainObject(newVal)) {
+                    return arePlainObjectsShallowEquals(oldVal, newVal);
+                } else {
+                    return oldVal === newVal;
+                }
+            }));
+}
+
+
+export function selectNonNilToObervable<S, R>(input$: Observable<S>,
+                                              selector?: (state: Readonly<S>) => R | null | undefined) {
+    return selectToObservable(input$, selector)
+        .pipe(
+            filter(val => !isNil(val)),
+            map(val => val!)
+        );
 }

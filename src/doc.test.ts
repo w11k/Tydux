@@ -64,7 +64,7 @@ describe("Documentation", function () {
         // 10 (start value)
         // 11 (incremented by 1)
         // 31 (incremented by 20)
-        myFacade.selectValueB().unbounded().subscribe(value => {
+        myFacade.selectValueB().subscribe(value => {
             console.log(value);
         });
 

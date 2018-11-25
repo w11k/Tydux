@@ -1,5 +1,6 @@
 import {Action} from "redux";
-import {ReplaySubject, Subject} from "rxjs";
+import {Observable, ReplaySubject, Subject} from "rxjs";
+import {distinctUntilChanged, filter, map} from "rxjs/operators";
 import {
     CommandReducer,
     Commands,
@@ -10,13 +11,16 @@ import {
 } from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
-import {
-    ObservableSelection,
-    selectNonNilToObervableSelection,
-    selectToObservableSelection
-} from "./ObservableSelection";
+import {isPlainObject} from "./lodash/lodash";
 import {MountPoint} from "./store";
-import {createProxy, functions, functionsIn} from "./utils";
+import {
+    areArraysShallowEquals,
+    arePlainObjectsShallowEquals,
+    createProxy,
+    functions,
+    functionsIn,
+    isNil, selectNonNilToObervable, selectToObservable
+} from "./utils";
 
 let uniqueFacadeIds: { [id: string]: number } = {};
 
@@ -130,16 +134,16 @@ export abstract class Facade<S, C extends Commands<S>> {
      * - operates on the micro-task queue
      * - only emits values when they change (identity-based)
      */
-    select<R>(selector?: (state: Readonly<S>) => R): ObservableSelection<R> {
-        return selectToObservableSelection(this.reduxStoreStateSubject, selector);
+    select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
+        return selectToObservable(this.reduxStoreStateSubject, selector);
     }
 
     /**
      * - operates on the micro-task queue
      * - only emits values when they change (identity-based)
      */
-    selectNonNil<R>(selector?: (state: Readonly<S>) => R | null | undefined): ObservableSelection<R> {
-        return selectNonNilToObervableSelection(this.reduxStoreStateSubject, selector);
+    selectNonNil<R>(selector?: (state: Readonly<S>) => R | null | undefined): Observable<R> {
+        return selectNonNilToObervable(this.reduxStoreStateSubject, selector);
     }
 
     private enrichInstanceMethods() {
