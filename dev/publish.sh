@@ -13,8 +13,4 @@ npm run dist && \
 git tag ${PACKAGE_VERSION} && \
 npm publish --access public && \
 git push && \
-git push --tags && \
-npm --no-git-tag-version version patch && \
-git add . && \
-git commit -m "started new version" && \
-git push
+git push --tags

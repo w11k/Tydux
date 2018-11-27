@@ -1,3 +1,8 @@
+# Version 10.0.1
+
+- added declaration source maps closes #16
+
+
 # Version 10.0.0
 
 - removed `ObservableSelection` due to this [TSLint rule](https://github.com/w11k/rx-utils#w11k-rxjs-subscribe-takeuntil)
