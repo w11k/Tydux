@@ -30,6 +30,14 @@
     "rootDir": "src",
     "outDir": "dist",
     "baseUrl": "."
+    //    "plugins": [
+    //      {
+    //        "name": "typescript-tslint-plugin",
+    //        "ignoreDefinitionFiles": true,
+    //        "configFile": "./tslint.hard.json",
+    //        "suppressWhileTypeErrorsPresent": true
+    //      }
+    //    ]
   },
   "include": [
     "src/**/*"
