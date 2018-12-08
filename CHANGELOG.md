@@ -1,4 +1,9 @@
 
+# Version 10.0.2
+
+- removed AngularJS 1.x integration
+
+
 # Version 10.0.1
 
 - added declaration source maps closes #16
