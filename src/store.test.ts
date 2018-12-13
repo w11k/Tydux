@@ -34,6 +34,52 @@ describe("Store", function () {
         });
     });
 
+    it("select() first emits the current state", function (done) {
+        const initialState = {
+            val: 10
+        };
+
+        const tyduxStore = createTyduxStore(initialState);
+
+        tyduxStore.select().subscribe(state => {
+            assert.equal(state.val, 10);
+            done();
+        });
+    });
+
+    it("select() emits value on state changes", function (done) {
+        const initialState = {
+            val: 10
+        };
+
+        class MyCommands extends Commands<typeof initialState> {
+            inc(by: number) {
+                this.state.val += by;
+            }
+        }
+
+        class MyFacade extends Facade<typeof initialState, MyCommands> {
+            action() {
+                this.commands.inc(100);
+            }
+        }
+
+        const tyduxStore = createTyduxStore(initialState);
+        const collected: number[] = [];
+        tyduxStore.select().subscribe(state => {
+            collected.push(state.val);
+        });
+
+        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
+        myFacade.action();
+
+        setTimeout(() => {
+            assert.deepEqual(collected, [10, 110]);
+            done();
+        }, 0);
+    });
+
     it("createTyduxStore() - with slice", async function () {
         const initialState = {
             facade: {
@@ -202,5 +248,5 @@ describe("Store", function () {
             }
         });
     });
-    
+
 });

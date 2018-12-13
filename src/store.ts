@@ -1,4 +1,5 @@
 import {Action, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
+import {Observable} from "rxjs";
 import {CommandReducer} from "./commands";
 
 
@@ -23,6 +24,15 @@ export class TyduxStore<S> {
 
     getState() {
         return this.store.getState();
+    }
+
+    select(): Observable<S> {
+        return new Observable<S>(observer => {
+            observer.next(this.store.getState());
+            return this.store.subscribe(() => {
+                Promise.resolve().then(() => observer.next(this.store.getState()));
+            });
+        });
     }
 
     createMountPoint<L>(stateGetter: (globalState: S) => L,
@@ -58,13 +68,6 @@ export class TyduxReducerBridge {
 
     private readonly facadeReducers: CommandReducer<any>[] = [];
 
-    private readonly reducer = (initialState?: any) => (state: any = initialState, action: any) => {
-        for (let reducer of this.facadeReducers) {
-            state = reducer(state, action);
-        }
-        return state;
-    };
-
     createTyduxReducer<S>(initialState?: S): Reducer<S> {
         return this.reducer(initialState);
     }
@@ -76,6 +79,13 @@ export class TyduxReducerBridge {
     connectStore<S>(store: Store<S>) {
         return new TyduxStore<S>(store, this.facadeReducers);
     }
+
+    private readonly reducer = (initialState?: any) => (state: any = initialState, action: any) => {
+        for (let reducer of this.facadeReducers) {
+            state = reducer(state, action);
+        }
+        return state;
+    };
 
 }
 

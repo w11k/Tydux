@@ -1,26 +1,10 @@
-import {Action} from "redux";
-import {Observable, ReplaySubject, Subject} from "rxjs";
-import {distinctUntilChanged, filter, map} from "rxjs/operators";
-import {
-    CommandReducer,
-    Commands,
-    CommandsInvoker,
-    CommandsMethods,
-    createReducerFromCommandsInvoker,
-    FacadeAction
-} from "./commands";
-import {deepFreeze} from "./deep-freeze";
-import {isTyduxDevelopmentModeEnabled} from "./development";
-import {isPlainObject} from "./lodash/lodash";
-import {MountPoint} from "./store";
-import {
-    areArraysShallowEquals,
-    arePlainObjectsShallowEquals,
-    createProxy,
-    functions,
-    functionsIn,
-    isNil, selectNonNilToObervable, selectToObservable
-} from "./utils";
+import { Action } from "redux";
+import { Observable, ReplaySubject, Subject } from "rxjs";
+import { CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReducerFromCommandsInvoker, FacadeAction } from "./commands";
+import { deepFreeze } from "./deep-freeze";
+import { isTyduxDevelopmentModeEnabled } from "./development";
+import { MountPoint } from "./store";
+import { createProxy, functions, functionsIn, selectNonNilToObervable, selectToObservable } from "./utils";
 
 let uniqueFacadeIds: { [id: string]: number } = {};
 

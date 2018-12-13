@@ -1,4 +1,9 @@
 
+# Version 10.1.0
+
+- added TyduxStore#select()
+
+
 # Version 10.0.2
 
 - removed AngularJS 1.x integration
