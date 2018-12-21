@@ -1,4 +1,9 @@
 
+# Version 10.2.0
+
+- Facades can now mount to possibly undefined mount points as long as they provide the initial state
+
+
 # Version 10.1.0
 
 - added TyduxStore#select()

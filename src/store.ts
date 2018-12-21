@@ -1,24 +1,25 @@
-import {Action, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
+import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
 import {Observable} from "rxjs";
 import {CommandReducer} from "./commands";
+import {isNil} from "./utils";
 
 
-export interface MountPoint<L, S = any> {
+export interface MountPoint<L, S = any, A extends Action = Action<string>> {
     addReducer: (commandReducer: CommandReducer<any>) => void;
-    dispatch: Dispatch<Action<string>>;
+    dispatch: Dispatch<A>;
     getState: () => L;
     extractState: (globalState: S) => L;
     setState: (globalState: S, localState: L) => S;
     subscribe: (listener: () => void) => Unsubscribe;
 }
 
-export interface NamedMountPoint<L, S = any> extends MountPoint<L, S> {
+export interface NamedMountPoint<L, S = any, A extends Action = Action<string>> extends MountPoint<L, S, A> {
     sliceName: string;
 }
 
-export class TyduxStore<S> {
+export class TyduxStore<S, A extends Action = Action<string>> {
 
-    constructor(readonly store: Store<S>,
+    constructor(readonly store: Store<S, A>,
                 private readonly facadeReducers: CommandReducer<any>[]) {
     }
 
@@ -36,10 +37,10 @@ export class TyduxStore<S> {
     }
 
     createMountPoint<L>(stateGetter: (globalState: S) => L,
-                        stateSetter: (globalState: S, localState: L) => S): MountPoint<L, S> {
+                        stateSetter: (globalState: S, localState: L) => S): MountPoint<L, S, A> {
         return {
             addReducer: (commandReducer: CommandReducer<any>) => this.facadeReducers.push(commandReducer),
-            dispatch: this.store.dispatch.bind(this.store),
+            dispatch: <T extends A>(action: T) => this.store.dispatch(action),
             getState: () => stateGetter(this.store.getState()),
             extractState: (state: S) => stateGetter(state),
             setState: stateSetter,
@@ -47,7 +48,7 @@ export class TyduxStore<S> {
         };
     }
 
-    createRootMountPoint<K extends keyof S>(slice: K): NamedMountPoint<S[K], S> {
+    createRootMountPoint<K extends keyof S>(slice: K): NamedMountPoint<S[K], S, A> {
         return ({
                 sliceName: slice.toString(),
                 ...this.createMountPoint(
@@ -68,57 +69,47 @@ export class TyduxReducerBridge {
 
     private readonly facadeReducers: CommandReducer<any>[] = [];
 
-    createTyduxReducer<S>(initialState?: S): Reducer<S> {
-        return this.reducer(initialState);
+    createTyduxReducer<S = any, A extends Action = AnyAction>(initialState?: S): Reducer<S, A> {
+        let firstCall = true;
+        return (state: S | undefined, action: A) => {
+            if (firstCall) {
+                state = state === undefined ? initialState : state;
+                firstCall = false;
+            }
+
+            for (let reducer of this.facadeReducers) {
+                state = reducer(state, action);
+            }
+            return state!;
+        };
     }
 
-    wrapReducer<S>(wrappedReducer: Reducer<S>): Reducer<S> {
-        return (state: S | undefined, action: Action) => wrappedReducer(this.reducer()(state, action), action);
+    wrapReducer<S, A extends Action = AnyAction>(wrappedReducer: Reducer<S, A>): Reducer<S, A> {
+        const tyduxReducer = this.createTyduxReducer<S, A>(undefined);
+        return (state, action) => {
+            const stateAfterWrappedReducer: S = wrappedReducer(state, action);
+            return tyduxReducer(stateAfterWrappedReducer, action);
+        };
     }
 
-    connectStore<S>(store: Store<S>) {
+    connectStore<S>(store: Store<S>): TyduxStore<S> {
         return new TyduxStore<S>(store, this.facadeReducers);
     }
 
-    private readonly reducer = (initialState?: any) => (state: any = initialState, action: any) => {
-        for (let reducer of this.facadeReducers) {
-            state = reducer(state, action);
-        }
-        return state;
-    };
-
 }
 
-// export interface TyduxMiddlewareBridge<S> {
-//     (): void;
-// }
-// function createTyduxStoreMiddleware<S>(store: { getState(): S, dispatch(action: any): void }) {
-//     const bridge = new TyduxReducerBridge();
-//     const subject = new Subject<S>();
-//     const subscribe = (listener: () => void) => {
-//         const subscription = subject.subscribe(() => {
-//             listener();
-//         });
-//         return () => {
-//             subscription.unsubscribe();
-//         }
-//     };
-//
-//     const storeWithSubscribe = Object.assign({subscribe}, store);
-//     let connected = bridge.connectStore(storeWithSubscribe);
-//
-//     return (next: any) => (action: any) => {
-//         return next(action);
-//     }
-// }
-
-export function createTyduxStore<S>(initialState: S,
-                                    enhancer?: StoreEnhancer<any>,
-                                    reducer = (state: S | undefined, action: any) => state): TyduxStore<S> {
+export function createTyduxStore<S, A extends Action = AnyAction>(initialState: S,
+                                                                  enhancer?: StoreEnhancer<any>,
+                                                                  reducer?: Reducer<S, A>): TyduxStore<S> {
 
     const bridge = new TyduxReducerBridge();
+
+    const rootReducer = isNil(reducer)
+        ? bridge.createTyduxReducer(initialState)
+        : bridge.wrapReducer(reducer);
+
     const reduxStore = createStore(
-        bridge.wrapReducer(reducer),
+        rootReducer,
         initialState as any /*cast due to strange TS error*/,
         enhancer);
 

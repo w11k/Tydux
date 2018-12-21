@@ -7,7 +7,7 @@ export type CommandsMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 export type CommandReducer<S> = (state: S, action: FacadeAction) => S;
 
 export interface FacadeAction extends Action<string> {
-    payload: any[];
+    payload?: any[];
     debugContext?: string;
 }
 

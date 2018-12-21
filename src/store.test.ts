@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {Action, createStore, Store, Store as ReduxStore} from "redux";
+import {Action, AnyAction, createStore, Store, Store as ReduxStore} from "redux";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
 import {createTyduxStore, TyduxReducerBridge} from "./store";
@@ -31,6 +31,37 @@ describe("Store", function () {
 
         assert.deepEqual(tyduxStore.getState(), {
             val: 110
+        });
+    });
+
+    it("createTyduxStore() - mount point is optional", async function () {
+        type MyState = { val: number };
+        const globalState = {
+            myState: undefined as MyState | undefined
+        };
+
+        class MyCommands extends Commands<MyState> {
+            inc(by: number) {
+                this.state.val += by;
+            }
+        }
+
+        class MyFacade extends Facade<MyState, MyCommands> {
+            action() {
+                this.commands.inc(100);
+            }
+        }
+
+        const tyduxStore = createTyduxStore(globalState);
+        const mount = tyduxStore.createMountPoint(
+            s => s.myState,
+            (global, facade) => ({...global, myState: facade}));
+
+        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands(), {val: 1});
+        myFacade.action();
+
+        assert.deepEqual(tyduxStore.getState().myState, {
+            val: 101
         });
     });
 
@@ -100,7 +131,10 @@ describe("Store", function () {
         }
 
         const tyduxStore = createTyduxStore(initialState);
-        const mount = tyduxStore.createMountPoint(s => s.facade, (state, facade) => ({...state, facade}));
+        const mount = tyduxStore.createMountPoint(
+            s => s.facade,
+            (state, facade) => ({...state, facade}));
+
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
         myFacade.action();
 
@@ -197,7 +231,7 @@ describe("Store", function () {
         });
     });
 
-    it("can be used along Redux", async function () {
+    it("can be used along Redux with wrapReducer", async function () {
         const initialState = {
             someValue: 0,
             managedByFacade: {
@@ -221,6 +255,61 @@ describe("Store", function () {
 
         const tyduxBridge = new TyduxReducerBridge();
         const reduxStore: ReduxStore<AppState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
+        const connected = tyduxBridge.connectStore(reduxStore);
+        const mount = connected.createRootMountPoint("managedByFacade");
+
+        reduxStore.dispatch({type: "inc", payload: 5});
+
+        class MyCommands extends Commands<ManagedByFacadeState> {
+            inc(by: number) {
+                this.state.val += by;
+            }
+        }
+
+        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+            action() {
+                this.commands.inc(100);
+            }
+        }
+
+        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
+        myFacade.action();
+
+        assert.deepEqual(reduxStore.getState(), {
+            someValue: 5,
+            managedByFacade: {
+                val: 110
+            }
+        });
+    });
+
+    it("can be used along Redux with Tydux reducer", async function () {
+        const initialState = {
+            someValue: 0,
+            managedByFacade: {
+                val: 10
+            }
+        };
+
+        type AppState = typeof initialState;
+        type ManagedByFacadeState = typeof initialState.managedByFacade;
+
+        const tyduxBridge = new TyduxReducerBridge();
+        const tyduxReducer = tyduxBridge.createTyduxReducer();
+
+        function rootReducer(state: AppState | undefined = initialState, action: AnyAction) {
+            switch (action.type) {
+                case "inc":
+                    return {
+                        ...state,
+                        someValue: state.someValue + action.payload
+                    };
+            }
+            return tyduxReducer(state, action);
+        }
+
+
+        const reduxStore: ReduxStore<AppState, Action> = createStore(rootReducer);
         const connected = tyduxBridge.connectStore(reduxStore);
         const mount = connected.createRootMountPoint("managedByFacade");
 

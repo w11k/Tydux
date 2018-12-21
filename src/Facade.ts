@@ -39,6 +39,8 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     protected readonly commands: CommandsMethods<C>;
 
+    constructor(mountPoint: MountPoint<S, any>, name: String, commands: C);
+    constructor(mountPoint: MountPoint<S | undefined, any>, name: String, commands: C, initialState: S);
     constructor(readonly mountPoint: MountPoint<S, any>,
                 name: String,
                 commands: C,
