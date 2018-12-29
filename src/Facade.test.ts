@@ -3,7 +3,7 @@ import {Action, createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
-import {TyduxReducerBridge, TyduxStore} from "./store";
+import {MountPoint, TyduxReducerBridge, TyduxStore} from "./store";
 import {collect, createAsyncPromise, createTestMount} from "./test-utils";
 import {areArraysShallowEquals, isNil, untilNoBufferedStateChanges} from "./utils";
 
@@ -19,6 +19,21 @@ describe("Facade", function () {
         const tf1 = new TestFacade(mount, "TestFacade", Commands);
         const tf2 = new TestFacade(mount, "TestFacade", Commands);
         assert.notEqual(tf1.facadeId, tf2.facadeId);
+    });
+
+    it("can be destroyed", function () {
+        const mount = createTestMount({});
+        let called = false;
+        class TestFacade extends Facade<any, any> {
+            constructor(mountPoint: MountPoint<any, any>, name: String, commands: any) {
+                super(mountPoint, name, commands);
+                this.destroyed.subscribe(() => called = true);
+            }
+        }
+
+        const facade = new TestFacade(mount, "TestFacade", Commands);
+        facade.destroy();
+        assert.isTrue(called);
     });
 
    it("select()", async function () {

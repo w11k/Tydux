@@ -1,10 +1,17 @@
-import { Action } from "redux";
-import { Observable, ReplaySubject, Subject } from "rxjs";
-import { CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReducerFromCommandsInvoker, FacadeAction } from "./commands";
-import { deepFreeze } from "./deep-freeze";
-import { isTyduxDevelopmentModeEnabled } from "./development";
-import { MountPoint } from "./store";
-import { createProxy, functions, functionsIn, selectNonNilToObervable, selectToObservable } from "./utils";
+import {Action} from "redux";
+import {Observable, ReplaySubject, Subject} from "rxjs";
+import {
+    CommandReducer,
+    Commands,
+    CommandsInvoker,
+    CommandsMethods,
+    createReducerFromCommandsInvoker,
+    FacadeAction
+} from "./commands";
+import {deepFreeze} from "./deep-freeze";
+import {isTyduxDevelopmentModeEnabled} from "./development";
+import {MountPoint} from "./store";
+import {createProxy, functions, functionsIn, selectNonNilToObervable, selectToObservable} from "./utils";
 
 let uniqueFacadeIds: { [id: string]: number } = {};
 
@@ -26,21 +33,18 @@ function createUniqueFacadeId(name: string) {
 export abstract class Facade<S, C extends Commands<S>> {
 
     readonly facadeId: string;
-
-    private destroyed = false;
-
+    protected readonly commands: CommandsMethods<C>;
+    private readonly destroyedSubject = new ReplaySubject<true>(1);
+    protected readonly destroyed = this.destroyedSubject.asObservable();
+    private destroyedState = false;
     private bufferedStateChanges = 0;
-
     private readonly commandContextCallstack: string[] = [];
-
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
-    private _state!: S;
-
-    protected readonly commands: CommandsMethods<C>;
-
     constructor(mountPoint: MountPoint<S, any>, name: String, commands: C);
+
     constructor(mountPoint: MountPoint<S | undefined, any>, name: String, commands: C, initialState: S);
+
     constructor(readonly mountPoint: MountPoint<S, any>,
                 name: String,
                 commands: C,
@@ -87,6 +91,8 @@ export abstract class Facade<S, C extends Commands<S>> {
         });
     }
 
+    private _state!: S;
+
     get state(): Readonly<S> {
         return this._state;
     }
@@ -100,9 +106,9 @@ export abstract class Facade<S, C extends Commands<S>> {
      * dispatched actions won't have an effect.
      */
     destroy(): void {
-        // this.destroyed = true;
-        // this.storeConnector.stateChangesSubject.complete();
-        // this.processedActionsSubject.complete();
+        this.destroyedState = true;
+        this.reduxStoreStateSubject.complete();
+        this.destroyedSubject.next(true);
     }
 
     /**
@@ -196,7 +202,7 @@ export abstract class Facade<S, C extends Commands<S>> {
         return (state: any, action: FacadeAction) => {
             const preLocalState = createProxy(this.mountPoint.extractState(state));
 
-            if (this.destroyed || !this.isActionForThisFacade(action)) {
+            if (this.destroyedState || !this.isActionForThisFacade(action)) {
                 return state;
             }
 
