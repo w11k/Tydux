@@ -1,3 +1,26 @@
+# Version 10.4.0
+
+In this version we simplified the API
+
+- TyduxStore's type parameter for the state is optional now
+  
+  If you don't use a global AppState previously you have to write ```TyduxStore<any>```. Now you can obmit the type parameter and just write ```TyduxStore```
+- Extended Facade constructor signature
+  
+  Instead of creating a mount point manually and pass it to facade's constructor, you can now just pass the TyduxStore.
+  Before:
+  ```
+  constructor(tydux: TyduxStore) {
+    super(tydux.createRootMountPoint('name'), 'name', new Commands(), new State()); 
+  }
+  ```
+  After:
+    ```
+    constructor(tydux: TyduxStore) {
+      super(tydux, 'name', new Commands(), new State());
+    }
+    ```
+  Facade will create a mount point for you with the given name (second parameter).
 
 # Version 10.3.0
 

@@ -17,7 +17,7 @@ export interface NamedMountPoint<L, S = any, A extends Action = Action<string>> 
     sliceName: string;
 }
 
-export class TyduxStore<S, A extends Action = Action<string>> {
+export class TyduxStore<S = any, A extends Action = Action<string>> {
 
     constructor(readonly store: Store<S, A>,
                 private readonly facadeReducers: CommandReducer<any>[]) {

@@ -10,7 +10,7 @@ import {
 } from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
-import {MountPoint} from "./store";
+import {MountPoint, TyduxStore} from "./store";
 import {createProxy, functions, functionsIn, selectNonNilToObervable, selectToObservable} from "./utils";
 
 let uniqueFacadeIds: { [id: string]: number } = {};
@@ -40,13 +40,15 @@ export abstract class Facade<S, C extends Commands<S>> {
     private bufferedStateChanges = 0;
     private readonly commandContextCallstack: string[] = [];
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
+    private mountPoint: MountPoint<S, any>;
 
     constructor(mountPoint: MountPoint<S, any>, name: String, commands: C);
+    constructor(tydux: TyduxStore, name: String, commands: C, initialState: S);
 
     constructor(mountPoint: MountPoint<S | undefined, any>, name: String, commands: C, initialState: S);
 
-    constructor(readonly mountPoint: MountPoint<S, any>,
-                name: String,
+    constructor(readonly mountPointOrRootStore: MountPoint<S, any> | TyduxStore,
+                name: string,
                 commands: C,
                 initialState?: S) {
 
@@ -56,30 +58,35 @@ export abstract class Facade<S, C extends Commands<S>> {
         const [commandsInvoker, proxyObj] = this.createCommandsProxy(commands);
         this.commands = proxyObj;
 
-        mountPoint.addReducer(this.createReducerFromCommandsInvoker(commandsInvoker));
+        this.mountPoint =
+            mountPointOrRootStore instanceof TyduxStore
+            ? mountPointOrRootStore.createRootMountPoint(name)
+            : mountPointOrRootStore;
+
+        this.mountPoint.addReducer(this.createReducerFromCommandsInvoker(commandsInvoker));
         delete (this.commands as any).state;
 
-        this.setState(mountPoint.getState());
+        this.setState(this.mountPoint.getState());
         this.reduxStoreStateSubject.next(this.state);
 
         if (initialState !== undefined) {
             const initialFacadeStateAction = this.facadeId + "@@INIT";
 
-            mountPoint.addReducer((state: S, action: Action) => {
+            this.mountPoint.addReducer((state: S, action: Action) => {
                 if (action.type === initialFacadeStateAction) {
                     this.setState(initialState);
                     this.reduxStoreStateSubject.next(this.state);
-                    return mountPoint.setState(state, initialState);
+                    return this.mountPoint.setState(state, initialState);
                 }
 
                 return state;
             });
 
-            mountPoint.dispatch({type: initialFacadeStateAction, initialFacadeState: initialState});
+            this.mountPoint.dispatch({type: initialFacadeStateAction, initialFacadeState: initialState});
         }
 
-        mountPoint.subscribe(() => {
-            const currentState = Object.assign({}, mountPoint.getState());
+        this.mountPoint.subscribe(() => {
+            const currentState = Object.assign({}, this.mountPoint.getState());
             this.bufferedStateChanges++;
             this.setState(currentState);
 

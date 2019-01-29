@@ -319,6 +319,30 @@ describe("Facade", function () {
         facade.met1();
     });
 
+    it("should provide an overloaded constructor to pass TyduxStore instead of mount point", function () {
+        class TestState {}
+
+        class TestCommands extends Commands<TestState> {}
+
+        class TestFacade extends Facade<TestState, TestCommands> {}
+
+        const tyduxBridge = new TyduxReducerBridge();
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer(), {});
+        const tydux = tyduxBridge.connectStore(reduxStore);
+
+        const facade = new TestFacade(tydux, "test", new TestCommands(), new TestState());
+
+        assert.deepEqual(
+            reduxStore.getState(),
+            { test: {} }
+        );
+
+        assert.deepEqual(
+            facade.state,
+            {}
+        );
+    });
+
     it("can set their initial state during super call", function () {
         class AppState {
             // noinspection JSUnusedGlobalSymbols
