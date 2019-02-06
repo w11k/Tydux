@@ -17,6 +17,20 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "tydux": [
+        "dist/tydux"
+      ],
+      "tydux/*": [
+        "dist/tydux/*"
+      ],
+      "tydux-angular": [
+        "dist/tydux-angular"
+      ],
+      "tydux-angular/*": [
+        "dist/tydux-angular/*"
+      ]
+    }
   }
 }

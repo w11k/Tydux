@@ -134,6 +134,76 @@
           }
         }
       }
+    },
+    "tydux": {
+      "root": "projects/tydux",
+      "sourceRoot": "projects/tydux/src",
+      "projectType": "library",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/tydux/tsconfig.lib.json",
+            "project": "projects/tydux/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/tydux/src/test.ts",
+            "tsConfig": "projects/tydux/tsconfig.spec.json",
+            "karmaConfig": "projects/tydux/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/tydux/tsconfig.lib.json",
+              "projects/tydux/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
+    },
+    "tydux-angular": {
+      "root": "projects/tydux-angular",
+      "sourceRoot": "projects/tydux-angular/src",
+      "projectType": "library",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/tydux-angular/tsconfig.lib.json",
+            "project": "projects/tydux-angular/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/tydux-angular/src/test.ts",
+            "tsConfig": "projects/tydux-angular/tsconfig.spec.json",
+            "karmaConfig": "projects/tydux-angular/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/tydux-angular/tsconfig.lib.json",
+              "projects/tydux-angular/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "tydux-demo"
