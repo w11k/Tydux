@@ -2,12 +2,12 @@
   "name": "tydux",
   "version": "0.0.1",
   "dependencies": {
-    "redux": "4.0.0"
+    "rxjs": ">= 6.2.0",
+    "redux": "4.x.x"
   },
   "peerDependencies": {
     "rxjs": ">= 6.2.0",
-    "@angular/common": "^7.2.0",
-    "@angular/core": "^7.2.0"
+    "redux": "4.x.x"
   },
   "devDependencies": {
     "@types/chai": "4.1.2",
@@ -24,7 +24,13 @@
     "source-map-support": "0.5.3",
     "ts-node": "4.1.0",
     "tslint": "5.9.1",
-    "typescript": "3.0.x",
+    "typescript": "^3.3.1",
     "typescript-tslint-plugin": "^0.1.2"
+  },
+  "ngPackage": {
+    "whitelistedNonPeerDependencies": [
+      "rxjs",
+      "redux"
+    ]
   }
 }

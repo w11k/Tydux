@@ -1,39 +1,41 @@
 {
-  "extends": "../../tsconfig.json",
+  "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "../../out-tsc/lib",
-    "target": "es2015",
-    "module": "es2015",
-    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "allowJs": false,
     "declaration": true,
-    "sourceMap": true,
-    "inlineSources": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "importHelpers": true,
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "noEmitOnError": false,
+    "noImplicitAny": true,
     "strict": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "types": [],
+    "typeRoots": [
+      "node_modules/@types"
+    ],
     "lib": [
-      "dom",
-      "es2018"
-    ]
+      "es2015",
+      "dom"
+    ],
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": "."
+    //    "plugins": [
+    //      {
+    //        "name": "typescript-tslint-plugin",
+    //        "ignoreDefinitionFiles": true,
+    //        "configFile": "./tslint.hard.json",
+    //        "suppressWhileTypeErrorsPresent": true
+    //      }
+    //    ]
   },
-  "angularCompilerOptions": {
-    "annotateForClosureCompiler": true,
-    "skipTemplateCodegen": true,
-    "strictMetadataEmit": true,
-    "fullTemplateTypeCheck": true,
-    "strictInjectionParameters": true,
-    "enableResourceInlining": true
-  },
-  "exclude": [
-    "src/test.ts",
-    "**/*.spec.ts"
+  "include": [
+    "src/**/*"
   ]
 }
