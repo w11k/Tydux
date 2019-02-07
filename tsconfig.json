@@ -19,17 +19,17 @@
       "dom"
     ],
     "paths": {
-      "tydux": [
-        "dist/tydux"
+      "@w11k/tydux": [
+        "dist/w11k/tydux"
       ],
-      "tydux/*": [
-        "dist/tydux/*"
+      "@w11k/tydux/*": [
+        "dist/w11k/tydux/*"
       ],
-      "tydux-angular": [
-        "dist/tydux-angular"
+      "@w11k/tydux-angular": [
+        "dist/w11k/tydux-angular"
       ],
-      "tydux-angular/*": [
-        "dist/tydux-angular/*"
+      "@w11k/tydux-angular/*": [
+        "dist/w11k/tydux-angular/*"
       ]
     }
   }

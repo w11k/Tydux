@@ -22,6 +22,9 @@
     "core-js": "^2.5.4",
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
+    "redux": "4.x.x",
+    "@w11k/tydux-angular": "./projects/w11k/tydux-angular",
+    "@w11k/tydux": "./projects/w11k/tydux",
     "zone.js": "~0.8.26"
   },
   "devDependencies": {
@@ -48,6 +51,5 @@
     "tslib": "^1.9.0",
     "tslint": "~5.11.0",
     "typescript": "^3.1.6"
-  },
-
+  }
 }
