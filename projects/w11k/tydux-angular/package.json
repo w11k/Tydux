@@ -5,7 +5,7 @@
     "@w11k/tydux": "10.x.x",
     "rxjs": ">= 6.2.0",
     "redux": "4.x.x",
-    "@angular/core": ">= 6.x.x",
-    "@angular/common": ">= 6.x.x"
+    "@angular/core": ">= 6.0.0",
+    "@angular/common": ">= 6.0.0"
   }
 }

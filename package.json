@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "npm run start:demo",
+    "start:demo": "ng serve",
+    "start:tydux": "ng build tydux --watch",
+    "start:angular": "ng build tydux-angular --watch",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
@@ -22,9 +25,8 @@
     "core-js": "^2.5.4",
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
+    "redux-devtools-extension": "2.13.5",
     "redux": "4.x.x",
-    "@w11k/tydux-angular": "./projects/w11k/tydux-angular",
-    "@w11k/tydux": "./projects/w11k/tydux",
     "zone.js": "~0.8.26"
   },
   "devDependencies": {
@@ -48,7 +50,13 @@
     "protractor": "~5.4.0",
     "ts-node": "~7.0.0",
     "tsickle": ">=0.34.0",
-    "tslib": "^1.9.0",
+    "@types/chai": "4.1.2",
+    "@types/es6-shim": "0.31.35",
+    "@types/mocha": "2.2.48",
+    "@w11k/rx-ninja": "^1.8.2",
+    "chai": "4.1.2",
+    "mocha": "5.0.0",
+    "nyc": "^11.4.1",
     "tslint": "~5.11.0",
     "typescript": "^3.1.6"
   }

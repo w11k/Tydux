@@ -72,7 +72,8 @@ export function createProxy<T>(target: T): T {
     // assignIn(proxy, target);
     Object.assign(proxy, target);
 
-    Object.setPrototypeOf(proxy, target);
+    // TODO remove 'as any' when compiler bug is fixed
+    Object.setPrototypeOf(proxy, (target as any));
     return proxy;
 }
 

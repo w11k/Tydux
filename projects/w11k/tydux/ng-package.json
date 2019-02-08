@@ -3,9 +3,5 @@
   "dest": "../../../dist/w11k/tydux",
   "lib": {
     "entryFile": "src/public_api.ts"
-  },
-  "whitelistedNonPeerDependencies": [
-    "rxjs",
-    "redux"
-  ]
+  }
 }
