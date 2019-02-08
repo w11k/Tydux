@@ -1,24 +1,71 @@
-# TyduxAngular
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.2.0.
+[![Build Status](https://travis-ci.org/w11k/Tydux-angular.svg?branch=master)](https://travis-ci.org/w11k/Tydux-angular)
+[![npm version](https://badge.fury.io/js/%40w11k%2Ftydux-angular.svg)](https://badge.fury.io/js/%40w11k%2Ftydux-angular)
 
-## Code scaffolding
+![Tydux Logo](https://raw.githubusercontent.com/w11k/Tydux/master/doc/tydux_logo.png)
 
-Run `ng generate component component-name --project tydux-angular` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project tydux-angular`.
-> Note: Don't forget to add `--project tydux-angular` or else it will be added to the default project in your `angular.json` file. 
+# Tydux Angular Integration
 
-## Build
+## Installation
 
-Run `ng build tydux-angular` to build the project. The build artifacts will be stored in the `dist/` directory.
+**Install NPM package**
 
-## Publishing
+```
+npm install @w11k/tydux-angular
+```
 
-After building your library with `ng build tydux-angular`, go to the dist folder `cd dist/tydux-angular` and run `npm publish`.
+**Define your initial state**
 
-## Running unit tests
+```
+// your application state
+export function createInitialState() {
+  return {
+    state1: new State1()
+  };
+}
 
-Run `ng test tydux-angular` to execute the unit tests via [Karma](https://karma-runner.github.io).
+// useful type alias 
+export type AppState = ReturnType<typeof createInitialState>;
+```
 
-## Further help
+**Create a Tydux configuration factory function**
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+```
+export function createTyduxConfig(): TyduxConfiguration {
+  return {
+    preloadedState: createInitialState(),
+    storeEnhancer: environment.production ? undefined : composeWithDevTools(),
+    developmentMode: !environment.production
+  };
+}
+```
+
+
+**Add Tydux Angular module**
+
+```
+@NgModule({
+  imports: [
+    TyduxModule.forRoot(createTyduxConfig) // !!! do not call factory function !!!
+  ],
+  ...
+})
+export class AppModule {
+}
+```
+
+
+**Mark your facade as Injectable() and inject the TyduxStore**
+
+```
+@Injectable({providedIn: 'root'})
+export class MyFacade extends Facade<State1, MyCommands> {
+
+  constructor(tydux: TyduxStore<AppState>) {         // inject TyduxStore
+    super(tydux.createRootMountPoint('state1'),      // the facade's mount point
+          'State1',                                  // action's type prefix
+          new MyCommands());
+  }
+
+}
+```

@@ -1,27 +1,84 @@
-# TyduxDemo
+[![Build Status](https://travis-ci.org/w11k/Tydux.svg?branch=master)](https://travis-ci.org/w11k/Tydux)
+[![npm version](https://badge.fury.io/js/%40w11k%2Ftydux.svg)](https://badge.fury.io/js/%40w11k%2Ftydux)
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.3.0.
+![Tydux Logo](https://raw.githubusercontent.com/w11k/Tydux/master/doc/tydux_logo.png)
 
-## Development server
+# Your foreman library for writing Redux stores
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Tydux is a TypeScript library to provide structure and type-safety when writing Redux stores (or other compatible frameworks). You can use Tydux as a complete wrapper around Redux or along with your existing reducers and actions.  
 
-## Code scaffolding
+# How does it work?
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+- With Tydux you combine a group of *reducers*, *actions* and *selectors*
+- Every group is encapsulated within a *facade*
+- For each *facade* you create a *mount point* to define in which slice of your store the *facade* should operate
+- In your *facade* you expose an API to expose *action* triggers and *selectors* 
 
-## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+# Key benefits
 
-## Running unit tests
+- implement "divide and conquer" 
+- type safety 
+- enforced immutability
+- class-based API works well with Angular's dependency injection
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## Installation
 
-## Running end-to-end tests
+### tydux
+Install via npm `npm install @w11k/tydux`. Note that dependencies are only declared as peer dependencies.
+So make sure that you have installed `redux: 4.x.x` and `rxjs: >= 6.2.0` in your project. 
+You could for example throw in `redux-devtools-extension`.
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+### tydux-angular
+Install tydux (see above) and install tydux-anguar per npm `npm install @w11k/tydux-angular`.
 
-## Further help
+## Getting startet
+Create your initial state 
+```typescript
+export class TodoState {
+  todos: ToDo[] = [
+    {isDone: false, name: 'learn Angular'},
+    {isDone: true, name: 'learn Angular JS'},
+    {isDone: true, name: 'cleanup tutorial'},
+  ]
+}
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+Then setup your commands to calculate and update your state. Note that all objects in your
+state are frozen and can't be altered. So we generate new objects instead of altering.
+
+```typescript
+export class TodoCommands extends Commands<TodoState>{
+  toggleToDo(name: string) {
+    this.state.todos = this.state.todos.map(
+      it => it.name === name ? {...it, isDone: !it.isDone} : it
+    )
+  }
+}
+```
+
+We have now our state and our commands to temper with the state. Now we combine those two
+in our facade
+
+```typescript
+export class TodoSStore extends Facade<TodoState, TodoCommands>{
+
+  constructor(tydux: TyduxStore) {
+    super(tydux, 'todos', new TodoCommands(), new TodoState())
+  }
+
+  //in our store we can do synchronous or asynchronous stuff (action or effect)
+  async toggleDoneStateOf(t: ToDo): Promise<void> {
+    await this.callServer();
+    this.commands.toggleToDo(t.name);
+  }
+
+  private async callServer(): Promise<void> {
+    await new Promise(resolve => {
+      //simulate server
+      setTimeout(() => {resolve()}, 100)
+    });
+  }
+
+}
+```
