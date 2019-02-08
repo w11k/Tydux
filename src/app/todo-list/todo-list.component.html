@@ -1,7 +1,7 @@
 <ul>
   <li *ngFor="let t of todos" [class.done]="t.isDone">
     <label>
-      <input type="checkbox" [value]="t.isDone" (input)="isDoneChanged(t)">
+      <input type="checkbox" [checked]="t.isDone" (input)="isDoneChanged(t)">
       {{t.name}}
     </label>
   </li>
