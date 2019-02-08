@@ -33,6 +33,8 @@ You could for example throw in `redux-devtools-extension`.
 Install tydux (see above) and install tydux-anguar per npm `npm install @w11k/tydux-angular`.
 
 ## Getting startet
+
+### tydux
 Create your initial state 
 ```typescript
 export class TodoState {
@@ -81,4 +83,24 @@ export class TodoSStore extends Facade<TodoState, TodoCommands>{
   }
 
 }
+```
+
+### tydux-angular
+To integrate tydux into angular just create a factory function for your tydux config and import
+the `TyduxModule` into your `AppModule`
+
+```typescript
+export function createTyduxConfig(): TyduxConfiguration {
+  return {
+    storeEnhancer: environment.production ? undefined : composeWithDevTools(),
+    developmentMode: !environment.production
+  };
+}
+
+@NgModule({
+imports: [
+  TyduxModule.forRoot(createTyduxConfig)
+]
+})
+export class AppModule{}
 ```
