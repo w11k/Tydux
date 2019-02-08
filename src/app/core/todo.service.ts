@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ToDo } from './todo.entity';
 import { Commands, Facade, TyduxStore } from '@w11k/tydux';
-import { isDone } from 'ng-packagr/lib/brocc/select';
 
 @Injectable({
   providedIn: 'root'
