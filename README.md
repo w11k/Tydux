@@ -63,7 +63,7 @@ We have now our state and our commands to temper with the state. Now we combine 
 in our facade
 
 ```typescript
-export class TodoSStore extends Facade<TodoState, TodoCommands>{
+export class TodoStore extends Facade<TodoState, TodoCommands>{
 
   constructor(tydux: TyduxStore) {
     super(tydux, 'todos', new TodoCommands(), new TodoState())

@@ -26,7 +26,6 @@ export class TodoListContextComponent implements OnInit, OnDestroy {
   }
 
   updateTodo($event: ToDo) {
-    console.log("$event", $event);
     this.todoService.toggleDoneStateOf($event);
   }
 }
