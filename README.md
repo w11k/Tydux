@@ -104,3 +104,16 @@ imports: [
 })
 export class AppModule{}
 ```
+# Documentation
+
+### (OUTDATED, will be updated soon) [Tutorial](https://github.com/w11k/Tydux/tree/master/doc/tutorial.md)
+### [Angular integration](https://github.com/w11k/Tydux/tree/master/doc/angular.md)
+### (OUTDATED, will be updated soon) [Redux Comparison](https://github.com/w11k/Tydux/tree/master/doc/redux_comparison.md)
+### [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
+
+
+# Patron
+
+❤️ [W11K - The Web Engineers](https://www.w11k.de/)
+
+❤️ [theCodeCampus - Trainings for Angular and TypeScript](https://www.thecodecampus.de/)
