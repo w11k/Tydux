@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {Action, AnyAction, createStore, Store, Store as ReduxStore} from "redux";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
@@ -29,7 +28,7 @@ describe("Store", function () {
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
         myFacade.action();
 
-        assert.deepEqual(tyduxStore.getState(), {
+        expect(tyduxStore.getState()).toEqual({
             val: 110
         });
     });
@@ -60,7 +59,7 @@ describe("Store", function () {
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands(), {val: 1});
         myFacade.action();
 
-        assert.deepEqual(tyduxStore.getState().myState, {
+        expect(tyduxStore.getState().myState).toEqual({
             val: 101
         });
     });
@@ -73,7 +72,7 @@ describe("Store", function () {
         const tyduxStore = createTyduxStore(initialState);
 
         tyduxStore.select().subscribe(state => {
-            assert.equal(state.val, 10);
+            expect(state.val).toEqual(10);
             done();
         });
     });
@@ -106,7 +105,7 @@ describe("Store", function () {
         myFacade.action();
 
         setTimeout(() => {
-            assert.deepEqual(collected, [10, 110]);
+            expect(collected).toEqual([10, 110]);
             done();
         }, 0);
     });
@@ -138,7 +137,7 @@ describe("Store", function () {
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
         myFacade.action();
 
-        assert.deepEqual(tyduxStore.getState(), {
+        expect(tyduxStore.getState()).toEqual({
             facade: {
                 val: 110
             }
@@ -174,7 +173,7 @@ describe("Store", function () {
         const myFacade = new MyFacade(mount, "MyFacade", new MyCommands());
         myFacade.action();
 
-        assert.deepEqual(reduxStore.getState(), {
+        expect(reduxStore.getState()).toEqual({
             managedByFacade: {
                 val: 110
             }
@@ -223,7 +222,7 @@ describe("Store", function () {
         const myFacade = new MyFacade(mount, "MyFacade", new MyCommands());
         myFacade.action();
 
-        assert.deepEqual(store.store.getState(), {
+        expect(store.store.getState()).toEqual({
             someValue: 5,
             managedByFacade: {
                 val: 110
@@ -275,7 +274,7 @@ describe("Store", function () {
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
         myFacade.action();
 
-        assert.deepEqual(reduxStore.getState(), {
+        expect(reduxStore.getState()).toEqual({
             someValue: 5,
             managedByFacade: {
                 val: 110
@@ -330,7 +329,7 @@ describe("Store", function () {
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
         myFacade.action();
 
-        assert.deepEqual(reduxStore.getState(), {
+        expect(reduxStore.getState()).toEqual({
             someValue: 5,
             managedByFacade: {
                 val: 110

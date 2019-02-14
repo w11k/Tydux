@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {Observable} from "rxjs";
 import {createTyduxStore, MountPoint} from "./store";
 
@@ -19,7 +18,7 @@ export function collect<T>(observable: Observable<T>) {
         },
         assert(...expected: (T | null | undefined)[]) {
             subscription.unsubscribe();
-            return assert.deepEqual(calls, expected);
+            return expect(calls).toEqual(expected);
         }
     };
 }

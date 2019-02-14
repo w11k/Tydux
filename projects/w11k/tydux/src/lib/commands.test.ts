@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {Commands, CommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
@@ -19,7 +18,7 @@ describe("Commands", function () {
 
         const ci = new CommandsInvoker(new TestCommands());
         const newState = ci.invoke({n1: 1}, c => c.mut1());
-        assert.deepEqual(newState, {n1: 2});
+        expect(newState).toEqual({n1: 2});
     });
 
     it("methods can assign state properties", async function () {
@@ -41,7 +40,7 @@ describe("Commands", function () {
 
         facade.action();
         await untilNoBufferedStateChanges(facade);
-        assert.deepEqual(facade.state, {n1: 1});
+        expect(facade.state).toEqual({n1: 1});
     });
 
     it("methods can assign state properties successively", async function () {
@@ -82,8 +81,8 @@ describe("Commands", function () {
 
         await untilNoBufferedStateChanges(facade);
 
-        assert.deepEqual(facade.state.list1, [1]);
-        assert.deepEqual(facade.state.list2, [2]);
+        expect(facade.state.list1).toEqual([1]);
+        expect(facade.state.list2).toEqual([2]);
     });
 
     it("methods can assign a new state", async function () {
@@ -104,13 +103,13 @@ describe("Commands", function () {
         const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
         facade.action();
         await untilNoBufferedStateChanges(facade);
-        assert.deepEqual(facade.state, {n1: 99});
+        expect(facade.state).toEqual({n1: 99});
     });
 
     it("can not change the state deeply", function () {
         class TestCommands extends Commands<{ n1: number[] }> {
             mut1() {
-                assert.throws(() => this.state.n1.push(3), "not extensible");
+                expect(() => this.state.n1.push(3)).toThrow();
             }
         }
 
@@ -172,8 +171,8 @@ describe("Commands", function () {
         }
 
         const facade = new TestFacade(createTestMount({a: 0}), "TestFacade", new TestCommands());
-        assert.throws(() => facade.action());
-        assert.equal(facade.state.a, 0);
+        expect(() => facade.action()).toThrow();
+        expect(facade.state.a).toEqual(0);
     });
 
     it("Commandss must not have instance members", function () {
@@ -185,10 +184,9 @@ describe("Commands", function () {
         class TestFacade extends Facade<any, TestCommands> {
         }
 
-        assert.throws(
-            () => new TestFacade(createTestMount({}), "TestFacade", new TestCommands()),
-            /abc/
-        );
+        expect(
+            () => new TestFacade(createTestMount({}), "TestFacade", new TestCommands())
+        ).toThrow();
     });
 
     it("Commandss must not create instance members", function () {
@@ -202,7 +200,7 @@ describe("Commands", function () {
 
         class TestFacade extends Facade<any, TestCommands> {
             action() {
-                assert.throws(() => this.commands.mut(), /abc/);
+                expect(() => this.commands.mut()).toThrow();
             }
         }
 

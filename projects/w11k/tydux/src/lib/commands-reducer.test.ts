@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {Commands, CommandsInvoker, createReducerFromCommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 
@@ -21,9 +20,9 @@ describe("ReducerFromCommands", function () {
         let state = {n1: 0};
 
         state = reducer(state, {type: "[f] cmd1", payload: []});
-        assert.equal(state.n1, 10);
+        expect(state.n1).toEqual(10);
         state = reducer(state, {type: "[f] cmd2", payload: []});
-        assert.equal(state.n1, 1010);
+        expect(state.n1).toEqual(1010);
     });
 
     it("directly returns the state on invalid action types", function () {
@@ -37,7 +36,7 @@ describe("ReducerFromCommands", function () {
         let state = {n1: 0};
 
         state = reducer(state, {type: "invalid", payload: []});
-        assert.equal(state.n1, 0);
+        expect(state.n1).toEqual(0);
     });
 
     it("methods can have arguments", function () {
@@ -51,18 +50,18 @@ describe("ReducerFromCommands", function () {
         let state = {n1: 0};
 
         state = reducer(state, {type: "[f] cmd1", payload: [10]});
-        assert.equal(state.n1, 10);
+        expect(state.n1).toEqual(10);
         state = reducer(state, {type: "[f] cmd1", payload: [5]});
-        assert.equal(state.n1, 15);
+        expect(state.n1).toEqual(15);
     });
 
     it("can not access the state asynchronously", function (done) {
         class TestCommands extends Commands<{ n1: number }> {
             cmd1() {
                 setTimeout(() => {
-                    assert.throws(() => {
+                    expect(() => {
                         this.state.n1++;
-                    });
+                    }).toThrow();
                     done();
                 }, 0);
             }
@@ -77,9 +76,9 @@ describe("ReducerFromCommands", function () {
         class TestCommands extends Commands<{ n1: number }> {
             cmd1() {
                 setTimeout(() => {
-                    assert.throws(() => {
+                    expect(() => {
                         this.mut2();
-                    });
+                    }).toThrow();
                     done();
                 }, 0);
             }

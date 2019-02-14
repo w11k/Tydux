@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
@@ -13,7 +12,7 @@ describe("Commands - sanity tests", function () {
         class TestCommands extends Commands<{ n1: number }> {
             mut() {
                 setTimeout(() => {
-                    assert.throws(() => this.state, /Illegal access.*this/);
+                    expect(() => this.state).toThrow();
                     done();
                 }, 0);
             }
@@ -34,7 +33,7 @@ describe("Commands - sanity tests", function () {
             mut() {
                 const child = this.state.root.child;
                 setTimeout(() => {
-                    assert.throws(() => child.push(3), /not extensible/);
+                    expect(() => child.push(3)).toThrow();
                     done();
                 }, 0);
             }
@@ -55,7 +54,7 @@ describe("Commands - sanity tests", function () {
         class TestCommands extends Commands<{ n1: number }> {
             mut() {
                 setTimeout(() => {
-                    assert.throws(() => this.state = {n1: 99}, /Illegal access.*this/);
+                    expect(() => this.state = {n1: 99}).toThrow();
                     done();
                 }, 0);
             }
@@ -75,7 +74,7 @@ describe("Commands - sanity tests", function () {
         class TestCommands extends Commands<{ n1: number }> {
             mut1() {
                 createAsyncPromise(1).then(val => {
-                    assert.throws(() => this.state.n1 = val);
+                    expect(() => this.state.n1 = val).toThrow();
                     done();
                 });
             }
@@ -95,7 +94,7 @@ describe("Commands - sanity tests", function () {
         class TestCommands extends Commands<{ n1: number }> {
             mut1() {
                 setTimeout(() => {
-                    assert.throws(() => this.mut2(), /Illegal access.*this/);
+                    expect(() => this.mut2()).toThrow();
                     done();
                 }, 0);
             }
@@ -123,7 +122,7 @@ describe("Commands - sanity tests", function () {
                         this.mut2();
                     })
                     .catch((e) => {
-                        assert.match(e, /Illegal access.*this/);
+                        expect(e).toMatch(/Illegal access.*this/);
                         done();
                     });
             }
@@ -152,7 +151,7 @@ describe("Commands - sanity tests", function () {
 
         class TestFacade extends Facade<any, TestCommands> {
             action() {
-                assert.throws(() => this.commands.mod1());
+                expect(() => this.commands.mod1()).toThrow();
             }
         }
 

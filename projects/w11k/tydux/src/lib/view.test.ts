@@ -5,7 +5,6 @@ import {createTyduxStore} from "./store";
 import {collect} from "./test-utils";
 import {untilNoBufferedStateChanges} from "./utils";
 import {View} from "./view";
-import {assert} from "chai";
 
 // Store 1
 class State1 {
@@ -133,15 +132,15 @@ describe("View", function () {
 
         let called = false;
         view.select().subscribe(s => {
-            assert.throws(() => {
+            expect(() => {
                 (s.child1 as any)["a"] = "a";
-            });
-            assert.throws(() => {
+            }).toThrow();
+            expect(() => {
                 s.child1.child2.fac1.value1 = 10;
-            });
+            }).toThrow();
             called = true;
         });
-        assert.isTrue(called);
+        expect(called).toBe(true);
     });
 
     it("select() filters the event stream", async function () {
@@ -171,7 +170,7 @@ describe("View", function () {
         await untilNoBufferedStateChanges(fac1);
         await untilNoBufferedStateChanges(fac2);
 
-        assert.deepEqual(values, [
+        expect(values).toEqual([
             [10],
         ]);
     });
@@ -188,8 +187,8 @@ describe("View", function () {
 
         view
             .select(vs => {
-                assert.equal(vs.fac1.value1, 10);
-                assert.equal(vs.fac2.value2, 20);
+                expect(vs.fac1.value1).toEqual(10);
+                expect(vs.fac2.value2).toEqual(20);
                 done();
             })
 
@@ -209,8 +208,8 @@ describe("View", function () {
         let firstCalled = false;
         view
             .select(vs => {
-                assert.equal(vs.fac1.value1, 10);
-                assert.equal(vs.fac2.value2, 20);
+                expect(vs.fac1.value1).toEqual(10);
+                expect(vs.fac2.value2).toEqual(20);
                 firstCalled = true;
             })
 
@@ -218,9 +217,9 @@ describe("View", function () {
 
         view
             .select(vs => {
-                assert.isTrue(firstCalled);
-                assert.equal(vs.fac1.value1, 10);
-                assert.equal(vs.fac2.value2, 20);
+                expect(firstCalled).toBe(true);
+                expect(vs.fac1.value1).toEqual(10);
+                expect(vs.fac2.value2).toEqual(20);
                 done();
             })
 
@@ -236,19 +235,19 @@ describe("View", function () {
         const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
         const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
         const view = new View({fac1, fac2});
-        assert.equal(view.internalSubscriptionCount, 0);
+        expect(view.internalSubscriptionCount).toEqual(0);
 
         let sub1 = view
             .select(vs => {
-                assert.equal(vs.fac1.value1, 10);
-                assert.equal(vs.fac2.value2, 20);
+                expect(vs.fac1.value1).toEqual(10);
+                expect(vs.fac2.value2).toEqual(20);
             })
 
             .subscribe();
 
-        assert.equal(view.internalSubscriptionCount, 2);
+        expect(view.internalSubscriptionCount).toEqual(2);
         sub1.unsubscribe();
-        assert.equal(view.internalSubscriptionCount, 0);
+        expect(view.internalSubscriptionCount).toEqual(0);
     });
 
     it("correctly unsubscribes with 2 observers", function () {
@@ -261,29 +260,29 @@ describe("View", function () {
         const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
         const view = new View({fac1, fac2});
 
-        assert.equal(view.internalSubscriptionCount, 0);
+        expect(view.internalSubscriptionCount).toEqual(0);
 
         let sub1 = view
             .select(vs => {
-                assert.equal(vs.fac1.value1, 10);
-                assert.equal(vs.fac2.value2, 20);
+                expect(vs.fac1.value1).toEqual(10);
+                expect(vs.fac2.value2).toEqual(20);
             })
 
             .subscribe();
 
         let sub2 = view
             .select(vs => {
-                assert.equal(vs.fac1.value1, 10);
-                assert.equal(vs.fac2.value2, 20);
+                expect(vs.fac1.value1).toEqual(10);
+                expect(vs.fac2.value2).toEqual(20);
             })
 
             .subscribe();
 
-        assert.equal(view.internalSubscriptionCount, 4);
+        expect(view.internalSubscriptionCount).toEqual(4);
         sub1.unsubscribe();
-        assert.equal(view.internalSubscriptionCount, 2);
+        expect(view.internalSubscriptionCount).toEqual(2);
         sub2.unsubscribe();
-        assert.equal(view.internalSubscriptionCount, 0);
+        expect(view.internalSubscriptionCount).toEqual(0);
     });
 
 });

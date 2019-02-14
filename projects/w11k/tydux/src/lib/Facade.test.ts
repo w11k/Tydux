@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {Action, createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {Commands} from "./commands";
@@ -18,7 +17,7 @@ describe("Facade", function () {
 
         const tf1 = new TestFacade(mount, "TestFacade", Commands);
         const tf2 = new TestFacade(mount, "TestFacade", Commands);
-        assert.notEqual(tf1.facadeId, tf2.facadeId);
+        expect(tf1.facadeId).not.toEqual(tf2.facadeId);
     });
 
     it("can be destroyed", function () {
@@ -33,7 +32,7 @@ describe("Facade", function () {
 
         const facade = new TestFacade(mount, "TestFacade", Commands);
         facade.destroy();
-        assert.isTrue(called);
+        expect(called).toBe(true);
     });
 
    it("select()", async function () {
@@ -62,7 +61,7 @@ describe("Facade", function () {
 
         await untilNoBufferedStateChanges(facade);
 
-        assert.deepEqual(values, [
+        expect(values).toEqual([
             {n1: 0},
             {n1: 1},
             {n1: 2},
@@ -292,8 +291,8 @@ describe("Facade", function () {
         facade.setValue();
 
         await untilNoBufferedStateChanges(facade);
-        assert.deepEqual(facade.state.list, [1, 2, 3]);
-        assert.equal(facade.state.value, 99);
+        expect(facade.state.list).toEqual([1, 2, 3]);
+        expect(facade.state.value).toEqual(99);
     });
 
     it("state changes are directly reflected in the facade state", function (done) {
@@ -310,7 +309,7 @@ describe("Facade", function () {
         class TestFacade extends Facade<TestState, TestCommands> {
             met1() {
                 this.commands.setValue(9);
-                assert.equal(this.state.value, 9);
+                expect(this.state.value).toEqual(9);
                 done();
             }
         }
@@ -332,15 +331,9 @@ describe("Facade", function () {
 
         const facade = new TestFacade(tydux, "test", new TestCommands(), new TestState());
 
-        assert.deepEqual(
-            reduxStore.getState(),
-            { test: {} }
-        );
+        expect(reduxStore.getState()).toEqual({ test: {} });
 
-        assert.deepEqual(
-            facade.state,
-            {}
-        );
+        expect(facade.state).toEqual({});
     });
 
     it("can set their initial state during super call", function () {
@@ -368,20 +361,16 @@ describe("Facade", function () {
         const tydux = tyduxBridge.connectStore(reduxStore);
         const facade = new TestFacade(tydux);
 
-        assert.deepEqual(
-            reduxStore.getState(),
-            {
-                global: true,
-                test: {
-                    value: 0
-                }
-            } as any);
-
-        assert.deepEqual(
-            facade.state,
-            {
+        expect(reduxStore.getState()).toEqual({
+            global: true,
+            test: {
                 value: 0
-            });
+            }
+        } as any);
+
+        expect(facade.state).toEqual({
+            value: 0
+        });
     });
 
     // it("can use a NamedMountPoint", function () {
@@ -432,7 +421,7 @@ describe("Facade", function () {
             }
 
             setValue(value: number) {
-                assert.deepEqual(this.state.list, [1, 2, 3]);
+                expect(this.state.list).toEqual([1, 2, 3]);
                 this.state.value = value;
             }
         }
@@ -453,8 +442,8 @@ describe("Facade", function () {
         await store.setList();
         await store.setValue();
 
-        assert.deepEqual(store.state.list, [1, 2, 3]);
-        assert.equal(store.state.value, 99);
+        expect(store.state.list).toEqual([1, 2, 3]);
+        expect(store.state.value).toEqual(99);
     });
 
     it("emits CommandsEvents in the correct order when re-entrant code exists", function (done) {
@@ -519,7 +508,7 @@ describe("Facade", function () {
             });
 
         setTimeout(() => {
-            assert.deepEqual(states, [
+            expect(states).toEqual([
                 {list1: [], list2: []},
                 {list1: [], list2: [0]},
                 {list1: [0], list2: [0]},

@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
@@ -21,7 +20,7 @@ describe("Facade - sanity tests", function () {
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
-        assert.throws(() => facade.action());
+        expect(() => facade.action()).toThrow();
     });
 
     it("can not assign the state", function () {
@@ -34,7 +33,7 @@ describe("Facade - sanity tests", function () {
         const tyduxStore = createTyduxStore({});
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
-        assert.throws(() => facade.action());
+        expect(() => facade.action()).toThrow();
     });
 
     it("member method can use async/await", async function () {
@@ -88,8 +87,8 @@ describe("Facade - sanity tests", function () {
         const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
         facade.action();
-        assert.equal(facade.counterA, 10);
-        assert.equal(facade.counterB, 20);
+        expect(facade.counterA).toEqual(10);
+        expect(facade.counterB).toEqual(20);
     });
 
     it("member method can use async/await and instance variables", function (done) {
@@ -103,7 +102,7 @@ describe("Facade - sanity tests", function () {
                 this.counter++;
 
                 setTimeout(() => {
-                    assert.equal(this.counter, 11);
+                    expect(this.counter).toEqual(11);
                     done();
                 }, 0);
 
@@ -127,7 +126,7 @@ describe("Facade - sanity tests", function () {
             }
 
             private check() {
-                assert.equal(this.counter, 10);
+                expect(this.counter).toEqual(10);
             }
         }
 
@@ -151,7 +150,7 @@ describe("Facade - sanity tests", function () {
                 this.chars += "E";
 
                 setTimeout(() => {
-                    assert.equal(this.chars, "ABXCXE");
+                    expect(this.chars).toEqual("ABXCXE");
                     done();
                 }, 0);
             }
@@ -187,7 +186,7 @@ describe("Facade - sanity tests", function () {
         } catch (e) {
             // ignore
         }
-        assert.equal(facade.chars, "A");
+        expect(facade.chars).toEqual("A");
     });
 
 });

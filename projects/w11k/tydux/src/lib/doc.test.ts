@@ -1,4 +1,3 @@
-import {assert} from "chai";
 import {createStore} from "redux";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
@@ -71,7 +70,7 @@ describe("Documentation", function () {
         myFacade.trigger(1);
         myFacade.trigger(20);
 
-        assert.deepEqual(reduxStore.getState(), {
+        expect(reduxStore.getState()).toEqual({
             valueA: 0,
             managedByTydux: {
                 valueB: 31
