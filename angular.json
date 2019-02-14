@@ -77,21 +77,8 @@
           }
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "main": "src/test.ts",
-            "polyfills": "src/polyfills.ts",
-            "tsConfig": "src/tsconfig.spec.json",
-            "karmaConfig": "src/karma.conf.js",
-            "styles": [
-              "src/styles.scss"
-            ],
-            "scripts": [],
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ]
-          }
+          "builder": "@angular-builders/jest:run",
+          "options": {}
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
@@ -149,12 +136,8 @@
           }
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "main": "projects/w11k/tydux/src/test.ts",
-            "tsConfig": "projects/w11k/tydux/tsconfig.spec.json",
-            "karmaConfig": "projects/w11k/tydux/karma.conf.js"
-          }
+          "builder": "@angular-builders/jest:run",
+          "options": {}
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
@@ -184,12 +167,8 @@
           }
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "main": "projects/w11k/tydux-angular/src/test.ts",
-            "tsConfig": "projects/w11k/tydux-angular/tsconfig.spec.json",
-            "karmaConfig": "projects/w11k/tydux-angular/karma.conf.js"
-          }
+          "builder": "@angular-builders/jest:run",
+          "options": {}
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",

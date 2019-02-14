@@ -1,3 +1,6 @@
+describe("empty test", () => {
+
+});
 /*
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";
