@@ -1,6 +1,6 @@
 {
   "name": "@w11k/tydux-angular",
-  "version": "@w11k/tydux-alpha1",
+  "version": "@w11k/tydux-alpha.0",
   "peerDependencies": {
     "@w11k/tydux": "11.x.x",
     "rxjs": ">= 6.2.0",

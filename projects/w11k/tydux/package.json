@@ -1,6 +1,6 @@
 {
-  "name": "@w11k/tydux-alpha1",
-  "version": "11.0.0",
+  "name": "@w11k/tydux",
+  "version": "11.0.0-alpha.0",
   "dependencies": {
   },
   "peerDependencies": {
