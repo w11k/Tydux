@@ -1,5 +1,3 @@
-const esModules = ['[thir-party-lib]'].join('|');
-
 module.exports = {
   globals: {
     "ts-jest": {

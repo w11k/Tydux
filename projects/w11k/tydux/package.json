@@ -5,6 +5,7 @@
   },
   "peerDependencies": {
     "rxjs": ">= 6.2.0",
-    "redux": "4.x.x"
+    "redux": "4.x.x",
+    "chai": "4.1.2"
   }
 }

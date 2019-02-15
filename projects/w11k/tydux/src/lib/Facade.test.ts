@@ -3,7 +3,7 @@ import {distinctUntilChanged, map} from "rxjs/operators";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
 import {MountPoint, TyduxReducerBridge, TyduxStore} from "./store";
-import {collect, createAsyncPromise, createTestMount} from "./test-utils";
+import { collect, createAsyncPromise, createTestMount } from "../testing";
 import {areArraysShallowEquals, isNil, untilNoBufferedStateChanges} from "./utils";
 
 

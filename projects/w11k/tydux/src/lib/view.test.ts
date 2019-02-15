@@ -2,7 +2,7 @@ import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 import {createTyduxStore} from "./store";
-import {collect} from "./test-utils";
+import { collect } from "../testing";
 import {untilNoBufferedStateChanges} from "./utils";
 import {View} from "./view";
 

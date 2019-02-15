@@ -1,7 +1,7 @@
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
-import {createAsyncPromise, createTestMount} from "./test-utils";
+import { createAsyncPromise, createTestMount } from "../testing";
 
 
 describe("Commands - sanity tests", function () {

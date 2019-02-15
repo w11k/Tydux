@@ -2,7 +2,7 @@ import {Commands, CommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 import {createTyduxStore} from "./store";
-import {collect, createTestMount} from "./test-utils";
+import { collect, createTestMount } from "../testing";
 import {untilNoBufferedStateChanges} from "./utils";
 
 describe("Commands", function () {
