@@ -1,7 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../out-tsc/lib",
+    "outDir": "../../../out-tsc/lib",
     "target": "es2015",
     "module": "es2015",
     "moduleResolution": "node",
@@ -11,9 +11,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "types": [
-      "jest"
-    ],
+    "types": [],
     "lib": [
       "dom",
       "es2018"
@@ -28,7 +26,6 @@
     "enableResourceInlining": true
   },
   "exclude": [
-    "src/test.ts",
     "**/*.spec.ts"
   ]
 }
