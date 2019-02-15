@@ -1,3 +1,11 @@
+import { success } from 'ng-packagr/lib/util/log';
+
+describe('Noop', () => {
+  it(' should do nothing at all', () => {
+    success('Realy nothing here!!!')
+  })
+});
+
 /*
 import {assert} from "chai";
 import {enableTyduxDevelopmentMode} from "./development";

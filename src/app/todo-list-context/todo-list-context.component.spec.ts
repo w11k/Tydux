@@ -3,6 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { TodoListContextComponent } from './todo-list-context.component';
 import { MockComponent } from 'ng-mocks';
 import { TodoListComponent } from '../todo-list/todo-list.component';
+import { TyduxModule } from '../../../projects/w11k/tydux-angular/src/lib/TyduxModule';
 
 describe('TodoListContextComponent', () => {
   let component: TodoListContextComponent;
@@ -14,6 +15,9 @@ describe('TodoListContextComponent', () => {
         TodoListContextComponent,
         MockComponent(TodoListComponent)
       ],
+      imports: [
+        TyduxModule.forRoot()
+      ]
     })
     .compileComponents();
   }));

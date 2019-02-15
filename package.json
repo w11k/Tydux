@@ -11,7 +11,10 @@
     "start:demo": "ng serve",
     "start:tydux": "build:tydux -- --watch",
     "start:angular": "build:tydux-angular -- --watch",
-    "test": "run-s build:lib test:all",
+    "jest": "jest",
+    "test": "run-s build:lib jest",
+    "test:lib": "jest --config ./jest.lib.config.js",
+    "test:app": "jest --config ./jest.app.config.js",
     "test:all": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -35,7 +38,6 @@
     "zone.js": "~0.8.26"
   },
   "devDependencies": {
-    "@angular-builders/jest": "^7.3.1",
     "@angular-devkit/build-angular": "~0.13.0",
     "@angular-devkit/build-ng-packagr": "~0.13.0",
     "@angular/cli": "~7.3.0",
@@ -54,6 +56,7 @@
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",
     "jest": "^23.1.0",
+    "jest-preset-angular": "^6.0.2",
     "karma": "~3.1.1",
     "karma-chrome-launcher": "~2.2.0",
     "karma-coverage-istanbul-reporter": "~2.0.1",
