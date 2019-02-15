@@ -56,6 +56,7 @@
     "karma-jasmine": "~1.1.2",
     "karma-jasmine-html-reporter": "^0.2.2",
     "mocha": "5.0.0",
+    "ng-mocks": "^7.5.0",
     "ng-packagr": "^4.2.0",
     "nyc": "^11.4.1",
     "protractor": "~5.4.0",

@@ -78,7 +78,9 @@
         },
         "test": {
           "builder": "@angular-builders/jest:run",
-          "options": {}
+          "options": {
+            "configPath": "../jest.config.js"
+          }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
@@ -137,7 +139,9 @@
         },
         "test": {
           "builder": "@angular-builders/jest:run",
-          "options": {}
+          "options": {
+            "configPath": "../../../jest.config.js"
+          }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
@@ -168,7 +172,9 @@
         },
         "test": {
           "builder": "@angular-builders/jest:run",
-          "options": {}
+          "options": {
+            "configPath": "../../../jest.config.js"
+          }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
