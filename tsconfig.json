@@ -1,45 +1,36 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "allowJs": false,
-    "declaration": true,
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "module": "es2015",
+    "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "importHelpers": true,
     "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "noEmitOnError": false,
-    "noImplicitAny": true,
-    "strict": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true,
-    "skipLibCheck": true,
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
-      "es5",
-      "es2015.core",
-      "es2015.proxy",
-      "es2015.promise",
-      "es2015.symbol",
+      "es2018",
       "dom"
     ],
-    "rootDir": "src",
-    "outDir": "dist",
-    "baseUrl": "."
-    //    "plugins": [
-    //      {
-    //        "name": "typescript-tslint-plugin",
-    //        "ignoreDefinitionFiles": true,
-    //        "configFile": "./tslint.hard.json",
-    //        "suppressWhileTypeErrorsPresent": true
-    //      }
-    //    ]
-  },
-  "include": [
-    "src/**/*"
-  ]
+    "paths": {
+      "@w11k/tydux": [
+        "dist/w11k/tydux"
+      ],
+      "@w11k/tydux/*": [
+        "dist/w11k/tydux/*"
+      ],
+      "@w11k/tydux-angular": [
+        "dist/w11k/tydux-angular"
+      ],
+      "@w11k/tydux-angular/*": [
+        "dist/w11k/tydux-angular/*"
+      ]
+    }
+  }
 }

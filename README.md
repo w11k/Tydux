@@ -1,4 +1,3 @@
-
 [![Build Status](https://travis-ci.org/w11k/Tydux.svg?branch=master)](https://travis-ci.org/w11k/Tydux)
 [![npm version](https://badge.fury.io/js/%40w11k%2Ftydux.svg)](https://badge.fury.io/js/%40w11k%2Ftydux)
 
@@ -23,66 +22,94 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 - enforced immutability
 - class-based API works well with Angular's dependency injection
 
-# Example
+## Installation
 
-	// store's state
-    const initialState = {
-        valueA: 0,
-        managedByTydux: {
-            valueB: 10
-        }
-    };
+### tydux
+Install via npm `npm install @w11k/tydux`. Note that dependencies are only declared as peer dependencies.
+So make sure that you have installed `redux: 4.x.x` and `rxjs: >= 6.2.0` in your project. 
+You could for example throw in `redux-devtools-extension`.
 
-    // bootstrap Redux & Tydux
-    const tyduxBridge = new TyduxReducerBridge();
-    const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
-    const tyduxStore = tyduxBridge.connectStore(reduxStore);
+### tydux-angular
+Install tydux (see above) and install tydux-anguar per npm `npm install @w11k/tydux-angular`.
 
-    type ManagedByTyduxState = { valueB: number };
+## Getting startet
 
-    // combine actions and reducers
-    class MyCommands extends Commands<ManagedByTyduxState> {
-        inc(by: number) {               // action + payload
-            this.state.valueB += by;    // reducer
-        }
-    }
+### tydux
+Create your initial state 
+```typescript
+export class TodoState {
+  todos: ToDo[] = [
+    {isDone: false, name: 'learn Angular'},
+    {isDone: true, name: 'learn Angular JS'},
+    {isDone: true, name: 'cleanup tutorial'},
+  ]
+}
+```
 
-    // facade to combine commands (actions & reducers) and selectors
-    class MyFacade extends Facade<ManagedByTyduxState, MyCommands> {
+Then setup your commands to calculate and update your state. Note that all objects in your
+state are frozen and can't be altered. So we generate new objects instead of altering.
 
-        constructor(tyduxStore: TyduxStore<typeof initialState>) {
-            super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFacade", new MyCommands());
-        }
+```typescript
+export class TodoCommands extends Commands<TodoState>{
+  toggleToDo(name: string) {
+    this.state.todos = this.state.todos.map(
+      it => it.name === name ? {...it, isDone: !it.isDone} : it
+    )
+  }
+}
+```
 
-        trigger(incBy: number) {
-            this.commands.inc(incBy);
-        }
+We have now our state and our commands to temper with the state. Now we combine those two
+in our facade
 
-        selectValueB() {
-            return this.select(s => s.valueB);
-        }
-    }
+```typescript
+export class TodoStore extends Facade<TodoState, TodoCommands>{
 
-    const myFacade = new MyFacade(tyduxStore);
+  constructor(tydux: TyduxStore) {
+    super(tydux, 'todos', new TodoCommands(), new TodoState())
+  }
 
-    // prints:
-    // 10 (start value)
-    // 11 (incremented by 1)
-    // 31 (incremented by 20)
-    myFacade.selectValueB().unbounded().subscribe(value => {
-        console.log(value);
+  //in our store we can do synchronous or asynchronous stuff (action or effect)
+  async toggleDoneStateOf(t: ToDo): Promise<void> {
+    await this.callServer();
+    this.commands.toggleToDo(t.name);
+  }
+
+  private async callServer(): Promise<void> {
+    await new Promise(resolve => {
+      //simulate server
+      setTimeout(() => {resolve()}, 100)
     });
+  }
 
-    myFacade.trigger(1);
-	myFacade.trigger(20);
+}
+```
 
+### tydux-angular
+To integrate tydux into angular just create a factory function for your tydux config and import
+the `TyduxModule` into your `AppModule`
+
+```typescript
+export function createTyduxConfig(): TyduxConfiguration {
+  return {
+    storeEnhancer: environment.production ? undefined : composeWithDevTools(),
+    developmentMode: !environment.production
+  };
+}
+
+@NgModule({
+imports: [
+  TyduxModule.forRoot(createTyduxConfig)
+]
+})
+export class AppModule{}
+```
 # Documentation
 
-### [Installation](https://github.com/Tydux/Tydux/tree/master/doc/installation.md)
-### [Migration guide version 8 -> 9](https://github.com/Tydux/Tydux/tree/master/doc/migration_8_9.md)
-### [Angular integration](https://github.com/Tydux/Tydux/tree/master/doc/angular.md)
-### (OUTDATED, will be updated soon) [Tutorial](https://github.com/Tydux/Tydux/tree/master/doc/tutorial.md)
-### (OUTDATED, will be updated soon) [Redux Comparison](https://github.com/Tydux/Tydux/tree/master/doc/redux_comparison.md)
+### (OUTDATED, will be updated soon) [Tutorial](https://github.com/w11k/Tydux/tree/master/doc/tutorial.md)
+### [Angular integration](https://github.com/w11k/Tydux/tree/master/doc/angular.md)
+### (OUTDATED, will be updated soon) [Redux Comparison](https://github.com/w11k/Tydux/tree/master/doc/redux_comparison.md)
+### [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
 
 
 # Patron
@@ -90,4 +117,3 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 ❤️ [W11K - The Web Engineers](https://www.w11k.de/)
 
 ❤️ [theCodeCampus - Trainings for Angular and TypeScript](https://www.thecodecampus.de/)
-
