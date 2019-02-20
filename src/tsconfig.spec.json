@@ -8,11 +8,11 @@
     "module": "commonjs"
   },
   "files": [
-    "test.ts",
     "polyfills.ts"
   ],
   "include": [
     "**/*.spec.ts",
+    "**/*.test.ts",
     "**/*.d.ts"
   ]
 }
