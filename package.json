@@ -6,7 +6,7 @@
     "build": "ng build",
     "build:tydux": "ng build tydux",
     "build:tydux-angular": "ng build tydux-angular",
-    "build:lib": "run-s build:tydux build:tydux-angular",
+    "build:lib": "run-s build:tydux build:tydux-angular cp:license cp:readme",
     "start": "npm run start:demo",
     "start:demo": "ng serve",
     "start:tydux": "build:tydux -- --watch",
@@ -15,6 +15,8 @@
     "test:lib": "jest --config ./jest.lib.config.js",
     "test:app": "jest --config ./jest.app.config.js",
     "test:all": "ng test",
+    "cp:license": "cpx LICENSE dist/w11k/tydux && cpx LICENSE dist/w11k/tydux-angular",
+    "cp:readme": "cpx README.md dist/w11k/tydux && cpx README.md dist/w11k/tydux-angular",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
