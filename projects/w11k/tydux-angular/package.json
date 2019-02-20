@@ -1,0 +1,23 @@
+{
+  "name": "@w11k/tydux-angular",
+  "version": "11.0.0-alpha.3",
+  "author": "W11K GmbH",
+  "contributors": [
+    "Roman Roelofson",
+    "Philipp Burgmer",
+    "Sascha Engmann"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/w11k/Tydux",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/w11k/Tydux.git"
+  },
+  "peerDependencies": {
+    "@w11k/tydux": "11.x.x",
+    "rxjs": ">= 6.2.0",
+    "redux": "4.x.x",
+    "@angular/core": ">= 6.0.0",
+    "@angular/common": ">= 6.0.0"
+  }
+}
