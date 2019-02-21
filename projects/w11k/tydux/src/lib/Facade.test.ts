@@ -1,9 +1,10 @@
 import {Action, createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
+import {collect} from "../testing/test-utils-internal";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
 import {MountPoint, TyduxReducerBridge, TyduxStore} from "./store";
-import { collect, createAsyncPromise, createTestMount } from "../testing";
+import { createAsyncPromise, createTestMount } from "../testing";
 import {areArraysShallowEquals, isNil, untilNoBufferedStateChanges} from "./utils";
 
 

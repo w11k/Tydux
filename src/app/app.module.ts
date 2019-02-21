@@ -20,7 +20,7 @@ import { FormsModule } from '@angular/forms';
     BrowserModule,
     CoreModule,
     FormsModule,
-    TyduxModule.forRoot(createTyduxConfig)
+    TyduxModule.forRootWithConfig(createTyduxConfig)
   ],
   providers: [],
   bootstrap: [AppComponent]

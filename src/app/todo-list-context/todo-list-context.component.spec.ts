@@ -16,7 +16,7 @@ describe('TodoListContextComponent', () => {
         MockComponent(TodoListComponent)
       ],
       imports: [
-        TyduxModule.forRoot()
+        TyduxModule.forRootWithoutConfig()
       ]
     })
     .compileComponents();

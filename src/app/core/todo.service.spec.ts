@@ -8,7 +8,7 @@ describe('TodoService', () => {
     console.log(TyduxModule);
     TestBed.configureTestingModule({
       imports: [
-        TyduxModule.forRoot()
+        TyduxModule.forRootWithoutConfig()
       ]
     })
   });

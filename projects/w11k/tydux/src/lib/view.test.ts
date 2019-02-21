@@ -1,8 +1,8 @@
+import {collect} from "../testing/test-utils-internal";
 import {Commands} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 import {createTyduxStore} from "./store";
-import { collect } from "../testing";
 import {untilNoBufferedStateChanges} from "./utils";
 import {View} from "./view";
 

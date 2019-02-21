@@ -99,7 +99,8 @@ export function createTyduxConfig(): TyduxConfiguration {
 
 @NgModule({
 imports: [
-  TyduxModule.forRoot(createTyduxConfig)
+  TyduxModule.forRootWithConfig(createTyduxConfig)
+  // or TyduxModule.forRootWithoutConfig()
 ]
 })
 export class AppModule{}
