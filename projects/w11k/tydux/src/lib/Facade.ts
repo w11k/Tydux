@@ -1,12 +1,12 @@
 import {Action} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
 import {
-    CommandReducer,
-    Commands,
-    CommandsInvoker,
-    CommandsMethods,
-    createReducerFromCommandsInvoker,
-    FacadeAction
+  CommandReducer,
+  Commands,
+  CommandsInvoker,
+  CommandsMethods,
+  createReducerFromCommandsInvoker,
+  FacadeAction
 } from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
@@ -129,6 +129,8 @@ export abstract class Facade<S, C extends Commands<S>> {
         return this.bufferedStateChanges > 0;
     }
 
+    select(): Observable<Readonly<S>>;
+    select<R>(selector?: (state: Readonly<S>) => R): Observable<R>;
     /**
      * - operates on the micro-task queue
      * - only emits values when they change (identity-based)

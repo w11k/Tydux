@@ -174,7 +174,7 @@ export async function untilNoBufferedStateChanges(facade: Facade<any, any>): Pro
 }
 
 
-export function selectToObservable<S, R>(input$: Observable<S>,
+export function selectToObservable<S, R = Readonly<S>>(input$: Observable<S>,
                                          selector?: (state: Readonly<S>) => R) {
     return input$
         .pipe(
@@ -193,7 +193,7 @@ export function selectToObservable<S, R>(input$: Observable<S>,
 }
 
 
-export function selectNonNilToObervable<S, R>(input$: Observable<S>,
+export function selectNonNilToObervable<S, R = Readonly<S>>(input$: Observable<S>,
                                               selector?: (state: Readonly<S>) => R | null | undefined) {
     return selectToObservable(input$, selector)
         .pipe(
