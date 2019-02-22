@@ -1,7 +1,7 @@
-import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
-import {Observable} from "rxjs";
-import {CommandReducer} from "./commands";
-import {isNil} from "./utils";
+import {isNil} from '@w11k/rx-ninja';
+import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from 'redux';
+import {Observable} from 'rxjs';
+import {CommandReducer} from './commands';
 
 
 export interface MountPoint<L, S = any, A extends Action = Action<string>> {
@@ -77,7 +77,7 @@ export class TyduxReducerBridge {
                 firstCall = false;
             }
 
-            for (let reducer of this.facadeReducers) {
+            for (const reducer of this.facadeReducers) {
                 state = reducer(state, action);
             }
             return state!;

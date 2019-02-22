@@ -1,11 +1,11 @@
-import {isNil} from "./utils";
+import {isNil} from '@w11k/rx-ninja';
 
 function weCareAbout(val: any): boolean {
     return val !== null && (Array.isArray(val) || isObjectLike(val));
 }
 
 function isObjectLike(val: any): boolean {
-    return typeof val === "object";
+    return typeof val === 'object';
 }
 
 function forKeys(obj: any, iter: any) {
@@ -28,7 +28,7 @@ const prevNodes: any[] = [];
 
 export function deepFreeze<T extends any>(coll: T): T {
     if (prevNodes.some(val => val === coll)) {
-        throw new Error("object has a reference cycle");
+        throw new Error('object has a reference cycle');
     }
     prevNodes.push(coll);
 

@@ -1,5 +1,5 @@
-import {Action} from "redux";
-import {Observable, ReplaySubject, Subject} from "rxjs";
+import {Action} from 'redux';
+import {Observable, ReplaySubject, Subject} from 'rxjs';
 import {
   CommandReducer,
   Commands,
@@ -7,13 +7,13 @@ import {
   CommandsMethods,
   createReducerFromCommandsInvoker,
   FacadeAction
-} from "./commands";
-import {deepFreeze} from "./deep-freeze";
-import {isTyduxDevelopmentModeEnabled} from "./development";
-import {MountPoint, TyduxStore} from "./store";
-import {createProxy, functions, functionsIn, selectNonNilToObervable, selectToObservable} from "./utils";
+} from './commands';
+import {deepFreeze} from './deep-freeze';
+import {isTyduxDevelopmentModeEnabled} from './development';
+import {MountPoint, TyduxStore} from './store';
+import {createProxy, functions, functionsIn, selectToObservable} from './utils';
 
-let uniqueFacadeIds: { [id: string]: number } = {};
+const uniqueFacadeIds: { [id: string]: number } = {};
 
 function createUniqueFacadeId(name: string) {
     if (uniqueFacadeIds[name] === undefined) {
@@ -42,17 +42,17 @@ export abstract class Facade<S, C extends Commands<S>> {
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
     private mountPoint: MountPoint<S, any>;
 
-    constructor(mountPoint: MountPoint<S, any>, name: String, commands: C);
-    constructor(tydux: TyduxStore, name: String, commands: C, initialState: S);
+    constructor(mountPoint: MountPoint<S, any>, name: string, commands: C);
+    constructor(tydux: TyduxStore, name: string, commands: C, initialState: S);
 
-    constructor(mountPoint: MountPoint<S | undefined, any>, name: String, commands: C, initialState: S);
+    constructor(mountPoint: MountPoint<S | undefined, any>, name: string, commands: C, initialState: S);
 
     constructor(readonly mountPointOrRootStore: MountPoint<S, any> | TyduxStore,
                 name: string,
                 commands: C,
                 initialState?: S) {
 
-        this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
+        this.facadeId = createUniqueFacadeId(name.replace(' ', '_'));
         this.enrichInstanceMethods();
 
         const [commandsInvoker, proxyObj] = this.createCommandsProxy(commands);
@@ -70,7 +70,7 @@ export abstract class Facade<S, C extends Commands<S>> {
         this.reduxStoreStateSubject.next(this.state);
 
         if (initialState !== undefined) {
-            const initialFacadeStateAction = this.facadeId + "@@INIT";
+            const initialFacadeStateAction = this.facadeId + '@@INIT';
 
             this.mountPoint.addReducer((state: S, action: Action) => {
                 if (action.type === initialFacadeStateAction) {
@@ -139,14 +139,6 @@ export abstract class Facade<S, C extends Commands<S>> {
         return selectToObservable(this.reduxStoreStateSubject, selector);
     }
 
-    /**
-     * - operates on the micro-task queue
-     * - only emits values when they change (identity-based)
-     */
-    selectNonNil<R>(selector?: (state: Readonly<S>) => R | null | undefined): Observable<R> {
-        return selectNonNilToObervable(this.reduxStoreStateSubject, selector);
-    }
-
     private enrichInstanceMethods() {
         const methodNamesUntilStoreParent: string[] = [];
         let level: any = this;
@@ -155,15 +147,15 @@ export abstract class Facade<S, C extends Commands<S>> {
             level = Object.getPrototypeOf(level);
         }
 
-        for (let fnMemberName of methodNamesUntilStoreParent) {
+        for (const fnMemberName of methodNamesUntilStoreParent) {
             this.enrichInstanceMethod(fnMemberName);
         }
     }
 
     private enrichInstanceMethod(name: string) {
         const self = this;
-        let member = (this as any)[name];
-        Object.getPrototypeOf(this)[name] = function () {
+        const member = (this as any)[name];
+        Object.getPrototypeOf(this)[name] = function() {
             self.commandContextCallstack.push(name);
             try {
                 const result = member.apply(this, arguments);
@@ -191,9 +183,9 @@ export abstract class Facade<S, C extends Commands<S>> {
 
         const protoOfCommandsInstance = Object.getPrototypeOf(commandsInvoker.commands);
 
-        for (let mutatorMethodName of functionsIn(protoOfCommandsInstance)) {
+        for (const mutatorMethodName of functionsIn(protoOfCommandsInstance)) {
             const self = this;
-            proxyObj[mutatorMethodName] = function () {
+            proxyObj[mutatorMethodName] = function() {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
                 const actionType = `[${self.facadeId}] ${mutatorMethodName}`;
                 const args = Array.prototype.slice.call(arguments);
@@ -222,7 +214,7 @@ export abstract class Facade<S, C extends Commands<S>> {
     }
 
     private isActionForThisFacade(action: Action): boolean {
-        if (typeof action.type !== "string") {
+        if (typeof action.type !== 'string') {
             return false;
         }
 

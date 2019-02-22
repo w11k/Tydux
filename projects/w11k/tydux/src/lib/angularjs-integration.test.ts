@@ -2,8 +2,8 @@ import { success } from 'ng-packagr/lib/util/log';
 
 describe('Noop', () => {
   it(' should do nothing at all', () => {
-    success('Realy nothing here!!!')
-  })
+    success('Realy nothing here!!!');
+  });
 });
 // import {assert} from "chai";
 // import {AngularJS1ScopeLike, IAngularEvent, scoped} from "./angularjs-integration";

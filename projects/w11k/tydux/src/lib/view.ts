@@ -1,8 +1,8 @@
-import {Observable, Observer, Subscriber, Subscription} from "rxjs";
-import {skip} from "rxjs/operators";
-import {forEachIn, isPlainObject} from "./lodash/lodash";
-import {Facade} from "./Facade";
-import {get, last, selectNonNilToObervable, selectToObservable} from "./utils";
+import {Observable, Observer, Subscriber, Subscription} from 'rxjs';
+import {skip} from 'rxjs/operators';
+import {forEachIn, isPlainObject} from './lodash/lodash';
+import {Facade} from './Facade';
+import {get, last, selectToObservable} from './utils';
 
 
 export type ViewTreeState<T> = {
@@ -18,7 +18,7 @@ export class View<T> {
 
     private readonly stateChanges$: Observable<ViewTreeState<Readonly<T>>> =
         Observable.create((subscriber: Subscriber<ViewTreeState<Readonly<T>>>) => {
-            let stateCell: [ViewTreeState<Readonly<T>>] = [{} as any];
+            const stateCell: [ViewTreeState<Readonly<T>>] = [{} as any];
             const subscriptions: Subscription[] = [];
 
             for (const [path, store] of this.stores) {
@@ -91,7 +91,7 @@ export class View<T> {
         }
 
         const newParentState: any = {};
-        let parentPath = path.slice(0, path.length - 1);
+        const parentPath = path.slice(0, path.length - 1);
         const currentParentState = get(stateCell[0], parentPath);
 
         Object.assign(newParentState, currentParentState);
@@ -107,10 +107,6 @@ export class View<T> {
 
     select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): Observable<R> {
         return selectToObservable(this.stateChanges$, selector);
-    }
-
-    selectNonNil<R>(selector: (state: ViewTreeState<Readonly<T>>) => R | null | undefined): Observable<R> {
-        return selectNonNilToObervable(this.stateChanges$, selector);
     }
 
 }

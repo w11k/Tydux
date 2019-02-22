@@ -1,10 +1,11 @@
-import {Observable, Operator, Subscriber} from "rxjs";
-import {distinctUntilChanged, filter, map, take} from "rxjs/operators";
-import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
-import {Facade} from "./Facade";
-import {isPlainObject} from "./lodash/lodash";
+import {isNil} from '@w11k/rx-ninja';
+import {Observable, Operator, Subscriber} from 'rxjs';
+import {distinctUntilChanged, filter, map, take} from 'rxjs/operators';
+import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from './error-messages';
+import {Facade} from './Facade';
+import {isPlainObject} from './lodash/lodash';
 
-let hasProxySupport: boolean = false;
+let hasProxySupport = false;
 try {
     new Proxy({}, {});
     hasProxySupport = true;
@@ -23,7 +24,7 @@ export function areArraysShallowEquals(array1: any[], array2: any[]): boolean {
 }
 
 export function arePlainObjectsShallowEquals(obj1: any, obj2: any): boolean {
-    let keysInObj1 = keysIn(obj1);
+    const keysInObj1 = keysIn(obj1);
     if (keysInObj1.length !== keysIn(obj2).length) {
         return false;
     }
@@ -40,9 +41,9 @@ export function failIfNotUndefined(value: any): void {
 }
 
 export function failIfInstanceMembersExistExceptState(obj: any) {
-    const members = Object.keys(obj).filter(key => key !== "state");
+    const members = Object.keys(obj).filter(key => key !== 'state');
     if (members.length > 0) {
-        throw new Error(mutatorHasInstanceMembers + ": " + members.join(", "));
+        throw new Error(mutatorHasInstanceMembers + ': ' + members.join(', '));
     }
 }
 
@@ -104,11 +105,6 @@ export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Obser
     };
 }
 
-export function isNil(obj: any): obj is null | undefined {
-    return obj === null || obj === undefined;
-}
-
-
 export function last(array: any[]) {
     const length = array == null ? 0 : array.length;
     return length > 0 ? array[length - 1] : undefined;
@@ -119,13 +115,13 @@ export function functions(object: any): string[] {
         return [];
     }
     return Object.keys(object).filter((key) => {
-        return object.hasOwnProperty(key) && typeof object[key] === "function";
+        return object.hasOwnProperty(key) && typeof object[key] === 'function';
     });
 }
 
 export function functionsIn(object: any) {
     let fnMembers: string[] = functions(object);
-    let proto = Object.getPrototypeOf(object);
+    const proto = Object.getPrototypeOf(object);
     if (proto !== null) {
         fnMembers = [...fnMembers, ...functionsIn(proto)];
     }
@@ -138,7 +134,7 @@ export function keysIn(object: any) {
     }
 
     let keys: string[] = Object.keys(object);
-    let proto = Object.getPrototypeOf(object);
+    const proto = Object.getPrototypeOf(object);
     if (proto !== null) {
         keys = [...keys, ...functionsIn(proto)];
     }
@@ -147,7 +143,7 @@ export function keysIn(object: any) {
 
 export function get(obj: any, path: string[]) {
     let target = obj;
-    for (let p of path) {
+    for (const p of path) {
         if (target !== undefined && target.hasOwnProperty(p)) {
             target = target[p];
         } else {
@@ -175,7 +171,7 @@ export async function untilNoBufferedStateChanges(facade: Facade<any, any>): Pro
 
 
 export function selectToObservable<S, R = Readonly<S>>(input$: Observable<S>,
-                                         selector?: (state: Readonly<S>) => R) {
+                                                       selector?: (state: Readonly<S>) => R) {
     return input$
         .pipe(
             map(stateChange => {
@@ -190,14 +186,4 @@ export function selectToObservable<S, R = Readonly<S>>(input$: Observable<S>,
                     return oldVal === newVal;
                 }
             }));
-}
-
-
-export function selectNonNilToObervable<S, R = Readonly<S>>(input$: Observable<S>,
-                                              selector?: (state: Readonly<S>) => R | null | undefined) {
-    return selectToObservable(input$, selector)
-        .pipe(
-            filter(val => !isNil(val)),
-            map(val => val!)
-        );
 }
