@@ -44,7 +44,6 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     constructor(mountPoint: MountPoint<S, any>, name: string, commands: C);
     constructor(tydux: TyduxStore, name: string, commands: C, initialState: S);
-
     constructor(mountPoint: MountPoint<S | undefined, any>, name: string, commands: C, initialState: S);
 
     constructor(readonly mountPointOrRootStore: MountPoint<S, any> | TyduxStore,

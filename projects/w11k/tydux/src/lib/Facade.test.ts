@@ -1,29 +1,30 @@
-import {Action, createStore, Store as ReduxStore} from 'redux';
-import {distinctUntilChanged, map} from 'rxjs/operators';
-import {collect} from '../testing/test-utils-internal';
-import {Commands} from './commands';
-import {Facade} from './Facade';
-import {MountPoint, TyduxReducerBridge, TyduxStore} from './store';
-import { createAsyncPromise, createTestMount } from '../testing';
-import {areArraysShallowEquals, untilNoBufferedStateChanges} from './utils';
+import {Action, createStore, Store as ReduxStore} from "redux";
+import {distinctUntilChanged, map} from "rxjs/operators";
+import {createAsyncPromise, createTestMount} from "../testing";
+import {collect} from "../testing/test-utils-internal";
+import {Commands} from "./commands";
+import {Facade} from "./Facade";
+import {MountPoint, TyduxReducerBridge, TyduxStore} from "./store";
+import {areArraysShallowEquals, untilNoBufferedStateChanges} from "./utils";
 
 
-describe('Facade', () => {
+describe("Facade", () => {
 
-    it('ID must be unique', () => {
+    it("ID must be unique", () => {
         const mount = createTestMount({});
 
         class TestFacade extends Facade<any, any> {
         }
 
-        const tf1 = new TestFacade(mount, 'TestFacade', Commands);
-        const tf2 = new TestFacade(mount, 'TestFacade', Commands);
+        const tf1 = new TestFacade(mount, "TestFacade", Commands);
+        const tf2 = new TestFacade(mount, "TestFacade", Commands);
         expect(tf1.facadeId).not.toEqual(tf2.facadeId);
     });
 
-    it('can be destroyed', () => {
+    it("can be destroyed", () => {
         const mount = createTestMount({});
         let called = false;
+
         class TestFacade extends Facade<any, any> {
             constructor(mountPoint: MountPoint<any, any>, name: string, commands: any) {
                 super(mountPoint, name, commands);
@@ -31,12 +32,12 @@ describe('Facade', () => {
             }
         }
 
-        const facade = new TestFacade(mount, 'TestFacade', Commands);
+        const facade = new TestFacade(mount, "TestFacade", Commands);
         facade.destroy();
         expect(called).toBe(true);
     });
 
-    it('select()', async () => {
+    it("select()", async () => {
         class TestCommands extends Commands<{ n1: number }> {
             inc() {
                 this.state.n1++;
@@ -50,7 +51,7 @@ describe('Facade', () => {
         }
 
         const mount = createTestMount({n1: 0});
-        const facade = new TestFacade(mount, 'TestFacade', new TestCommands());
+        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
 
         const values: any = [];
         facade.select((currentState) => {
@@ -69,7 +70,7 @@ describe('Facade', () => {
         ]);
     });
 
-    it('select(with selector)', async () => {
+    it("select(with selector)", async () => {
         class TestCommands extends Commands<{ n1: number }> {
             inc() {
                 this.state.n1++;
@@ -82,7 +83,7 @@ describe('Facade', () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount({n1: 0}), 'TestFacade', new TestCommands());
+        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
         const collected = collect(facade.select(s => s.n1));
         facade.actionInc();
         facade.actionInc();
@@ -91,7 +92,7 @@ describe('Facade', () => {
         collected.assert(0, 1, 2);
     });
 
-    it('select(with selector return an Arrays) only emits values when the content of the array changes', async () => {
+    it("select(with selector return an Arrays) only emits values when the content of the array changes", async () => {
         class TestCommands extends Commands<{ a: number; b: number; c: number }> {
             incAB() {
                 this.state.a++;
@@ -113,7 +114,7 @@ describe('Facade', () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), 'TestFacade', new TestCommands());
+        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), "TestFacade", new TestCommands());
         const collected = collect(facade.select(s => [s.a, s.b]));
         facade.actionIncAB();
         facade.actionIncC();
@@ -124,7 +125,7 @@ describe('Facade', () => {
         collected.assert([0, 10], [1, 11], [2, 12]);
     });
 
-    it('select(with selector return an object) only emits values when the content of the object changes', async () => {
+    it("select(with selector return an object) only emits values when the content of the object changes", async () => {
         class TestCommands extends Commands<{ a: number; b: number; c: number }> {
             incAB() {
                 this.state.a++;
@@ -146,7 +147,7 @@ describe('Facade', () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), 'TestFacade', new TestCommands());
+        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), "TestFacade", new TestCommands());
         const collected = collect(facade.select(s => {
             return {
                 a: s.a,
@@ -166,7 +167,7 @@ describe('Facade', () => {
         );
     });
 
-    it('select() only triggers when the selected value deeply changed', () => {
+    it("select() only triggers when the selected value deeply changed", () => {
         class TestCommands extends Commands<{ root: { child: { val1: number } } }> {
             dummy() {
             }
@@ -179,7 +180,7 @@ describe('Facade', () => {
         }
 
         const state = {root: {child: {val1: 1}}};
-        const store = new TestFacade(createTestMount(state), 'TestFacade', new TestCommands());
+        const store = new TestFacade(createTestMount(state), "TestFacade", new TestCommands());
         const collected = collect(store.select(s => s.root));
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
@@ -190,7 +191,7 @@ describe('Facade', () => {
         );
     });
 
-    it('select() gets called on every `.command...` method invocation', async () => {
+    it("select() gets called on every `.command...` method invocation", async () => {
         class TestState {
             count = 0;
         }
@@ -213,7 +214,7 @@ describe('Facade', () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount(new TestState()), 'TestFacade', new TestCommands());
+        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
         const collected = collect(facade.select(s => s.count));
         facade.action();
 
@@ -221,7 +222,7 @@ describe('Facade', () => {
         collected.assert(0, 1, 2, 1);
     });
 
-    it('keeps state between action invocations', async () => {
+    it("keeps state between action invocations", async () => {
         class TestState {
             list: number[] = [];
             value?: number;
@@ -248,7 +249,7 @@ describe('Facade', () => {
         }
 
 
-        const facade = new TestFacade(createTestMount(new TestState()), 'TestFacade', new TestCommands());
+        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
         facade.setList();
         facade.setValue();
 
@@ -257,7 +258,7 @@ describe('Facade', () => {
         expect(facade.state.value).toEqual(99);
     });
 
-    it('state changes are directly reflected in the facade state', done => {
+    it("state changes are directly reflected in the facade state", done => {
         class TestState {
             value = 0;
         }
@@ -276,29 +277,32 @@ describe('Facade', () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount(new TestState()), 'TestFacade', new TestCommands());
+        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
         facade.met1();
     });
 
-    it('should provide an overloaded constructor to pass TyduxStore instead of mount point', () => {
-        class TestState {}
+    it("should provide an overloaded constructor to pass TyduxStore instead of mount point", () => {
+        class TestState {
+        }
 
-        class TestCommands extends Commands<TestState> {}
+        class TestCommands extends Commands<TestState> {
+        }
 
-        class TestFacade extends Facade<TestState, TestCommands> {}
+        class TestFacade extends Facade<TestState, TestCommands> {
+        }
 
         const tyduxBridge = new TyduxReducerBridge();
         const reduxStore = createStore(tyduxBridge.createTyduxReducer(), {});
         const tydux = tyduxBridge.connectStore(reduxStore);
 
-        const facade = new TestFacade(tydux, 'test', new TestCommands(), new TestState());
+        const facade = new TestFacade(tydux, "test", new TestCommands(), new TestState());
 
-        expect(reduxStore.getState()).toEqual({ test: {} });
+        expect(reduxStore.getState()).toEqual({test: {}});
 
         expect(facade.state).toEqual({});
     });
 
-    it('can set their initial state during super call', () => {
+    it("can set their initial state during super call", () => {
         class AppState {
             // noinspection JSUnusedGlobalSymbols
             global = true;
@@ -313,7 +317,7 @@ describe('Facade', () => {
 
         class TestFacade extends Facade<TestState, TestCommands> {
             constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint('test'), 'test', new TestCommands(), new TestState());
+                super(tydux.createRootMountPoint("test"), "test", new TestCommands(), new TestState());
 
             }
         }
@@ -371,7 +375,7 @@ describe('Facade', () => {
     //         });
     // });
 
-    it('keeps state between async invocations', async () => {
+    it("keeps state between async invocations", async () => {
         class TestState {
             list: number[] = [];
             value?: number;
@@ -400,7 +404,7 @@ describe('Facade', () => {
             }
         }
 
-        const store = new TestFacade(createTestMount(new TestState()), 'TestFacade', new TestCommands());
+        const store = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
         await store.setList();
         await store.setValue();
 
@@ -408,7 +412,7 @@ describe('Facade', () => {
         expect(store.state.value).toEqual(99);
     });
 
-    it('emits CommandsEvents in the correct order when re-entrant code exists', done => {
+    it("emits CommandsEvents in the correct order when re-entrant code exists", done => {
         const initialState = {
             list1: [] as number[],
             list2: [] as number[]
@@ -438,7 +442,7 @@ describe('Facade', () => {
             private counter = 0;
 
             constructor() {
-                super(mount, '', new TestCommands());
+                super(mount, "", new TestCommands());
 
                 this.select()
 
