@@ -12,7 +12,8 @@ export interface TyduxConfiguration {
   developmentMode?: boolean;
 }
 
-const staticProviders = [TyduxReducerBridge,
+const staticProviders = [
+  TyduxReducerBridge,
   {
     provide: REDUX_STORE,
     deps: [
@@ -43,14 +44,14 @@ export class TyduxModule {
     };
   }
 
- static forRootWithoutConfig(): ModuleWithProviders {
-   return {
-     ngModule: TyduxModule,
-     providers: [
-       ...staticProviders,
-     ]
-   };
- }
+  static forRootWithoutConfig(): ModuleWithProviders {
+    return {
+      ngModule: TyduxModule,
+      providers: [
+        ...staticProviders,
+      ]
+    };
+  }
 }
 
 export function factoryReduxStore(injector: Injector, bridge: TyduxReducerBridge) {
@@ -70,5 +71,5 @@ export function factoryReduxStore(injector: Injector, bridge: TyduxReducerBridge
 }
 
 export function factoryTyduxStore(redux: Store, bridge: TyduxReducerBridge) {
-  return bridge.connectStore(redux)
+  return bridge.connectStore(redux);
 }

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Tydux.iml" filepath="$PROJECT_DIR$/.idea/Tydux.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tydux.iml" filepath="$PROJECT_DIR$/.idea/tydux.iml" />
     </modules>
   </component>
 </project>

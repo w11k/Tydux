@@ -1,6 +1,13 @@
 {
   "extends": "../../../tslint.json",
   "rules": {
+    "quotemark": [
+      true,
+      "double"
+    ],
+    "only-arrow-functions": false,
+    "space-before-function-paren": false,
+    "interface-over-type-literal": false,
     "directive-selector": [
       true,
       "attribute",

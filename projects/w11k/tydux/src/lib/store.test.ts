@@ -6,335 +6,335 @@ import {createTyduxStore, TyduxReducerBridge} from "./store";
 
 describe("Store", function () {
 
-    it("createTyduxStore() - facade at root", async function () {
-        const initialState = {
-            val: 10
-        };
+  it("createTyduxStore() - facade at root", async function () {
+    const initialState = {
+      val: 10
+    };
 
-        class MyCommands extends Commands<typeof initialState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
+    class MyCommands extends Commands<typeof initialState> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
 
-        class MyFacade extends Facade<typeof initialState, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
+    class MyFacade extends Facade<typeof initialState, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
 
-        const tyduxStore = createTyduxStore(initialState);
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
-        myFacade.action();
+    const tyduxStore = createTyduxStore(initialState);
+    const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+    const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
+    myFacade.action();
 
-        expect(tyduxStore.getState()).toEqual({
-            val: 110
-        });
+    expect(tyduxStore.getState()).toEqual({
+      val: 110
+    });
+  });
+
+  it("createTyduxStore() - mount point is optional", async function () {
+    type MyState = { val: number };
+    const globalState = {
+      myState: undefined as MyState | undefined
+    };
+
+    class MyCommands extends Commands<MyState> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
+
+    class MyFacade extends Facade<MyState, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
+
+    const tyduxStore = createTyduxStore(globalState);
+    const mount = tyduxStore.createMountPoint(
+      s => s.myState,
+      (global, facade) => ({...global, myState: facade}));
+
+    const myFacade = new MyFacade(mount, "TestFacade", new MyCommands(), {val: 1});
+    myFacade.action();
+
+    expect(tyduxStore.getState().myState).toEqual({
+      val: 101
+    });
+  });
+
+  it("select() first emits the current state", function (done) {
+    const initialState = {
+      val: 10
+    };
+
+    const tyduxStore = createTyduxStore(initialState);
+
+    tyduxStore.select().subscribe(state => {
+      expect(state.val).toEqual(10);
+      done();
+    });
+  });
+
+  it("select() emits value on state changes", function (done) {
+    const initialState = {
+      val: 10
+    };
+
+    class MyCommands extends Commands<typeof initialState> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
+
+    class MyFacade extends Facade<typeof initialState, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
+
+    const tyduxStore = createTyduxStore(initialState);
+    const collected: number[] = [];
+    tyduxStore.select().subscribe(state => {
+      collected.push(state.val);
     });
 
-    it("createTyduxStore() - mount point is optional", async function () {
-        type MyState = { val: number };
-        const globalState = {
-            myState: undefined as MyState | undefined
-        };
+    const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+    const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
+    myFacade.action();
 
-        class MyCommands extends Commands<MyState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
+    setTimeout(() => {
+      expect(collected).toEqual([10, 110]);
+      done();
+    }, 0);
+  });
 
-        class MyFacade extends Facade<MyState, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
+  it("createTyduxStore() - with slice", async function () {
+    const initialState = {
+      facade: {
+        val: 10
+      }
+    };
 
-        const tyduxStore = createTyduxStore(globalState);
-        const mount = tyduxStore.createMountPoint(
-            s => s.myState,
-            (global, facade) => ({...global, myState: facade}));
+    class MyCommands extends Commands<typeof initialState.facade> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
 
-        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands(), {val: 1});
-        myFacade.action();
+    class MyFacade extends Facade<typeof initialState.facade, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
 
-        expect(tyduxStore.getState().myState).toEqual({
-            val: 101
-        });
+    const tyduxStore = createTyduxStore(initialState);
+    const mount = tyduxStore.createMountPoint(
+      s => s.facade,
+      (state, facade) => ({...state, facade}));
+
+    const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
+    myFacade.action();
+
+    expect(tyduxStore.getState()).toEqual({
+      facade: {
+        val: 110
+      }
     });
+  });
 
-    it("select() first emits the current state", function (done) {
-        const initialState = {
-            val: 10
-        };
+  it("createRootMountPoint()", async function () {
+    const initialState = {
+      managedByFacade: {
+        val: 10
+      }
+    };
 
-        const tyduxStore = createTyduxStore(initialState);
+    type ManagedByFacadeState = typeof initialState.managedByFacade;
 
-        tyduxStore.select().subscribe(state => {
-            expect(state.val).toEqual(10);
-            done();
-        });
+    const tyduxBridge = new TyduxReducerBridge();
+    const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
+    const connected = tyduxBridge.connectStore(reduxStore);
+    const mount = connected.createRootMountPoint("managedByFacade");
+
+    class MyCommands extends Commands<ManagedByFacadeState> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
+
+    class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
+
+    const myFacade = new MyFacade(mount, "MyFacade", new MyCommands());
+    myFacade.action();
+
+    expect(reduxStore.getState()).toEqual({
+      managedByFacade: {
+        val: 110
+      }
     });
+  });
 
-    it("select() emits value on state changes", function (done) {
-        const initialState = {
-            val: 10
-        };
+  it("can be used with plain reducer", async function () {
+    const initialState = {
+      someValue: 0,
+      managedByFacade: {
+        val: 10
+      }
+    };
 
-        class MyCommands extends Commands<typeof initialState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
+    type AppState = typeof initialState;
+    type ManagedByFacadeState = typeof initialState.managedByFacade;
 
-        class MyFacade extends Facade<typeof initialState, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
+    function plainReducer(state: AppState | undefined = initialState, action: any) {
+      switch (action.type) {
+        case "inc":
+          return {
+            ...state,
+            someValue: state.someValue + action.payload
+          };
+      }
+      return state;
+    }
 
-        const tyduxStore = createTyduxStore(initialState);
-        const collected: number[] = [];
-        tyduxStore.select().subscribe(state => {
-            collected.push(state.val);
-        });
+    const store = createTyduxStore(initialState, undefined, plainReducer);
+    const mount = store.createRootMountPoint("managedByFacade");
 
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
-        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
-        myFacade.action();
+    store.store.dispatch({type: "inc", payload: 5});
 
-        setTimeout(() => {
-            expect(collected).toEqual([10, 110]);
-            done();
-        }, 0);
+    class MyCommands extends Commands<ManagedByFacadeState> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
+
+    class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
+
+    const myFacade = new MyFacade(mount, "MyFacade", new MyCommands());
+    myFacade.action();
+
+    expect(store.store.getState()).toEqual({
+      someValue: 5,
+      managedByFacade: {
+        val: 110
+      }
     });
+  });
 
-    it("createTyduxStore() - with slice", async function () {
-        const initialState = {
-            facade: {
-                val: 10
-            }
-        };
+  it("can be used along Redux with wrapReducer", async function () {
+    const initialState = {
+      someValue: 0,
+      managedByFacade: {
+        val: 10
+      }
+    };
 
-        class MyCommands extends Commands<typeof initialState.facade> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
+    type AppState = typeof initialState;
+    type ManagedByFacadeState = typeof initialState.managedByFacade;
 
-        class MyFacade extends Facade<typeof initialState.facade, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
+    function plainReducer(state: AppState | undefined = initialState, action: any) {
+      switch (action.type) {
+        case "inc":
+          return {
+            ...state,
+            someValue: state.someValue + action.payload
+          };
+      }
+      return state;
+    }
 
-        const tyduxStore = createTyduxStore(initialState);
-        const mount = tyduxStore.createMountPoint(
-            s => s.facade,
-            (state, facade) => ({...state, facade}));
+    const tyduxBridge = new TyduxReducerBridge();
+    const reduxStore: ReduxStore<AppState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
+    const connected = tyduxBridge.connectStore(reduxStore);
+    const mount = connected.createRootMountPoint("managedByFacade");
 
-        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
-        myFacade.action();
+    reduxStore.dispatch({type: "inc", payload: 5});
 
-        expect(tyduxStore.getState()).toEqual({
-            facade: {
-                val: 110
-            }
-        });
+    class MyCommands extends Commands<ManagedByFacadeState> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
+
+    class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
+
+    const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
+    myFacade.action();
+
+    expect(reduxStore.getState()).toEqual({
+      someValue: 5,
+      managedByFacade: {
+        val: 110
+      }
     });
+  });
 
-    it("createRootMountPoint()", async function () {
-        const initialState = {
-            managedByFacade: {
-                val: 10
-            }
-        };
+  it("can be used along Redux with Tydux reducer", async function () {
+    const initialState = {
+      someValue: 0,
+      managedByFacade: {
+        val: 10
+      }
+    };
 
-        type ManagedByFacadeState = typeof initialState.managedByFacade;
+    type AppState = typeof initialState;
+    type ManagedByFacadeState = typeof initialState.managedByFacade;
 
-        const tyduxBridge = new TyduxReducerBridge();
-        const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
-        const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createRootMountPoint("managedByFacade");
+    const tyduxBridge = new TyduxReducerBridge();
+    const tyduxReducer = tyduxBridge.createTyduxReducer();
 
-        class MyCommands extends Commands<ManagedByFacadeState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
+    function rootReducer(state: AppState | undefined = initialState, action: AnyAction) {
+      switch (action.type) {
+        case "inc":
+          return {
+            ...state,
+            someValue: state.someValue + action.payload
+          };
+      }
+      return tyduxReducer(state, action);
+    }
 
-        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
 
-        const myFacade = new MyFacade(mount, "MyFacade", new MyCommands());
-        myFacade.action();
+    const reduxStore: ReduxStore<AppState, Action> = createStore(rootReducer);
+    const connected = tyduxBridge.connectStore(reduxStore);
+    const mount = connected.createRootMountPoint("managedByFacade");
 
-        expect(reduxStore.getState()).toEqual({
-            managedByFacade: {
-                val: 110
-            }
-        });
+    reduxStore.dispatch({type: "inc", payload: 5});
+
+    class MyCommands extends Commands<ManagedByFacadeState> {
+      inc(by: number) {
+        this.state.val += by;
+      }
+    }
+
+    class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+      action() {
+        this.commands.inc(100);
+      }
+    }
+
+    const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
+    myFacade.action();
+
+    expect(reduxStore.getState()).toEqual({
+      someValue: 5,
+      managedByFacade: {
+        val: 110
+      }
     });
-
-    it("can be used with plain reducer", async function () {
-        const initialState = {
-            someValue: 0,
-            managedByFacade: {
-                val: 10
-            }
-        };
-
-        type AppState = typeof initialState;
-        type ManagedByFacadeState = typeof initialState.managedByFacade;
-
-        function plainReducer(state: AppState | undefined = initialState, action: any) {
-            switch (action.type) {
-                case "inc":
-                    return {
-                        ...state,
-                        someValue: state.someValue + action.payload
-                    };
-            }
-            return state;
-        }
-
-        const store = createTyduxStore(initialState, undefined, plainReducer);
-        const mount = store.createRootMountPoint("managedByFacade");
-
-        store.store.dispatch({type: "inc", payload: 5});
-
-        class MyCommands extends Commands<ManagedByFacadeState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
-
-        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
-
-        const myFacade = new MyFacade(mount, "MyFacade", new MyCommands());
-        myFacade.action();
-
-        expect(store.store.getState()).toEqual({
-            someValue: 5,
-            managedByFacade: {
-                val: 110
-            }
-        });
-    });
-
-    it("can be used along Redux with wrapReducer", async function () {
-        const initialState = {
-            someValue: 0,
-            managedByFacade: {
-                val: 10
-            }
-        };
-
-        type AppState = typeof initialState;
-        type ManagedByFacadeState = typeof initialState.managedByFacade;
-
-        function plainReducer(state: AppState | undefined = initialState, action: any) {
-            switch (action.type) {
-                case "inc":
-                    return {
-                        ...state,
-                        someValue: state.someValue + action.payload
-                    };
-            }
-            return state;
-        }
-
-        const tyduxBridge = new TyduxReducerBridge();
-        const reduxStore: ReduxStore<AppState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
-        const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createRootMountPoint("managedByFacade");
-
-        reduxStore.dispatch({type: "inc", payload: 5});
-
-        class MyCommands extends Commands<ManagedByFacadeState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
-
-        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
-
-        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
-        myFacade.action();
-
-        expect(reduxStore.getState()).toEqual({
-            someValue: 5,
-            managedByFacade: {
-                val: 110
-            }
-        });
-    });
-
-    it("can be used along Redux with Tydux reducer", async function () {
-        const initialState = {
-            someValue: 0,
-            managedByFacade: {
-                val: 10
-            }
-        };
-
-        type AppState = typeof initialState;
-        type ManagedByFacadeState = typeof initialState.managedByFacade;
-
-        const tyduxBridge = new TyduxReducerBridge();
-        const tyduxReducer = tyduxBridge.createTyduxReducer();
-
-        function rootReducer(state: AppState | undefined = initialState, action: AnyAction) {
-            switch (action.type) {
-                case "inc":
-                    return {
-                        ...state,
-                        someValue: state.someValue + action.payload
-                    };
-            }
-            return tyduxReducer(state, action);
-        }
-
-
-        const reduxStore: ReduxStore<AppState, Action> = createStore(rootReducer);
-        const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createRootMountPoint("managedByFacade");
-
-        reduxStore.dispatch({type: "inc", payload: 5});
-
-        class MyCommands extends Commands<ManagedByFacadeState> {
-            inc(by: number) {
-                this.state.val += by;
-            }
-        }
-
-        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
-            action() {
-                this.commands.inc(100);
-            }
-        }
-
-        const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
-        myFacade.action();
-
-        expect(reduxStore.getState()).toEqual({
-            someValue: 5,
-            managedByFacade: {
-                val: 110
-            }
-        });
-    });
+  });
 
 });
