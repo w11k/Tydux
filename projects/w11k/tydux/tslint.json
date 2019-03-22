@@ -1,24 +1,25 @@
 {
-  "extends": "../../../tslint.json",
-  "rules": {
-    "quotemark": [
-      true,
-      "double"
-    ],
-    "only-arrow-functions": false,
-    "space-before-function-paren": false,
-    "interface-over-type-literal": false,
-    "directive-selector": [
-      true,
-      "attribute",
-      "lib",
-      "camelCase"
-    ],
-    "component-selector": [
-      true,
-      "element",
-      "lib",
-      "kebab-case"
-    ]
-  }
+    "extends": "../../../tslint.json",
+    "rules": {
+        "quotemark": [
+            true,
+            "double"
+        ],
+        "only-arrow-functions": false,
+        "space-before-function-paren": false,
+        "interface-over-type-literal": false,
+        "variable-name": false,
+        "directive-selector": [
+            true,
+            "attribute",
+            "lib",
+            "camelCase"
+        ],
+        "component-selector": [
+            true,
+            "element",
+            "lib",
+            "kebab-case"
+        ]
+    }
 }

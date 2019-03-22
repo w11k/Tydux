@@ -33,17 +33,33 @@ function createUniqueFacadeId(name: string) {
 export abstract class Facade<S, C extends Commands<S>> {
 
     readonly facadeId: string;
+
     protected readonly commands: CommandsMethods<C>;
+
     private readonly destroyedSubject = new ReplaySubject<true>(1);
+
     protected readonly destroyed = this.destroyedSubject.asObservable();
+
     private destroyedState = false;
+
     private bufferedStateChanges = 0;
+
     private readonly commandContextCallstack: string[] = [];
+
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
+
     private mountPoint: MountPoint<S, any>;
 
+    private _state!: S;
+
+    get state(): Readonly<S> {
+        return this._state;
+    }
+
     constructor(mountPoint: MountPoint<S, any>, name: string, commands: C);
+
     constructor(tydux: TyduxStore, name: string, commands: C, initialState: S);
+
     constructor(mountPoint: MountPoint<S | undefined, any>, name: string, commands: C, initialState: S);
 
     constructor(readonly mountPointOrRootStore: MountPoint<S, any> | TyduxStore,
@@ -54,13 +70,13 @@ export abstract class Facade<S, C extends Commands<S>> {
         this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
         this.enrichInstanceMethods();
 
-        const [commandsInvoker, proxyObj] = this.createCommandsProxy(commands);
-        this.commands = proxyObj;
-
         this.mountPoint =
             mountPointOrRootStore instanceof TyduxStore
                 ? mountPointOrRootStore.createRootMountPoint(name)
                 : mountPointOrRootStore;
+
+        const [commandsInvoker, proxyObj] = this.createCommandsProxy(commands);
+        this.commands = proxyObj;
 
         this.mountPoint.addReducer(this.createReducerFromCommandsInvoker(commandsInvoker));
         delete (this.commands as any).state;
@@ -97,16 +113,6 @@ export abstract class Facade<S, C extends Commands<S>> {
         });
     }
 
-    private _state!: S;
-
-    get state(): Readonly<S> {
-        return this._state;
-    }
-
-    setState(state: S) {
-        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
-    }
-
     /**
      * Completes all observables returned by this store. Once this method gets called,
      * dispatched actions won't have an effect.
@@ -117,9 +123,11 @@ export abstract class Facade<S, C extends Commands<S>> {
         this.destroyedSubject.next(true);
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Delegate to Store#destroy() for Angular.
      */
+    // tslint:disable-next-line:use-life-cycle-interface
     ngOnDestroy(): void {
         this.destroy();
     }
@@ -129,13 +137,19 @@ export abstract class Facade<S, C extends Commands<S>> {
     }
 
     select(): Observable<Readonly<S>>;
+
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R>;
+
     /**
      * - operates on the micro-task queue
      * - only emits values when they change (identity-based)
      */
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
         return selectToObservable(this.reduxStoreStateSubject, selector);
+    }
+
+    private setState(state: S) {
+        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
     private enrichInstanceMethods() {

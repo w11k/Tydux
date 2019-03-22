@@ -339,41 +339,33 @@ describe("Facade", () => {
         });
     });
 
-    // it("can use a NamedMountPoint", function () {
-    //     class TestState {
-    //         value = 0;
-    //     }
-    //
-    //     class TestCommands extends Commands<TestState> {
-    //     }
-    //
-    //     class TestFacade extends Facade<TestState, TestCommands> {
-    //         constructor(tydux: TyduxStore<any>) {
-    //             super(tydux.createRootMountPoint("test"), TestCommands);
-    //
-    //         }
-    //     }
-    //
-    //     const tyduxBridge = new TyduxReducerBridge();
-    //     const reduxStore = createStore(tyduxBridge.createTyduxReducer(new TestState()));
-    //     const tydux = tyduxBridge.connectStore(reduxStore);
-    //     const facade = new TestFacade(tydux);
-    //
-    //     assert.deepEqual(
-    //         reduxStore.getState(),
-    //         {
-    //             global: true,
-    //             test: {
-    //                 value: 0
-    //             }
-    //         } as any);
-    //
-    //     assert.deepEqual(
-    //         facade.state,
-    //         {
-    //             value: 0
-    //         });
-    // });
+    it("exceptions in facade methods", () => {
+        class TestState {
+            s1 = 0;
+        }
+
+        class TestCommands extends Commands<TestState> {
+            set(s: number) {
+                this.state.s1 = s;
+            }
+        }
+
+        class TestFacade extends Facade<TestState, TestCommands> {
+            op() {
+                this.commands.set(99);
+                throw new Error();
+            }
+        }
+
+        const store = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        try {
+            store.op();
+        } catch (e) {
+            // ignore
+        }
+
+        expect(store.state.s1).toEqual(99);
+    });
 
     it("keeps state between async invocations", async () => {
         class TestState {

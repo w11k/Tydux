@@ -69,34 +69,3 @@ export class CommandsInvoker<C extends Commands<any>> {
 export class Commands<S> {
     protected state: S = undefined as any;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-// type FunctionWithVoid<F> = F extends (...args: infer U) => any ? (...args: U) => void : never;
-//
-// type FunctionsWithVoid<T> = { [K in keyof T]: FunctionWithVoid<T[K]> };
-//
-// type CommandsType<TF> = TF extends (arr: string[]) => infer R ? FunctionsWithVoid<R> : never;
-//
-//
-// const commandsFactory = (arr: string[]) => ({
-//
-//     add: (stringToAdd: string) => {
-//         return arr.push(stringToAdd);
-//     },
-//
-//     pop: () => arr.pop(),
-//
-// });
-//
-//
-// const commands: CommandsType<typeof commandsFactory> = null as any;
-//
-// commands.add("bla");
-// const last1: string = commands.pop()!;
-// const last2: string = commands.pop(2)!;
-// commands.error();
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
