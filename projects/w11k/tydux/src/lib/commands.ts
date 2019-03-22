@@ -19,19 +19,16 @@ export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsIn
             return state;
         }
         const commandName = action.type.substr(typePrefix.length);
-        try {
-            return commandsInvoker.invoke(state, commands => {
-                let mutatorFn = (commands as any)[commandName];
-                if (mutatorFn === undefined) {
-                    return;
-                }
+        return commandsInvoker.invoke(state, commands => {
+            let mutatorFn = (commands as any)[commandName];
+            if (mutatorFn === undefined) {
+                return;
+            }
 
-                const result = mutatorFn.apply(commands, action.payload);
-                failIfNotUndefined(result);
-                failIfInstanceMembersExistExceptState(commands);
-            });
-        } finally {
-        }
+            const result = mutatorFn.apply(commands, action.payload);
+            failIfNotUndefined(result);
+            failIfInstanceMembersExistExceptState(commands);
+        });
     };
 }
 

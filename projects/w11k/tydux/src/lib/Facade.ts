@@ -75,11 +75,10 @@ export abstract class Facade<S, C extends Commands<S>> {
                 ? mountPointOrRootStore.createRootMountPoint(name)
                 : mountPointOrRootStore;
 
-        const [commandsInvoker, proxyObj] = this.createCommandsProxy(commands);
-        this.commands = proxyObj;
 
+        const commandsInvoker = new CommandsInvoker(commands);
+        this.commands = this.createCommandsProxy(commandsInvoker);
         this.mountPoint.addReducer(this.createReducerFromCommandsInvoker(commandsInvoker));
-        delete (this.commands as any).state;
 
         this.setState(this.mountPoint.getState());
         this.reduxStoreStateSubject.next(this.state);
@@ -189,11 +188,8 @@ export abstract class Facade<S, C extends Commands<S>> {
         };
     }
 
-    private createCommandsProxy(commands: C): [CommandsInvoker<C>, C] {
-        const commandsInvoker = new CommandsInvoker(commands);
-
+    private createCommandsProxy(commandsInvoker: CommandsInvoker<C>): C {
         const proxyObj = {} as any;
-
         const protoOfCommandsInstance = Object.getPrototypeOf(commandsInvoker.commands);
 
         for (const mutatorMethodName of functionsIn(protoOfCommandsInstance)) {
@@ -207,7 +203,7 @@ export abstract class Facade<S, C extends Commands<S>> {
             };
         }
 
-        return [commandsInvoker, proxyObj];
+        return proxyObj;
     }
 
     private createReducerFromCommandsInvoker(commandsInvoker: CommandsInvoker<C>): CommandReducer<S> {
