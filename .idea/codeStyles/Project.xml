@@ -61,7 +61,9 @@
       <option name="WRAP_PARENTHESIZED_EXPRESSION_INSIDE_VALUES" value="0" />
     </SqlCodeStyleSettings>
     <TypeScriptCodeStyleSettings version="1">
+      <option name="FORCE_SEMICOLON_STYLE" value="true" />
       <option name="FORCE_QUOTE_STYlE" value="true" />
+      <option name="SPACE_WITHIN_TYPE_ASSERTION" value="true" />
       <option name="IMPORT_SORT_MODULE_NAME" value="true" />
     </TypeScriptCodeStyleSettings>
     <XML>
@@ -368,14 +370,12 @@
         <option name="CONTINUATION_INDENT_SIZE" value="8" />
       </indentOptions>
     </codeStyleSettings>
-    <codeStyleSettings language="SQL">
-      <indentOptions>
-        <option name="INDENT_SIZE" value="4" />
-        <option name="CONTINUATION_INDENT_SIZE" value="8" />
-        <option name="TAB_SIZE" value="4" />
-      </indentOptions>
-    </codeStyleSettings>
     <codeStyleSettings language="TypeScript">
+      <option name="RIGHT_MARGIN" value="140" />
+      <option name="IF_BRACE_FORCE" value="3" />
+      <option name="DOWHILE_BRACE_FORCE" value="3" />
+      <option name="WHILE_BRACE_FORCE" value="3" />
+      <option name="FOR_BRACE_FORCE" value="3" />
       <arrangement>
         <rules>
           <section>
