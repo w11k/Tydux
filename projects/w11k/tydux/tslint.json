@@ -1,5 +1,6 @@
 {
     "extends": "../../../tslint.json",
     "rules": {
+        "unified-signatures": false
     }
 }
