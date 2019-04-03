@@ -3,16 +3,19 @@
 
 ![Tydux Logo](https://raw.githubusercontent.com/w11k/Tydux/master/doc/tydux_logo.png)
 
-# Your foreman library for writing Redux stores
 
-Tydux is a TypeScript library to provide structure and type-safety when writing Redux stores (or other compatible frameworks). You can use Tydux as a complete wrapper around Redux or along with your existing reducers and actions.  
+# Encapsulating State Management Library
 
-# How does it work?
+Tydux is a state management library implemented in TypeScript with a strong focus on encapsulation, type safety and immutability. It can be used standalone or hook into existing Redux-based (or compatible) application.  
 
-- With Tydux you combine a group of *reducers*, *actions* and *selectors*
-- Every group is encapsulated within a *facade*
-- For each *facade* you create a *mount point* to define in which slice of your store the *facade* should operate
-- In your *facade* you expose an API to expose *action* triggers and *selectors* 
+Tydux shares the concept of state, actions, reducer and selectors but differs in the way they are implemented. The key differences and concepts are:
+
+- Actions and their reducers are implemented together and are called **commands**. No more action type string identifier!
+- Commands are only accessible within a **facade**. 
+- The facade and commands share and operate on a **state**. Only the commands can mutate the state while the facade provides read-only access to the state as well as coarse-grained operations for consumers.
+- The facade is responsible for handling async operations (e.g. HTTP calls) and uses the commands to change the state accordingly.
+- Consumers of the facade can access a read-only version of the state or subscribe to state changes via an RxJS `Observable`.
+- You can have as many facades as you like with each of them containing their own commands and state.
 
 
 # Key benefits
@@ -22,21 +25,21 @@ Tydux is a TypeScript library to provide structure and type-safety when writing 
 - enforced immutability
 - class-based API works well with Angular's dependency injection
 
-## Installation
 
-### tydux
-Install via npm `npm install @w11k/tydux`. Note that dependencies are only declared as peer dependencies.
-So make sure that you have installed `redux: 4.x.x` and `rxjs: >= 6.2.0` in your project. 
-You could for example throw in `redux-devtools-extension`.
+# Installation
 
-### tydux-angular
-Install tydux (see above) and install tydux-anguar per npm `npm install @w11k/tydux-angular`.
+Install Tydux, Redux and RxJS via npm `npm install @w11k/tydux redux rxjs`.
 
-## Getting startet
 
-### tydux
-Create your initial state 
-```typescript
+# Quick Overview Demo
+
+Well will need at least a **state**, the **commands** and the **facade**. 
+
+**Create the state class:**
+
+Your can implement the state with a class or a plain JavaScript object. Classes are a bit more convenient but remember that you must not use inheritance and that the class only contains fields. 
+
+```
 export class TodoState {
   todos: ToDo[] = [
     {isDone: false, name: 'learn Angular'},
@@ -46,24 +49,33 @@ export class TodoState {
 }
 ```
 
-Then setup your commands to calculate and update your state. Note that all objects in your
-state are frozen and can't be altered. So we generate new objects instead of altering.
+**Create the commands:**
 
-```typescript
-export class TodoCommands extends Commands<TodoState>{
-  toggleToDo(name: string) {
-    this.state.todos = this.state.todos.map(
-      it => it.name === name ? {...it, isDone: !it.isDone} : it
-    )
-  }
+Commands are grouped within a class and can alter the state via `this.state`. Only the direct field members of the state object can be changed, not the attributes of nested object. 
+
+```
+export class TodoCommands extends Commands<TodoState> {
+    addTodo(name: string) {
+        this.state.todos = [
+            {isDone: false, name},
+            ...this.state
+        ];
+    }
+    
+    toggleTodo(name: string) {
+        this.state.todos = this.state.todos.map(
+            it => it.name === name ? {...it, isDone: !it.isDone} : it
+        )
+    }
 }
 ```
 
-We have now our state and our commands to temper with the state. Now we combine those two
-in our facade
+**Create the facade:**
 
-```typescript
-export class TodoStore extends Facade<TodoState, TodoCommands>{
+After we created the state and commands, we combine them within a facade.
+
+```
+export class TodoFacade extends Facade<TodoState, TodoCommands> {
 
   constructor(tydux: TyduxStore) {
     super(tydux, 'todos', new TodoCommands(), new TodoState())
@@ -85,31 +97,9 @@ export class TodoStore extends Facade<TodoState, TodoCommands>{
 }
 ```
 
-### tydux-angular
-To integrate tydux into angular just create a factory function for your tydux config and import
-the `TyduxModule` into your `AppModule`
-
-```typescript
-export function createTyduxConfig(): TyduxConfiguration {
-  return {
-    storeEnhancer: environment.production ? undefined : composeWithDevTools(),
-    developmentMode: !environment.production
-  };
-}
-
-@NgModule({
-imports: [
-  TyduxModule.forRootWithConfig(createTyduxConfig)
-  // or TyduxModule.forRootWithoutConfig()
-]
-})
-export class AppModule{}
-```
 # Documentation
 
-### (OUTDATED, will be updated soon) [Tutorial](https://github.com/w11k/Tydux/tree/master/doc/tutorial.md)
 ### [Angular integration](https://github.com/w11k/Tydux/tree/master/doc/angular.md)
-### (OUTDATED, will be updated soon) [Redux Comparison](https://github.com/w11k/Tydux/tree/master/doc/redux_comparison.md)
 ### [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
 
 
