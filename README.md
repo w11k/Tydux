@@ -114,6 +114,18 @@ export class TodoFacade extends Facade<TodoState, TodoCommands> {
 }
 ```
 
+**Bootstrap:**
+
+After we created the state, commands and facade, we can bootstrap Tydux. 
+
+1. We need to create a `TyduxStore` once and provide the global initial state. Every facade's state is part of this global state. 
+2. When instantiating the facade, we need to provide the global TyduxStore instance, a name to identify the facade within the global state, the commands instance and the initial state.
+
+```
+const tyduxStore = createTyduxStore({}); // {} as initial state
+const todoFacade = new TodoFacade(tyduxStore, "todos", new TodoCommands(), new TodoState()); // instatiate every facade once 
+```
+
 # Documentation
 
 ### [Angular integration](https://github.com/w11k/Tydux/tree/master/doc/angular.md)
