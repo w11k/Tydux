@@ -8,27 +8,38 @@
 
 Tydux is a state management library implemented in TypeScript with a strong focus on encapsulation, type safety and immutability. It can be used standalone or hook into existing Redux-based (or compatible) application.  
 
-Tydux shares the concept of state, actions, reducer and selectors but differs in the way they are implemented. The key differences and concepts are:
+**The key concepts are:**
 
-- Actions and their reducers are implemented together and are called **commands**. No more action type string identifier!
-- Commands are only accessible within a **facade**. 
-- The facade and commands share and operate on a **state**. Only the commands can mutate the state while the facade provides read-only access to the state as well as coarse-grained operations for consumers.
+- You define your **state** in designated classes or objects. 
+- Only **commands** are allowed to alter the state. Commands are implemented as classes with methods. Every method defines a valid state transition. Hence, only commands are responsible for the state manipulation.
+- Commands are only accessible within a **facade**. The facade provides the initial state, a read-only access to the state and a stream to subscribe state changes.
+- While commands provide fine-grained methods for state manipulation, the facades provide more coarse-grained methods. For example, a facade could provide a method to load a todo list from the server. To do so, the facade method would 1. use a command method to clear the current state, 2. load the list from the server and 3. use a command method to update the state with the received list.
 - The facade is responsible for handling async operations (e.g. HTTP calls) and uses the commands to change the state accordingly.
 - Consumers of the facade can access a read-only version of the state or subscribe to state changes via an RxJS `Observable`.
 - You can have as many facades as you like with each of them containing their own commands and state.
 
+**If you know Redux:** 
 
-# Key benefits
+Tydux shares the concept of state, actions, reducer and selectors but differs in the way they are implemented:
+
+- Actions and their reducers are implemented together and are called **commands**. No more action type string identifier!
+- Only **facades** can access commands
+- A facade provides a read-only stream of state changes
+
+**Key benefits:**
 
 - implement "divide and conquer" 
 - type safety 
 - enforced immutability
-- class-based API works well with Angular's dependency injection
+- class-based API 
+- ... which works well with Angular's dependency injection
 
 
 # Installation
 
-Install Tydux, Redux and RxJS via npm `npm install @w11k/tydux redux rxjs`.
+Install Tydux and all required peer-dependencies: 
+
+`npm install @w11k/tydux redux rxjs`.
 
 
 # Quick Overview Demo
@@ -37,7 +48,7 @@ Well will need at least a **state**, the **commands** and the **facade**.
 
 **Create the state class:**
 
-Your can implement the state with a class or a plain JavaScript object. Classes are a bit more convenient but remember that you must not use inheritance and that the class only contains fields. 
+You can implement the state with a class or a plain JavaScript object. Classes are a bit more convenient but remember that you must not use inheritance and that the class only contains fields. 
 
 ```
 export class TodoState {
@@ -55,11 +66,13 @@ Commands are grouped within a class and can alter the state via `this.state`. On
 
 ```
 export class TodoCommands extends Commands<TodoState> {
-    addTodo(name: string) {
-        this.state.todos = [
-            {isDone: false, name},
-            ...this.state
-        ];
+
+    clear() {
+        this.state.todos = [];
+    }
+    
+    setTodoList(todos: ToDo[]) {
+        this.state.todos = todos;
     }
     
     toggleTodo(name: string) {
@@ -67,6 +80,7 @@ export class TodoCommands extends Commands<TodoState> {
             it => it.name === name ? {...it, isDone: !it.isDone} : it
         )
     }
+    
 }
 ```
 
@@ -81,17 +95,20 @@ export class TodoFacade extends Facade<TodoState, TodoCommands> {
     super(tydux, 'todos', new TodoCommands(), new TodoState())
   }
 
-  //in our store we can do synchronous or asynchronous stuff (action or effect)
-  async toggleDoneStateOf(t: ToDo): Promise<void> {
-    await this.callServer();
-    this.commands.toggleToDo(t.name);
+  /**
+   * in our facade we can do synchronous or asynchronous stuff (action or effect)
+   */
+  async loadTodoListFromServer() {
+    this.commands.clear();
+    const list = await fetch("/todos");
+    this.setTodoList(list);
   }
-
-  private async callServer(): Promise<void> {
-    await new Promise(resolve => {
-      //simulate server
-      setTimeout(() => {resolve()}, 100)
-    });
+  
+  /**
+   * simple delegate to a command method
+   */
+  toggleDoneStateOf(t: ToDo) {
+    this.commands.toggleToDo(t.name);
   }
 
 }
