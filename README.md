@@ -122,13 +122,16 @@ After we created the state, commands and facade, we can bootstrap Tydux.
 2. When instantiating the facade, we need to provide the global TyduxStore instance, a name to identify the facade within the global state, the commands instance and the initial state.
 
 ```
-const tyduxStore = createTyduxStore({}); // {} as initial state
-const todoFacade = new TodoFacade(tyduxStore, "todos", new TodoCommands(), new TodoState()); // instatiate every facade once 
+// Use {} as initial state
+const tyduxStore = createTyduxStore({});
+
+// instatiate every facade once
+const todoFacade = new TodoFacade(tyduxStore, "todos", new TodoCommands(), new TodoState());  
 ```
 
 # Documentation
 
-### [Angular integration](https://github.com/w11k/Tydux/tree/master/doc/angular.md)
+### [Angular integration](https://github.com/w11k/Tydux/blob/master/projects/w11k/tydux-angular/README.md)
 ### [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
 
 
