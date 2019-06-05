@@ -106,7 +106,7 @@ export class View<T> {
     select<R>(selector: (state: ViewTreeState<Readonly<T>>) => R): Observable<R>;
 
     select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): Observable<R> {
-        return selectToObservable(this.stateChanges$, selector);
+        return selectToObservable(this.stateChanges$ as any, selector as any);
     }
 
 }

@@ -110,20 +110,23 @@ export function last(array: any[]) {
     return length > 0 ? array[length - 1] : undefined;
 }
 
+export const excludeMethodNames = ["constructor"];
+
 export function functions(object: any): string[] {
     if (object == null) {
         return [];
     }
-    return Object.keys(object).filter((key) => {
-        return object.hasOwnProperty(key) && typeof object[key] === 'function';
+    return Object.getOwnPropertyNames(object).filter((key) => {
+        return typeof object[key] === "function" && excludeMethodNames.indexOf(key) === -1;
     });
 }
 
 export function functionsIn(object: any) {
     let fnMembers: string[] = functions(object);
     const proto = Object.getPrototypeOf(object);
-    if (proto !== null) {
-        fnMembers = [...fnMembers, ...functionsIn(proto)];
+
+    if (proto !== null && proto !== Object.prototype) {
+        fnMembers = fnMembers.concat(functionsIn(proto));
     }
     return fnMembers;
 }
