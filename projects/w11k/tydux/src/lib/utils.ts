@@ -110,23 +110,23 @@ export function last(array: any[]) {
     return length > 0 ? array[length - 1] : undefined;
 }
 
-export const excludeMethodNames = ["constructor"];
+const excludeMethodNames = ["constructor"];
 
-export function functions(object: any): string[] {
+export function functionNamesShallow(object: any): string[] {
     if (object == null) {
         return [];
     }
     return Object.getOwnPropertyNames(object).filter((key) => {
-        return typeof object[key] === "function" && excludeMethodNames.indexOf(key) === -1;
+        return typeof Object.getOwnPropertyDescriptor(object, key).value === "function" && excludeMethodNames.indexOf(key) === -1;
     });
 }
 
-export function functionsIn(object: any) {
-    let fnMembers: string[] = functions(object);
+export function functionNamesDeep(object: any): string[] {
+    let fnMembers: string[] = functionNamesShallow(object);
     const proto = Object.getPrototypeOf(object);
 
     if (proto !== null && proto !== Object.prototype) {
-        fnMembers = fnMembers.concat(functionsIn(proto));
+        fnMembers = [...fnMembers, ...functionNamesShallow(proto)];
     }
     return fnMembers;
 }
@@ -139,7 +139,7 @@ export function keysIn(object: any) {
     let keys: string[] = Object.keys(object);
     const proto = Object.getPrototypeOf(object);
     if (proto !== null) {
-        keys = [...keys, ...functionsIn(proto)];
+        keys = [...keys, ...functionNamesDeep(proto)];
     }
     return keys;
 }
