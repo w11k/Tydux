@@ -1,9 +1,9 @@
-import {isNil} from '@w11k/rx-ninja';
-import {Observable, Operator, Subscriber} from 'rxjs';
-import {distinctUntilChanged, filter, map, take} from 'rxjs/operators';
-import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from './error-messages';
-import {Facade} from './Facade';
-import {isPlainObject} from './lodash/lodash';
+import {isNil} from "@w11k/rx-ninja";
+import {Observable, Operator, Subscriber} from "rxjs";
+import {distinctUntilChanged, filter, map, take} from "rxjs/operators";
+import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
+import {Facade} from "./Facade";
+import {isPlainObject} from "./lodash/lodash";
 
 let hasProxySupport = false;
 try {
@@ -41,9 +41,9 @@ export function failIfNotUndefined(value: any): void {
 }
 
 export function failIfInstanceMembersExistExceptState(obj: any) {
-    const members = Object.keys(obj).filter(key => key !== 'state');
+    const members = Object.keys(obj).filter(key => key !== "state");
     if (members.length > 0) {
-        throw new Error(mutatorHasInstanceMembers + ': ' + members.join(', '));
+        throw new Error(mutatorHasInstanceMembers + ": " + members.join(", "));
     }
 }
 

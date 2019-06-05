@@ -126,7 +126,7 @@ export abstract class Facade<S, C extends Commands<S>> {
     /**
      * Delegate to Store#destroy() for Angular.
      */
-    // tslint:disable-next-line:use-life-cycle-interface
+    // tslint:disable-next-line:use-life-cycle-interface use-lifecycle-interface
     ngOnDestroy(): void {
         this.destroy();
     }
