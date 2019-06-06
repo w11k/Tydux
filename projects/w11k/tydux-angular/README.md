@@ -46,7 +46,7 @@ export function createTyduxConfig(): TyduxConfiguration {
 ```
 @NgModule({
   imports: [
-    TyduxModule.forRoot(createTyduxConfig) // !!! do not call factory function !!!
+    TyduxModule.forRootWithConfig(createTyduxConfig) // !!! do not call factory function !!!
   ],
   ...
 })
@@ -62,9 +62,10 @@ export class AppModule {
 export class MyFacade extends Facade<State1, MyCommands> {
 
   constructor(tydux: TyduxStore<AppState>) {         // inject TyduxStore
-    super(tydux.createRootMountPoint('state1'),      // the facade's mount point
-          'State1',                                  // action's type prefix
-          new MyCommands());
+    super(tydux,                                     // pass store
+          'state1',                                  // mountpoint name
+          new State1();                              // initial state
+          new MyCommands());                         // commands instance
   }
 
 }
