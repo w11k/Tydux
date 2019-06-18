@@ -1,4 +1,4 @@
-# Version 10.5.0
+# Version 11.1.0
 
 Facades can now provide their initial state with either the concrete state as value, a function returning the state or a promise that resolves the state:
 

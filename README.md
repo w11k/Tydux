@@ -122,7 +122,7 @@ After we created the state, commands and facade, we can bootstrap Tydux.
 2. When instantiating the facade, we need to provide the global TyduxStore instance, a name to identify the facade within the global state, the commands instance and the initial state.
 
 ```
-// Use {} as initial state
+// Use {} as initial global state
 const tyduxStore = createTyduxStore({});
 
 // instatiate every facade once
