@@ -16,7 +16,7 @@
             "es2018"
         ],
         "types": [
-            "jest"
+            "jasmine"
         ]
     },
     "angularCompilerOptions": {

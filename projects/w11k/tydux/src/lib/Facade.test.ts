@@ -303,27 +303,17 @@ describe("Facade", () => {
     });
 
     it("can set their initial state during super call", () => {
-        class AppState {
-            // noinspection JSUnusedGlobalSymbols
-            global = true;
-        }
+        type TestState = { value: number };
 
-        class TestState {
-            value = 0;
-        }
-
-        class TestCommands extends Commands<TestState> {
-        }
-
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestState, Commands<TestState>> {
             constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint("test"), "test", new TestCommands(), new TestState());
+                super(tydux.createRootMountPoint("test"), "test", new Commands(), {value: 0});
 
             }
         }
 
         const tyduxBridge = new TyduxReducerBridge();
-        const reduxStore = createStore(tyduxBridge.createTyduxReducer(new AppState()));
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer({global: true}));
         const tydux = tyduxBridge.connectStore(reduxStore);
         const facade = new TestFacade(tydux);
 
@@ -336,6 +326,70 @@ describe("Facade", () => {
 
         expect(facade.state).toEqual({
             value: 0
+        });
+    });
+
+    it("can set their initial state during super call with a function", () => {
+
+        type TestState = { value: number };
+
+        class TestFacade extends Facade<TestState, Commands<TestState>> {
+            constructor(tydux: TyduxStore<any>) {
+                super(tydux.createRootMountPoint("test"), "test", new Commands(), () => ({value: 99}));
+
+            }
+        }
+
+        const tyduxBridge = new TyduxReducerBridge();
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer({global: true}));
+        const tydux = tyduxBridge.connectStore(reduxStore);
+        const facade = new TestFacade(tydux);
+
+        expect(reduxStore.getState()).toEqual({
+            global: true,
+            test: {
+                value: 99
+            }
+        } as any);
+
+        expect(facade.state).toEqual({
+            value: 99
+        });
+    });
+
+    it("can set their initial state during super call with a proise", (done) => {
+
+        type TestState = { value: number };
+
+        const initialValuePromise = new Promise<TestState>(resolve => {
+            setTimeout(() => resolve({value: 77}), 0);
+        });
+
+        class TestFacade extends Facade<TestState, Commands<TestState>> {
+            constructor(tydux: TyduxStore<any>) {
+                super(tydux.createRootMountPoint("test"), "test", new Commands(), initialValuePromise);
+
+            }
+        }
+
+        const tyduxBridge = new TyduxReducerBridge();
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer({global: true}));
+        const tydux = tyduxBridge.connectStore(reduxStore);
+        const facade = new TestFacade(tydux);
+
+        reduxStore.subscribe(() => {
+            expect(reduxStore.getState()).toEqual({
+                global: true,
+                test: {
+                    value: 77
+                }
+            } as any);
+
+            expect(facade.state).toEqual({
+                value: 77
+            });
+
+            done();
         });
     });
 

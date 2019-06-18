@@ -1,3 +1,22 @@
+# Version 10.5.0
+
+Facades can now provide their initial state with either the concrete state as value, a function returning the state or a promise that resolves the state:
+
+```
+class TestFacade extends Facade<number, Commands<number>> {
+    constructor(tydux: TyduxStore<any>) {
+    
+        // one of:
+        super(tydux, "test", new TestCommands(), 7);        // value
+        super(tydux, "test", new TestCommands(), () => 7);  // functon
+        super(tydux, "test", new TestCommands(), promise);  // promise
+
+    }
+}
+
+
+``` 
+
 # Version 10.4.0
 
 In this version we simplified the API

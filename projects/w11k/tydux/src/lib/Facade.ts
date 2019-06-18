@@ -1,13 +1,6 @@
-import {Action} from "redux";
+import {Action, Unsubscribe} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
-import {
-    CommandReducer,
-    Commands,
-    CommandsInvoker,
-    CommandsMethods,
-    createReducerFromCommandsInvoker,
-    FacadeAction
-} from "./commands";
+import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReducerFromCommandsInvoker, FacadeAction} from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {MountPoint, TyduxStore} from "./store";
@@ -30,6 +23,17 @@ function createUniqueFacadeId(name: string) {
     }
 }
 
+/**
+ * One of:
+ * - a value of type S
+ * - a noarg-function that returns the value of type S
+ * - a promise that resolves the value of type S
+ */
+export type InitialStateValue<S> = S | (() => S) | Promise<S>;
+
+/**
+ * Tydux Facade
+ */
 export abstract class Facade<S, C extends Commands<S>> {
 
     readonly facadeId: string;
@@ -48,6 +52,8 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
+    private readonly mountPointSubscription: Unsubscribe;
+
     private mountPoint: MountPoint<S, any>;
 
     private _state!: S;
@@ -58,14 +64,14 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     constructor(mountPoint: MountPoint<S, any>, name: string, commands: C);
 
-    constructor(tydux: TyduxStore, name: string, commands: C, initialState: S);
+    constructor(tydux: TyduxStore, name: string, commands: C, initialState: InitialStateValue<S>);
 
-    constructor(mountPoint: MountPoint<S | undefined, any>, name: string, commands: C, initialState: S);
+    constructor(mountPoint: MountPoint<S | undefined, any>, name: string, commands: C, initialState: InitialStateValue<S>);
 
     constructor(readonly mountPointOrRootStore: MountPoint<S, any> | TyduxStore,
                 name: string,
                 commands: C,
-                initialState?: S) {
+                initialState?: InitialStateValue<S>) {
 
         this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
         this.enrichInstanceMethods();
@@ -84,22 +90,36 @@ export abstract class Facade<S, C extends Commands<S>> {
         this.reduxStoreStateSubject.next(this.state);
 
         if (initialState !== undefined) {
-            const initialFacadeStateAction = this.facadeId + "@@INIT";
+            const initialFacadeStateAction = this.facadeId + "@@SET_STATE";
 
-            this.mountPoint.addReducer((state: S, action: Action) => {
+            this.mountPoint.addReducer((state: S, action: Action & { state: S }) => {
                 if (action.type === initialFacadeStateAction) {
-                    this.setState(initialState);
+                    const stateValue = action.state;
+                    this.setState(stateValue);
                     this.reduxStoreStateSubject.next(this.state);
-                    return this.mountPoint.setState(state, initialState);
+                    return this.mountPoint.setState(state, stateValue);
                 }
 
                 return state;
             });
 
-            this.mountPoint.dispatch({type: initialFacadeStateAction, initialFacadeState: initialState});
+            // Determine the initial value. Seperate logic for promises and non-promises so that
+            // facades with an non-promise initial value are initialized synchronously.
+            if (initialState instanceof Promise) {
+                this.bufferedStateChanges++;
+                initialState.then(value => {
+                    this.bufferedStateChanges--;
+                    this.mountPoint.dispatch({type: initialFacadeStateAction, state: value});
+                });
+            } else {
+                const initialStateValue: S = initialState instanceof Function
+                    ? initialState()
+                    : initialState;
+                this.mountPoint.dispatch({type: initialFacadeStateAction, state: initialStateValue});
+            }
         }
 
-        this.mountPoint.subscribe(() => {
+        this.mountPointSubscription = this.mountPoint.subscribe(() => {
             const currentState = Object.assign({}, this.mountPoint.getState());
             this.bufferedStateChanges++;
             this.setState(currentState);
@@ -117,6 +137,7 @@ export abstract class Facade<S, C extends Commands<S>> {
      * dispatched actions won't have an effect.
      */
     destroy(): void {
+        this.mountPointSubscription();
         this.destroyedState = true;
         this.reduxStoreStateSubject.complete();
         this.destroyedSubject.next(true);
