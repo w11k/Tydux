@@ -129,6 +129,21 @@ const tyduxStore = createTyduxStore({});
 const todoFacade = new TodoFacade(tyduxStore, "todos", new TodoCommands(), new TodoState());  
 ```
 
+**Usage:**
+
+```
+// get the current state
+const todos: ToDo[] = todoFacade.state.todos;
+
+// subscribe to state changes
+todoFacade.subscribe(state => {
+    const todos: ToDo[] = state.todos;
+});
+
+// call facade methods
+todoFacade.loadTodoListFromServer();
+```
+
 # Documentation
 
 ### [Angular integration](https://github.com/w11k/Tydux/blob/master/projects/w11k/tydux-angular/README.md)
