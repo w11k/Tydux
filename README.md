@@ -53,9 +53,9 @@ You can implement the state with a class or a plain JavaScript object. Classes a
 ```
 export class TodoState {
   todos: ToDo[] = [
-    {isDone: false, name: 'learn Angular'},
-    {isDone: true, name: 'learn Angular JS'},
-    {isDone: true, name: 'cleanup tutorial'},
+    {isDone: false, name: 'learn TypeScript'},
+    {isDone: true, name: 'buy milk'},
+    {isDone: true, name: 'clean house'},
   ]
 }
 ```
@@ -92,7 +92,7 @@ After we created the state and commands, we combine them within a facade.
 export class TodoFacade extends Facade<TodoState, TodoCommands> {
 
   constructor(tydux: TyduxStore) {
-    super(tydux, 'todos', new TodoCommands(), new TodoState())
+    super(tydux, 'todos', new TodoCommands(), new TodoState());
   }
 
   /**
@@ -101,7 +101,7 @@ export class TodoFacade extends Facade<TodoState, TodoCommands> {
   async loadTodoListFromServer() {
     this.commands.clear();
     const list = await fetch("/todos");
-    this.setTodoList(list);
+    this.commands.setTodoList(list);
   }
   
   /**
@@ -126,7 +126,7 @@ After we created the state, commands and facade, we can bootstrap Tydux.
 const tyduxStore = createTyduxStore({});
 
 // instatiate every facade once
-const todoFacade = new TodoFacade(tyduxStore, "todos", new TodoCommands(), new TodoState());  
+const todoFacade = new TodoFacade();  
 ```
 
 **Usage:**

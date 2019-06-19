@@ -10,6 +10,7 @@ git checkout master && \
 git fetch && \
 git merge origin/master && \
 rm -rf node_modules && \
+rm -rf dist && \
 rm package-lock.json && \
 npm install && \
 npm run build:lib  && \
@@ -22,6 +23,3 @@ git push --tags && \
 cd dist/w11k/tydux && \
 npm publish --access public && \
 cd ../../..
-
-#git push
-#npm --no-git-tag-version version patch
