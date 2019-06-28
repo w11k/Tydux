@@ -1,4 +1,8 @@
-# Version 11.1.0
+# Version 11.3.0
+
+Fix error of missing functions in proxy object when compiing to ES5.
+
+# Version 11.2.0
 
 Facades can now provide their initial state with either the concrete state as value, a function returning the state or a promise that resolves the state:
 
