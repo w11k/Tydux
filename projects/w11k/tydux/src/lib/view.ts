@@ -1,8 +1,8 @@
-import {Observable, Observer, Subscriber, Subscription} from 'rxjs';
-import {skip} from 'rxjs/operators';
-import {forEachIn, isPlainObject} from './lodash/lodash';
-import {Facade} from './Facade';
-import {get, last, selectToObservable} from './utils';
+import {Observable, Observer, Subscriber, Subscription} from "rxjs";
+import {skip} from "rxjs/operators";
+import {Facade} from "./Facade";
+import {forEachIn, isPlainObject} from "./lodash/lodash";
+import {get, last, selectToObservable} from "./utils";
 
 
 export type ViewTreeState<T> = {
@@ -105,7 +105,7 @@ export class View<T> {
 
     select<R>(selector: (state: ViewTreeState<Readonly<T>>) => R): Observable<R>;
 
-    select<R>(selector?: (state: ViewTreeState<Readonly<T>>) => R): Observable<R> {
+    select<R>(selector?: (state: Readonly<ViewTreeState<Readonly<T>>>) => R): Observable<R> {
         return selectToObservable(this.stateChanges$, selector);
     }
 

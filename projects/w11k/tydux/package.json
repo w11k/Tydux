@@ -13,6 +13,7 @@
     "type": "git",
     "url": "https://github.com/w11k/Tydux.git"
   },
+  "dependencies": {},
   "peerDependencies": {
     "rxjs": ">= 6.2.0",
     "@w11k/rx-ninja": "^1.8.2",

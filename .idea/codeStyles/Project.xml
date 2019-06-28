@@ -415,6 +415,7 @@
       <option name="FORCE_QUOTE_STYlE" value="true" />
       <option name="SPACE_WITHIN_TYPE_ASSERTION" value="true" />
       <option name="IMPORT_SORT_MODULE_NAME" value="true" />
+      <option name="BLACKLIST_IMPORTS" value="rxjs/Rx" />
     </TypeScriptCodeStyleSettings>
     <XML>
       <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />

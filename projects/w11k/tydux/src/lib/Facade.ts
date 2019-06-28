@@ -4,7 +4,7 @@ import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReduce
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {MountPoint, TyduxStore} from "./store";
-import {createProxy, functions, functionsIn, selectToObservable} from "./utils";
+import {createProxy, functionNamesShallow, functionNamesDeep, selectToObservable} from "./utils";
 
 const uniqueFacadeIds: { [id: string]: number } = {};
 
@@ -147,7 +147,7 @@ export abstract class Facade<S, C extends Commands<S>> {
     /**
      * Delegate to Store#destroy() for Angular.
      */
-    // tslint:disable-next-line:use-life-cycle-interface
+    // tslint:disable-next-line:use-life-cycle-interface use-lifecycle-interface
     ngOnDestroy(): void {
         this.destroy();
     }
@@ -176,7 +176,7 @@ export abstract class Facade<S, C extends Commands<S>> {
         const methodNamesUntilStoreParent: string[] = [];
         let level: any = this;
         while (level instanceof Facade) {
-            methodNamesUntilStoreParent.push(...functions(level));
+            methodNamesUntilStoreParent.push(...functionNamesShallow(level));
             level = Object.getPrototypeOf(level);
         }
 
@@ -213,7 +213,7 @@ export abstract class Facade<S, C extends Commands<S>> {
         const proxyObj = {} as any;
         const protoOfCommandsInstance = Object.getPrototypeOf(commandsInvoker.commands);
 
-        for (const mutatorMethodName of functionsIn(protoOfCommandsInstance)) {
+        for (const mutatorMethodName of functionNamesDeep(protoOfCommandsInstance)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];

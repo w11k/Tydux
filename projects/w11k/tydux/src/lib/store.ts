@@ -108,9 +108,9 @@ export function createTyduxStore<S, A extends Action = AnyAction>(initialState: 
         ? bridge.createTyduxReducer(initialState)
         : bridge.wrapReducer(reducer);
 
-    const reduxStore = createStore(
+    const reduxStore = (createStore as any)/*cast due to strange TS error*/(
         rootReducer,
-        initialState as any /*cast due to strange TS error*/,
+        initialState,
         enhancer);
 
     return bridge.connectStore(reduxStore);

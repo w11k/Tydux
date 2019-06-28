@@ -17,6 +17,18 @@ class TestFacade extends Facade<number, Commands<number>> {
 
 ``` 
 
+# Version 11.1.0
+
+Add support for Angular 8
+
+# Version 11.0.0
+
+Use build of Angular-CLI for tydux. Add demo application for Tydux and Tydux-Angular
+
+## Breaking changes in Tydux-Angular
+
+Replaced `TyduxModule.forRoot()` with `TyduxModule.forRootWithConfig(configFactory: () => TyduxConfiguration)` and `TyduxModule.forRootWithoutConfig()`
+
 # Version 10.4.0
 
 In this version we simplified the API

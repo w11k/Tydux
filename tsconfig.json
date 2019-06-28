@@ -1,36 +1,36 @@
 {
-    "compileOnSave": false,
-    "compilerOptions": {
-        "baseUrl": "./",
-        "outDir": "./dist/out-tsc",
-        "sourceMap": true,
-        "declaration": false,
-        "module": "es2015",
-        "moduleResolution": "node",
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "importHelpers": true,
-        "target": "es5",
-        "typeRoots": [
-            "node_modules/@types"
-        ],
-        "lib": [
-            "es2018",
-            "dom"
-        ],
-        "paths": {
-            "@w11k/tydux": [
-                "dist/w11k/tydux"
-            ],
-            "@w11k/tydux/*": [
-                "dist/w11k/tydux/*"
-            ],
-            "@w11k/tydux-angular": [
-                "dist/w11k/tydux-angular"
-            ],
-            "@w11k/tydux-angular/*": [
-                "dist/w11k/tydux-angular/*"
-            ]
-        }
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "lib": [
+      "es2018",
+      "dom"
+    ],
+    "paths": {
+      "@w11k/tydux": [
+        "dist/w11k/tydux"
+      ],
+      "@w11k/tydux/*": [
+        "dist/w11k/tydux/*"
+      ],
+      "@w11k/tydux-angular": [
+        "dist/w11k/tydux-angular"
+      ],
+      "@w11k/tydux-angular/*": [
+        "dist/w11k/tydux-angular/*"
+      ]
     }
+  }
 }
