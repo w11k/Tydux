@@ -4,7 +4,7 @@ import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReduce
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {MountPoint, TyduxStore} from "./store";
-import {createProxy, functionNamesShallow, functionNamesDeep, selectToObservable} from "./utils";
+import {createProxy, functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
 
 const uniqueFacadeIds: { [id: string]: number } = {};
 
@@ -107,10 +107,11 @@ export abstract class Facade<S, C extends Commands<S>> {
             // facades with an non-promise initial value are initialized synchronously.
             if (initialState instanceof Promise) {
                 this.bufferedStateChanges++;
-                initialState.then(value => {
-                    this.bufferedStateChanges--;
-                    this.mountPoint.dispatch({type: initialFacadeStateAction, state: value});
-                });
+                initialState
+                    .then(value => {
+                        this.mountPoint.dispatch({type: initialFacadeStateAction, state: value});
+                    })
+                    .finally(() => this.bufferedStateChanges--);
             } else {
                 const initialStateValue: S = initialState instanceof Function
                     ? initialState()
