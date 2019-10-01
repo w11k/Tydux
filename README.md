@@ -126,7 +126,7 @@ After we created the state, commands and facade, we can bootstrap Tydux.
 const tyduxStore = createTyduxStore({});
 
 // instatiate every facade once
-const todoFacade = new TodoFacade();  
+const todoFacade = new TodoFacade(tyduxStore);  
 ```
 
 **Usage:**
