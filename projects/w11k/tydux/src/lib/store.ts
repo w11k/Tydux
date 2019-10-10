@@ -80,7 +80,7 @@ export class TyduxReducerBridge {
             for (const reducer of this.facadeReducers) {
                 state = reducer(state, action);
             }
-            return state!;
+            return state;
         };
     }
 
