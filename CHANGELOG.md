@@ -1,3 +1,7 @@
+# Version 11.4.0
+
+- added test util method `createTestFacade(commandsInstance, initialState)`
+
 # Version 11.3.0
 
 Fix error of missing functions in proxy object when compiing to ES5.
