@@ -39,7 +39,7 @@ Tydux shares the concept of state, actions, reducer and selectors but differs in
 
 Install Tydux and all required peer-dependencies: 
 
-`npm install @w11k/tydux redux rxjs`.
+`npm install @w11k/tydux redux redux-devtools-extension rxjs`.
 
 
 # Quick Overview Demo
