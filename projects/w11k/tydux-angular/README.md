@@ -11,7 +11,7 @@
 **Install NPM package**
 
 ```
-npm install @w11k/tydux-angular
+npm install @w11k/tydux @w11k/tydux-angular @w11k/rx-ninja rxjs redux redux-devtools-extension
 ```
 
 **Define your initial state**
