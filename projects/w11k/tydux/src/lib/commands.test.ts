@@ -1,6 +1,6 @@
 import {notNil} from "@w11k/rx-ninja";
-import {filter} from "rxjs/operators";
-import {createTestFacade, createTestMount} from "../testing";
+import {filter, take} from "rxjs/operators";
+import {createTestFacade, createTestMount, FacadeMock} from "../testing";
 import {collect} from "../testing/test-utils-internal";
 import {Commands, CommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
@@ -36,6 +36,27 @@ describe("Commands", () => {
 
         await untilNoBufferedStateChanges(facade);
         expect(facade.state).toEqual({n1: 1});
+    });
+
+    it("setting mock.state should trigger select observables", async () => {
+        class MockFacade extends FacadeMock<{ n1: number }> {
+            constructor() {
+                super({n1: 1});
+            }
+        }
+
+        const facade = new MockFacade();
+        let i = 1;
+        const expectChanges$ = facade.select(s => s.n1)
+            .pipe(take(2))
+            .forEach(it => {
+                expect(it).toBe(i);
+                i++;
+            });
+        expect(facade.state).toEqual({n1: 1});
+        facade.state = {n1: 2};
+        expect(facade.state).toEqual({n1: 2});
+        await expectChanges$;
     });
 
     it("methods can assign state properties successively", async () => {

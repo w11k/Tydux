@@ -1,1 +1,1 @@
-<app-todo-list [todos]="todos$ | async" (todoClicked)="updateTodo($event)"></app-todo-list>
+<app-todo-list *ngIf="todos" [todos]="todos" (todoClicked)="updateTodo($event)"></app-todo-list>

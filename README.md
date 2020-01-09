@@ -148,6 +148,7 @@ todoFacade.loadTodoListFromServer();
 
 ### [Angular integration](https://github.com/w11k/Tydux/blob/master/projects/w11k/tydux-angular/README.md)
 ### [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
+### [Testing](https://github.com/w11k/Tydux/tree/master/doc/testing.md)
 
 
 # Patron

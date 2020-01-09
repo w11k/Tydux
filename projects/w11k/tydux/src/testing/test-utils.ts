@@ -1,6 +1,8 @@
+import {BehaviorSubject, Observable} from "rxjs";
 import {Commands} from "../lib/commands";
 import {Facade} from "../lib/Facade";
 import {createTyduxStore, MountPoint} from "../lib/store";
+import {selectToObservable} from "../lib/utils";
 
 export function createTestMount<S>(initialState: S): MountPoint<S, S> {
     const tyduxStore = createTyduxStore(initialState);
@@ -28,6 +30,31 @@ class TestFacade<S, C extends Commands<S>> extends Facade<S, C> {
         this._commands = commands;
     }
 
+}
+
+export class FacadeMock<S> {
+    private _state: S;
+    subject: BehaviorSubject<S>;
+
+    constructor(initialState?: S) {
+        this._state = initialState;
+        this.subject = new BehaviorSubject<S>(initialState);
+    }
+
+    set state(s: Readonly<S>) {
+        this._state = s;
+        this.subject.next(s);
+    }
+
+    get state(): Readonly<S> {
+        return this._state;
+    }
+
+    select(): Observable<S>;
+    select<R>(selector?: (s: S) => R): Observable<R>;
+    select<R>(selector?: (s: S) => R): Observable<R> {
+        return selectToObservable(this.subject, selector);
+    }
 }
 
 export function createTestFacade<C extends Commands<S>, S>(commands: C, initialState: S) {
