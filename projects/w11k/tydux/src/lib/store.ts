@@ -99,8 +99,8 @@ export class TyduxReducerBridge {
 }
 
 export function createTyduxStore<S, A extends Action = AnyAction>(initialState: S,
-                                                                  enhancer?: StoreEnhancer<any>,
-                                                                  reducer?: Reducer<S, A>): TyduxStore<S> {
+                                                                  reducer?: Reducer<S, A>,
+                                                                  enhancer?: StoreEnhancer<any>): TyduxStore<S> {
 
     const bridge = new TyduxReducerBridge();
 

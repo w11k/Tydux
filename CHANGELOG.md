@@ -1,3 +1,14 @@
+
+# Version 12.0.0
+
+- **breaking change** Changed API 
+
+`createTyduxStore(initialState, enhancer, reducer)`
+
+to
+
+`createTyduxStore(initialState, reducer, enhancer)`
+
 # Version 11.4.1
 
 **FIX** Release 11.4.0 was broken

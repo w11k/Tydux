@@ -202,7 +202,7 @@ describe("Store", function () {
       return state;
     }
 
-    const store = createTyduxStore(initialState, undefined, plainReducer);
+    const store = createTyduxStore(initialState, plainReducer, undefined);
     const mount = store.createRootMountPoint("managedByFacade");
 
     store.store.dispatch({type: "inc", payload: 5});

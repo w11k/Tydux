@@ -1,4 +1,4 @@
-import {notNil} from "@w11k/rx-ninja";
+import {isNotNil} from "@w11k/rx-ninja";
 import {filter} from "rxjs/operators";
 import {createTestFacade, createTestMount} from "../testing";
 import {collect} from "../testing/test-utils-internal";
@@ -68,7 +68,7 @@ describe("Commands", () => {
 
         facade.select(s => s.list1)
             .pipe(
-                filter(s => notNil(s))
+                filter(s => isNotNil(s))
             )
 
             .subscribe(() => {

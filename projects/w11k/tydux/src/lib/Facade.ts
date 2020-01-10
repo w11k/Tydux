@@ -3,6 +3,7 @@ import {Observable, ReplaySubject, Subject} from "rxjs";
 import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReducerFromCommandsInvoker, FacadeAction} from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
+import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
 import {MountPoint, TyduxStore} from "./store";
 import {createProxy, functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
 
@@ -74,6 +75,7 @@ export abstract class Facade<S, C extends Commands<S>> {
                 initialState?: InitialStateValue<S>) {
 
         this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
+        registerFacadeCommands(this.facadeId, commands);
         this.enrichInstanceMethods();
 
         this.mountPoint =
@@ -90,7 +92,7 @@ export abstract class Facade<S, C extends Commands<S>> {
         this.reduxStoreStateSubject.next(this.state);
 
         if (initialState !== undefined) {
-            const initialFacadeStateAction = this.facadeId + "@@SET_STATE";
+            const initialFacadeStateAction = this.createActionName("@@SET_STATE");
 
             this.mountPoint.addReducer((state: S, action: Action & { state: S }) => {
                 if (action.type === initialFacadeStateAction) {
@@ -142,6 +144,7 @@ export abstract class Facade<S, C extends Commands<S>> {
         this.destroyedState = true;
         this.reduxStoreStateSubject.complete();
         this.destroyedSubject.next(true);
+        deregisterFacadeCommands(this.facadeId);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -167,6 +170,10 @@ export abstract class Facade<S, C extends Commands<S>> {
      */
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
         return selectToObservable(this.reduxStoreStateSubject, selector);
+    }
+
+    createActionName(mutatorMethodName: string) {
+        return `[${this.facadeId}] ${mutatorMethodName}`;
     }
 
     private setState(state: S) {
@@ -218,7 +225,7 @@ export abstract class Facade<S, C extends Commands<S>> {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
-                const actionType = `[${self.facadeId}] ${mutatorMethodName}`;
+                const actionType = self.createActionName(mutatorMethodName);
                 const args = Array.prototype.slice.call(arguments);
                 const mutatorAction: FacadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
                 return self.mountPoint.dispatch(mutatorAction);

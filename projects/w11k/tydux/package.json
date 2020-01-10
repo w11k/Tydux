@@ -1,22 +1,21 @@
 {
-  "name": "@w11k/tydux",
-  "version": "11.4.1",
-  "author": "W11K GmbH",
-  "contributors": [
-    "Roman Roelofson",
-    "Philipp Burgmer",
-    "Sascha Engmann"
-  ],
-  "license": "Apache-2.0",
-  "homepage": "https://github.com/w11k/Tydux",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/w11k/Tydux.git"
-  },
-  "dependencies": {},
-  "peerDependencies": {
-    "rxjs": ">= 6.2.0",
-    "@w11k/rx-ninja": "^1.8.2",
-    "redux": "4.x.x"
-  }
+    "name": "@w11k/tydux",
+    "version": "12.0.0",
+    "author": "W11K GmbH",
+    "contributors": [
+        "Roman Roelofson",
+        "Philipp Burgmer",
+        "Sascha Engmann"
+    ],
+    "license": "Apache-2.0",
+    "homepage": "https://github.com/w11k/Tydux",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/w11k/Tydux.git"
+    },
+    "peerDependencies": {
+        "rxjs": ">= 6.2.0",
+        "@w11k/rx-ninja": "4.0.2",
+        "redux": "4.x.x"
+    }
 }
