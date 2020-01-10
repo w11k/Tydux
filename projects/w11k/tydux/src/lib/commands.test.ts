@@ -54,7 +54,7 @@ describe("Commands", () => {
                 i++;
             });
         expect(facade.state).toEqual({n1: 1});
-        facade.state = {n1: 2};
+        facade.setState({n1: 2});
         expect(facade.state).toEqual({n1: 2});
         await expectChanges$;
     });
