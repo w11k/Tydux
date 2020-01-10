@@ -45,7 +45,7 @@ describe("TodoListContextComponent", () => {
         const mock: TodoServiceMock = TestBed.get(TodoServiceMock);
         expect(component.todos).toEqual(new TodoState().todos);
         const emptyListState: TodoState = {todos: []};
-        mock.state = emptyListState;
+        mock.setState(emptyListState);
         expect(component.todos).toEqual([]);
     });
 });

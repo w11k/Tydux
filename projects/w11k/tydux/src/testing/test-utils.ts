@@ -41,7 +41,11 @@ export class FacadeMock<S> {
         this.subject = new BehaviorSubject<S>(initialState);
     }
 
-    set state(s: Readonly<S>) {
+    /**
+     * Sets the state of mock to s and triggers observables created through select
+     * @param s the new state
+     */
+    setState(s: S) {
         this._state = s;
         this.subject.next(s);
     }
