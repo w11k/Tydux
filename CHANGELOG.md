@@ -1,3 +1,7 @@
+# Version 12.0.1
+
+fixing peer dependency warnings
+
 
 # Version 12.0.0
 
@@ -19,7 +23,7 @@ to
 
 # Version 11.3.0
 
-Fix error of missing functions in proxy object when compiing to ES5.
+Fix error of missing functions in proxy object when compiling to ES5.
 
 # Version 11.2.0
 
