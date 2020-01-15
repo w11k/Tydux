@@ -1,5 +1,6 @@
 export interface ToDo {
-  name: string;
-  isDone: boolean;
-  description?: string;
+    userId: number;
+    id: number;
+    title: string;
+    completed: boolean;
 }

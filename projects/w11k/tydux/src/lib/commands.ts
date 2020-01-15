@@ -2,13 +2,13 @@ import {Action} from "redux";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {createFailingProxy, failIfInstanceMembersExistExceptState, failIfNotUndefined} from "./utils";
 
-export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
+export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never }[keyof T];
 export type CommandsMethods<T> = Pick<T, FunctionPropertyNames<T>>;
 export type CommandReducer<S> = (state: S, action: FacadeAction) => S;
 
 export interface FacadeAction extends Action<string> {
     payload?: any[];
-    debugContext?: string;
+    facadeMethod?: string;
 }
 
 export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsInvoker: CommandsInvoker<Commands<S>>): CommandReducer<S> {

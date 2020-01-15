@@ -1,31 +1,28 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { TodoService } from '../core/todo.service';
-import { Observable } from 'rxjs';
-import { ToDo } from '../core/todo.entity';
-import { untilComponentDestroyed } from '@w11k/ngx-componentdestroyed';
+import {Component, OnDestroy, OnInit} from "@angular/core";
+import {ToDo} from "../core/todo.entity";
+import {TodoService} from "../core/todo.service";
 
 @Component({
-  selector: 'app-todo-list-context',
-  templateUrl: './todo-list-context.component.html',
-  styleUrls: ['./todo-list-context.component.scss']
+    selector: "app-todo-list-context",
+    templateUrl: "./todo-list-context.component.html",
+    styleUrls: ["./todo-list-context.component.scss"]
 })
 export class TodoListContextComponent implements OnInit, OnDestroy {
 
-  todos$: Observable<ToDo[]>;
+    todos$ = this.todoService.select(it => it.todos);
+    loading$ = this.todoService.select(it => it.loading);
 
-  constructor(private readonly todoService: TodoService) {
-  }
+    constructor(private readonly todoService: TodoService) {
+    }
 
-  ngOnInit() {
-    this.todos$ = this.todoService.select(it => it.todos).pipe(
-      untilComponentDestroyed(this)
-    )
-  }
+    ngOnInit() {
+        this.todoService.loadAllTodos(1);
+    }
 
-  ngOnDestroy(): void {
-  }
+    ngOnDestroy(): void {
+    }
 
-  updateTodo($event: ToDo) {
-    this.todoService.toggleDoneStateOf($event);
-  }
+    updateTodo($event: ToDo) {
+        this.todoService.updateTodo($event);
+    }
 }

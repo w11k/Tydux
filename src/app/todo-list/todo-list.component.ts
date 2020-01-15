@@ -6,17 +6,14 @@ import { ToDo } from '../core/todo.entity';
   templateUrl: './todo-list.component.html',
   styleUrls: ['./todo-list.component.scss']
 })
-export class TodoListComponent implements OnInit {
+export class TodoListComponent {
 
   @Input() todos: ToDo[];
   @Output() todoClicked = new EventEmitter<ToDo>();
 
   constructor() { }
 
-  ngOnInit() {
-  }
-
-  isDoneChanged(t: ToDo) {
-    this.todoClicked.emit(t)
+  onTodoClicked(t: ToDo) {
+      this.todoClicked.emit(t);
   }
 }

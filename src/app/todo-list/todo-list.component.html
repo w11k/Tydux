@@ -1,8 +1,8 @@
 <ul>
-  <li *ngFor="let t of todos" [class.done]="t.isDone">
+  <li *ngFor="let t of todos" [class.done]="t.completed">
     <label>
-      <input type="checkbox" [checked]="t.isDone" (input)="isDoneChanged(t)">
-      {{t.name}}
+      <input type="checkbox" [checked]="t.completed" (input)="onTodoClicked(t)">
+      {{t.title}}
     </label>
   </li>
 </ul>

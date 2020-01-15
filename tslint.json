@@ -61,10 +61,12 @@
         "object-literal-sort-keys": false,
         "ordered-imports": false,
         "quotemark": [
-            true,
+            false,
+            "single",
             "double"
         ],
         "trailing-comma": false,
+        "no-trailing-whitespace": false,
         "no-output-on-prefix": true,
         "no-inputs-metadata-property": true,
         "no-outputs-metadata-property": true,

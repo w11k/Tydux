@@ -227,7 +227,7 @@ export abstract class Facade<S, C extends Commands<S>> {
                 const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
                 const actionType = self.createActionName(mutatorMethodName);
                 const args = Array.prototype.slice.call(arguments);
-                const mutatorAction: FacadeAction = {type: actionType, payload: args, debugContext: storeMethodName};
+                const mutatorAction: FacadeAction = {type: actionType, payload: args, facadeMethod: storeMethodName};
                 return self.mountPoint.dispatch(mutatorAction);
             };
         }
