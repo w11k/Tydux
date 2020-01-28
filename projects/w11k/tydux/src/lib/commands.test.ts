@@ -34,7 +34,6 @@ describe("Commands", () => {
         const facade = createTestFacade(new TestCommands(), {n1: 0});
         facade.commands.mut1();
 
-        await untilNoBufferedStateChanges(facade);
         expect(facade.state).toEqual({n1: 1});
     });
 
