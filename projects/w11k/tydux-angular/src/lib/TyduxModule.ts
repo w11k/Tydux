@@ -1,6 +1,7 @@
 import {InjectionToken, Injector, ModuleWithProviders, NgModule} from "@angular/core";
-import {enableTyduxDevelopmentMode, TyduxReducerBridge, TyduxStore} from "@w11k/tydux";
-import {createStore, Reducer, Store, StoreEnhancer} from "redux";
+import {createDevToolsEnabledComposeFn, enableTyduxDevelopmentMode, TyduxReducerBridge, TyduxStore} from "@w11k/tydux";
+import {compose, createStore, Reducer, Store, StoreEnhancer} from "redux";
+import {EnhancerOptions} from "redux-devtools-extension";
 
 export const REDUX_STORE = new InjectionToken("ReduxStoreByTyduxToken");
 export const tyduxModuleConfiguration = new InjectionToken<() => TyduxConfiguration>("TyduxModuleConfiguration");
@@ -10,6 +11,8 @@ export interface TyduxConfiguration {
     preloadedState?: any;
     storeEnhancer?: StoreEnhancer;
     developmentMode?: boolean;
+    devToolsOptions?: EnhancerOptions,
+    autoUseDevToolsInDevelopmentMode?: boolean;
 }
 
 const staticProviders = [
@@ -59,15 +62,21 @@ export function factoryReduxStore(injector: Injector, bridge: TyduxReducerBridge
     const config = configFactory();
     const initialState = Object.assign({}, config.preloadedState);
     const reducer = config.reducer !== undefined ? config.reducer : (state: any) => state;
+    const autoUseDevToolsInDevelopmentMode = config.autoUseDevToolsInDevelopmentMode !== false;
 
     if (config.developmentMode === true) {
         enableTyduxDevelopmentMode(config.developmentMode);
     }
 
+    const composeEnhancers = autoUseDevToolsInDevelopmentMode
+        ? createDevToolsEnabledComposeFn(config.devToolsOptions)
+        : compose;
+
     return createStore(
         bridge.wrapReducer(reducer),
         initialState,
-        config.storeEnhancer);
+        config.storeEnhancer ? composeEnhancers(config.storeEnhancer) : composeEnhancers()
+    );
 }
 
 export function factoryTyduxStore(redux: Store, bridge: TyduxReducerBridge) {

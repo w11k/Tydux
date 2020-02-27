@@ -2,7 +2,6 @@ import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {TyduxConfiguration, TyduxModule} from "@w11k/tydux-angular";
-import {composeWithDevTools} from "redux-devtools-extension";
 import {environment} from "../environments/environment";
 
 import {AppComponent} from "./app.component";
@@ -31,7 +30,10 @@ export class AppModule {
 
 export function createTyduxConfig(): TyduxConfiguration {
     return {
-        storeEnhancer: environment.production ? undefined : composeWithDevTools(),
-        developmentMode: !environment.production
+        developmentMode: !environment.production,
+        devToolsOptions: {
+            trace: true,
+            traceLimit: 10,
+        }
     };
 }

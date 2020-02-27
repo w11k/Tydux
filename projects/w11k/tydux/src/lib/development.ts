@@ -1,3 +1,8 @@
+import {compose} from "redux";
+import {EnhancerOptions} from "redux-devtools-extension";
+
+const DEV_TOOLS_COMPOSE = "__REDUX_DEVTOOLS_EXTENSION_COMPOSE__";
+
 let developmentMode = false;
 
 export function enableTyduxDevelopmentMode(enable: boolean = true) {
@@ -9,4 +14,10 @@ export function enableTyduxDevelopmentMode(enable: boolean = true) {
 
 export function isTyduxDevelopmentModeEnabled() {
     return developmentMode;
+}
+
+export function createDevToolsEnabledComposeFn(options: EnhancerOptions = {}) {
+    return developmentMode && window.hasOwnProperty(DEV_TOOLS_COMPOSE)
+        ? window[DEV_TOOLS_COMPOSE](options)
+        : compose;
 }

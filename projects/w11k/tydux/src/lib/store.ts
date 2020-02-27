@@ -2,7 +2,7 @@ import {isNil} from "@w11k/rx-ninja";
 import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
 import {Observable} from "rxjs";
 import {CommandReducer} from "./commands";
-
+import {createDevToolsEnabledComposeFn} from "./development";
 
 export interface MountPoint<L, S = any, A extends Action = Action<string>> {
     addReducer: (commandReducer: CommandReducer<any>) => void;
@@ -98,9 +98,11 @@ export class TyduxReducerBridge {
 
 }
 
-export function createTyduxStore<S, A extends Action = AnyAction>(initialState: S,
-                                                                  reducer?: Reducer<S, A>,
-                                                                  enhancer?: StoreEnhancer<any>): TyduxStore<S> {
+export function createTyduxStore<S, A extends Action = AnyAction>(
+    initialState: S,
+    reducer?: Reducer<S, A>,
+    enhancer?: StoreEnhancer<any>
+): TyduxStore<S> {
 
     const bridge = new TyduxReducerBridge();
 
@@ -111,7 +113,7 @@ export function createTyduxStore<S, A extends Action = AnyAction>(initialState: 
     const reduxStore = (createStore as any)/*cast due to strange TS error*/(
         rootReducer,
         initialState,
-        enhancer);
+        createDevToolsEnabledComposeFn()(enhancer));
 
     return bridge.connectStore(reduxStore);
 }
