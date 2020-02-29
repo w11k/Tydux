@@ -41,7 +41,7 @@ export function createTyduxConfig(): TyduxConfiguration {
 ```
 
 
-**Add Tydux Angular module**
+**Add the Tydux Angular module**
 
 ```
 @NgModule({
@@ -61,11 +61,12 @@ export class AppModule {
 @Injectable({providedIn: 'root'})
 export class MyFacade extends Facade<State1, MyCommands> {
 
-  constructor(tydux: TyduxStore<AppState>) {         // inject TyduxStore
+  constructor(tydux: TyduxStore) {                   // inject TyduxStore
     super(tydux,                                     // pass store
           'state1',                                  // mountpoint name
-          new State1();                              // initial state
-          new MyCommands());                         // commands instance
+          new MyCommands(),                          // commands instance
+          new State1()                               // initial state
+    );
   }
 
 }
