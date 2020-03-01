@@ -3,21 +3,56 @@ import {EnhancerOptions} from "redux-devtools-extension";
 
 const DEV_TOOLS_COMPOSE = "__REDUX_DEVTOOLS_EXTENSION_COMPOSE__";
 
-let developmentMode = false;
+let devModeConfig: TyduxDevModeConfig | undefined;
 
-export function enableTyduxDevelopmentMode(enable: boolean = true) {
-    if (!developmentMode && enable && (typeof Window === "function")) {
+export type TyduxDevModeConfig = {
+    autoUseDevToolsInDevelopmentMode?: boolean;
+    devTools?: EnhancerOptions
+};
+
+const defaultTyduxDevModeConfig: TyduxDevModeConfig = {
+    autoUseDevToolsInDevelopmentMode: true
+};
+
+export function enableTyduxDevelopmentMode(enableOrConfig: boolean | TyduxDevModeConfig = true) {
+    if (devModeConfig === undefined && enableOrConfig && (typeof Window === "function")) {
         console.log("enableTyduxDevelopmentMode() called. Tydux is running in the development mode.");
     }
-    developmentMode = enable;
+
+    if (enableOrConfig === true) {
+        devModeConfig = defaultTyduxDevModeConfig;
+    } else if (enableOrConfig === false) {
+        devModeConfig = undefined;
+    } else {
+        devModeConfig = {
+            ...defaultTyduxDevModeConfig,
+            ...enableOrConfig
+        };
+    }
 }
 
 export function isTyduxDevelopmentModeEnabled() {
-    return developmentMode;
+    return devModeConfig !== undefined;
 }
 
-export function createDevToolsEnabledComposeFn(options: EnhancerOptions = {}) {
-    return developmentMode && window.hasOwnProperty(DEV_TOOLS_COMPOSE)
-        ? window[DEV_TOOLS_COMPOSE](options)
-        : compose;
+export function checkDevModeAndCreateDevToolsEnabledComposeFn(options: Partial<EnhancerOptions> = {}) {
+    if (isTyduxDevelopmentModeEnabled()
+        && devModeConfig.autoUseDevToolsInDevelopmentMode
+        && window.hasOwnProperty(DEV_TOOLS_COMPOSE)) {
+
+        // let options =
+        //     devModeConfig !== undefined
+        //     && devModeConfig.devTools !== undefined
+        //         ? devModeConfig.devTools
+        //         : {};
+        //
+        // options = {
+        //     ...options,
+        //     ...options,
+        // };
+
+        return window[DEV_TOOLS_COMPOSE](options);
+    }
+
+    return compose;
 }

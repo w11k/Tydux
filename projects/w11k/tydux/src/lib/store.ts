@@ -1,8 +1,9 @@
 import {isNil} from "@w11k/rx-ninja";
 import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
+import {EnhancerOptions} from "redux-devtools-extension";
 import {Observable} from "rxjs";
 import {CommandReducer} from "./commands";
-import {createDevToolsEnabledComposeFn} from "./development";
+import {checkDevModeAndCreateDevToolsEnabledComposeFn} from "./development";
 
 export interface MountPoint<L, S = any, A extends Action = Action<string>> {
     addReducer: (commandReducer: CommandReducer<any>) => void;
@@ -98,22 +99,28 @@ export class TyduxReducerBridge {
 
 }
 
-export function createTyduxStore<S, A extends Action = AnyAction>(
-    initialState: S,
-    reducer?: Reducer<S, A>,
-    enhancer?: StoreEnhancer<any>
+export function createTyduxStore<S = unknown, A extends Action = AnyAction>(
+    initialState: S = {} as any,
+    config?: {
+        name?: EnhancerOptions["name"],
+        reducer?: Reducer<S, A>,
+        enhancer?: StoreEnhancer<any>,
+    }
 ): TyduxStore<S> {
 
     const bridge = new TyduxReducerBridge();
 
-    const rootReducer = isNil(reducer)
+    const rootReducer = isNil(config.reducer)
         ? bridge.createTyduxReducer(initialState)
-        : bridge.wrapReducer(reducer);
+        : bridge.wrapReducer(config.reducer);
 
     const reduxStore = (createStore as any)/*cast due to strange TS error*/(
         rootReducer,
         initialState,
-        createDevToolsEnabledComposeFn()(enhancer));
+        checkDevModeAndCreateDevToolsEnabledComposeFn({
+            name: config ? config.name : undefined
+        })(config.enhancer)
+    );
 
     return bridge.connectStore(reduxStore);
 }

@@ -70,7 +70,6 @@ export function createProxy<T>(target: T): T {
     const proxy: any = {};
     // re-assign members. Otherwise these members would be marked as read only.
     // Also flattens the new state object.
-    // assignIn(proxy, target);
     Object.assign(proxy, target);
 
     // TODO remove 'as any' when compiler bug is fixed
