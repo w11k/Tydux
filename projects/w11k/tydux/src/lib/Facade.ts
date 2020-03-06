@@ -5,7 +5,7 @@ import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
 import {MountPoint, TyduxStore} from "./store";
-import {createProxy, functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
+import {createProxy, functionNamesDeep, selectToObservable} from "./utils";
 
 const uniqueFacadeIds: { [id: string]: number } = {};
 
@@ -49,8 +49,6 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     private bufferedStateChanges = 0;
 
-    private readonly commandContextCallstack: string[] = [];
-
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
     private readonly mountPointSubscription: Unsubscribe;
@@ -76,7 +74,7 @@ export abstract class Facade<S, C extends Commands<S>> {
 
         this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
         registerFacadeCommands(this.facadeId, commands);
-        this.enrichInstanceMethods();
+        // this.enrichInstanceMethods();
 
         this.mountPoint =
             mountPointOrRootStore instanceof TyduxStore
@@ -180,42 +178,37 @@ export abstract class Facade<S, C extends Commands<S>> {
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
-    private enrichInstanceMethods() {
-        const methodNamesUntilStoreParent: string[] = [];
-        let level: any = this;
-        while (level instanceof Facade) {
-            methodNamesUntilStoreParent.push(...functionNamesShallow(level));
-            level = Object.getPrototypeOf(level);
-        }
+    // private enrichInstanceMethods() {
+    // const methodNamesUntilStoreParent: string[] = [];
+    // let level: any = this;
+    // while (level instanceof Facade) {
+    // methodNamesUntilStoreParent.push(...functionNamesShallow(level));
+    // level = Object.getPrototypeOf(level);
+    // }
 
-        for (const fnMemberName of methodNamesUntilStoreParent) {
-            this.enrichInstanceMethod(fnMemberName);
-        }
-    }
+    // for (const fnMemberName of methodNamesUntilStoreParent) {
+    //     this.enrichInstanceMethod(fnMemberName);
+    // }
+    // }
 
-    private enrichInstanceMethod(name: string) {
-        const self = this;
-        const member = (this as any)[name];
-        Object.getPrototypeOf(this)[name] = function () {
-            self.commandContextCallstack.push(name);
-            try {
-                const result = member.apply(this, arguments);
-                if (result instanceof Promise) {
-                    return new Promise(resolve => {
-                        self.commandContextCallstack.push(name);
-                        resolve(result);
-                    }).then(value => {
-                        self.commandContextCallstack.pop();
-                        return value;
-                    });
-                } else {
-                    return result;
-                }
-            } finally {
-                self.commandContextCallstack.pop();
-            }
-        };
-    }
+    // private enrichInstanceMethod(name: string) {
+    //     const member = (this as any)[name];
+    //     Object.getPrototypeOf(this)[name] = function () {
+    //         try {
+    //             const result = member.apply(this, arguments);
+    //             if (result instanceof Promise) {
+    //                 return new Promise(resolve => {
+    //                     resolve(result);
+    //                 }).then(value => {
+    //                     return value;
+    //                 });
+    //             } else {
+    //                 return result;
+    //             }
+    //         } finally {
+    //         }
+    //     };
+    // }
 
     private createCommandsProxy(commandsInvoker: CommandsInvoker<C>): C {
         const proxyObj = {} as any;
@@ -224,10 +217,9 @@ export abstract class Facade<S, C extends Commands<S>> {
         for (const mutatorMethodName of functionNamesDeep(protoOfCommandsInstance)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
-                const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
                 const actionType = self.createActionName(mutatorMethodName);
                 const args = Array.prototype.slice.call(arguments);
-                const mutatorAction: FacadeAction = {type: actionType, payload: args, facadeMethod: storeMethodName};
+                const mutatorAction: FacadeAction = {type: actionType, payload: args};
                 return self.mountPoint.dispatch(mutatorAction);
             };
         }
