@@ -7,7 +7,7 @@ let devModeConfig: TyduxDevModeConfig | undefined;
 
 export type TyduxDevModeConfig = {
     autoUseDevToolsInDevelopmentMode?: boolean;
-    devTools?: EnhancerOptions
+    devToolsOptions?: EnhancerOptions
 };
 
 const defaultTyduxDevModeConfig: TyduxDevModeConfig = {
@@ -40,16 +40,16 @@ export function checkDevModeAndCreateDevToolsEnabledComposeFn(options: Partial<E
         && devModeConfig.autoUseDevToolsInDevelopmentMode
         && window.hasOwnProperty(DEV_TOOLS_COMPOSE)) {
 
-        // let options =
-        //     devModeConfig !== undefined
-        //     && devModeConfig.devTools !== undefined
-        //         ? devModeConfig.devTools
-        //         : {};
-        //
-        // options = {
-        //     ...options,
-        //     ...options,
-        // };
+        const defaultOptions =
+            devModeConfig !== undefined
+            && devModeConfig.devToolsOptions !== undefined
+                ? devModeConfig.devToolsOptions
+                : {};
+
+        options = {
+            ...defaultOptions,
+            ...options,
+        };
 
         return window[DEV_TOOLS_COMPOSE](options);
     }

@@ -101,11 +101,11 @@ export class TyduxReducerBridge {
 
 export function createTyduxStore<S = unknown, A extends Action = AnyAction>(
     initialState: S = {} as any,
-    config?: {
+    config: {
         name?: EnhancerOptions["name"],
         reducer?: Reducer<S, A>,
         enhancer?: StoreEnhancer<any>,
-    }
+    } = {}
 ): TyduxStore<S> {
 
     const bridge = new TyduxReducerBridge();
@@ -114,12 +114,14 @@ export function createTyduxStore<S = unknown, A extends Action = AnyAction>(
         ? bridge.createTyduxReducer(initialState)
         : bridge.wrapReducer(config.reducer);
 
+    const enhancer = checkDevModeAndCreateDevToolsEnabledComposeFn({
+        name: config ? config.name : undefined
+    });
+
     const reduxStore = (createStore as any)/*cast due to strange TS error*/(
         rootReducer,
         initialState,
-        checkDevModeAndCreateDevToolsEnabledComposeFn({
-            name: config ? config.name : undefined
-        })(config.enhancer)
+        config.enhancer ? enhancer(config.enhancer) : enhancer()
     );
 
     return bridge.connectStore(reduxStore);

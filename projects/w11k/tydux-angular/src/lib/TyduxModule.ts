@@ -1,22 +1,18 @@
 import {InjectionToken, Injector, ModuleWithProviders, NgModule} from "@angular/core";
-import {
-    checkDevModeAndCreateDevToolsEnabledComposeFn,
-    createTyduxStore,
-    enableTyduxDevelopmentMode,
-    TyduxDevModeConfig,
-    TyduxStore
-} from "@w11k/tydux";
-import {compose, Reducer, StoreEnhancer} from "redux";
+import {addGlobalStore, createTyduxStore, enableTyduxDevelopmentMode, TyduxDevModeConfig, TyduxStore} from "@w11k/tydux";
+import {Reducer, StoreEnhancer} from "redux";
 
 export const tyduxModuleConfiguration = new InjectionToken<() => TyduxConfiguration>("TyduxModuleConfiguration");
 
 export interface TyduxConfiguration {
+    name?: string;
     reducer?: Reducer;
     preloadedState?: any;
     enhancer?: StoreEnhancer;
     developmentMode?: boolean;
+    skipGlobalStoreRegistration?: boolean;
 
-    devToolsOptions?: TyduxDevModeConfig["devTools"];
+    devToolsOptions?: TyduxDevModeConfig["devToolsOptions"];
     autoUseDevToolsInDevelopmentMode?: TyduxDevModeConfig["autoUseDevToolsInDevelopmentMode"];
 }
 
@@ -60,26 +56,21 @@ export function factoryTyduxStore(injector: Injector) {
     const configFactory = injector.get(tyduxModuleConfiguration, () => ({} as TyduxConfiguration));
     const config = configFactory();
     const initialState = Object.assign({}, config.preloadedState);
-    // const reducer = config.reducer !== undefined ? config.reducer : (state: any) => state;
 
     if (config.developmentMode === true) {
         enableTyduxDevelopmentMode(config);
     }
 
-    // const composeEnhancers = config.autoUseDevToolsInDevelopmentMode
-    //     ? checkDevModeAndCreateDevToolsEnabledComposeFn()
-    //     : compose;
-
-    // const bridge = new TyduxReducerBridge();
-    // const reduxStore = createStore(
-    //     bridge.wrapReducer(reducer),
-    //     initialState,
-    //     config.enhancer ? composeEnhancers(config.enhancer) : composeEnhancers()
-    // );
-
-    return createTyduxStore(initialState, {
+    const tyduxStore = createTyduxStore(initialState, {
+        name: config.name,
         reducer: config.reducer,
         enhancer: config.enhancer,
     });
+
+    if (!config.skipGlobalStoreRegistration) {
+        addGlobalStore(tyduxStore);
+    }
+
+    return tyduxStore;
 }
 

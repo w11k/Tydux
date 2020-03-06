@@ -27,7 +27,9 @@ describe("ActionRecorder", () => {
         }
 
         const recorder = new ActionRecorder<{ MyTest: typeof state }>();
-        const tyduxStore = createTyduxStore({}, recorder.getReducer());
+        const tyduxStore = createTyduxStore({}, {
+            reducer: recorder.getReducer()
+        });
 
         const testFacade = new MyFacade(tyduxStore, "MyTest", new MyCommands(), state);
         const actionTypes = createCommandsActionTypeNames(testFacade);
@@ -42,7 +44,6 @@ describe("ActionRecorder", () => {
 
         const last = recorder.getLastActionAndStateForType(actionTypes.incrementBy);
         expect(last.state.MyTest.a).toEqual(4);
-
 
 
     });
