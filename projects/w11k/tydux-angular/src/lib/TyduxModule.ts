@@ -1,5 +1,5 @@
 import {InjectionToken, Injector, ModuleWithProviders, NgModule} from "@angular/core";
-import {addGlobalStore, createTyduxStore, enableTyduxDevelopmentMode, TyduxDevModeConfig, TyduxStore} from "@w11k/tydux";
+import {setGlobalStore, createTyduxStore, enableTyduxDevelopmentMode, TyduxDevModeConfig, TyduxStore} from "@w11k/tydux";
 import {Reducer, StoreEnhancer} from "redux";
 
 export const tyduxModuleConfiguration = new InjectionToken<() => TyduxConfiguration>("TyduxModuleConfiguration");
@@ -68,7 +68,7 @@ export function factoryTyduxStore(injector: Injector) {
     });
 
     if (!config.skipGlobalStoreRegistration) {
-        addGlobalStore(tyduxStore);
+        setGlobalStore(tyduxStore);
     }
 
     return tyduxStore;

@@ -2,7 +2,10 @@ import {TyduxStore} from "./store";
 
 let globalStore: TyduxStore | undefined;
 
-export function addGlobalStore(store: TyduxStore) {
+export function setGlobalStore(store: TyduxStore) {
+    if (globalStore !== undefined) {
+        throw new Error("a global store is already defined");
+    }
     globalStore = store;
 }
 

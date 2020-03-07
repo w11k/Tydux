@@ -11,7 +11,7 @@
         "start:demo": "ng serve",
         "start:tydux": "npm run build:tydux -- --watch",
         "start:angular": "npm run build:tydux-angular -- --watch",
-        "test": "run-s build:lib test:lib test:app",
+        "test": "npm run test:all",
         "test:lib": "jest --config ./jest.lib.config.js",
         "test:app": "jest --config ./jest.app.config.js",
         "test:all": "npm run test:lib && npm run test:app",

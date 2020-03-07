@@ -1,9 +1,7 @@
-import { success } from 'ng-packagr/lib/util/log';
-
 describe("empty test", () => {
-  it('should do nothing', () => {
-    success('Noop')
-  })
+    it("should do nothing", () => {
+        // success('Noop');
+    });
 });
 /*
 import {assert} from "chai";
