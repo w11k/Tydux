@@ -4,21 +4,23 @@ import {createAsyncPromise, createTestMount} from "../testing";
 import {collect} from "../testing/test-utils-internal";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
-import {MountPoint, TyduxReducerBridge, TyduxStore} from "./store";
+import {createTyduxStore, MountPoint, TyduxReducerBridge, TyduxStore} from "./store";
 import {areArraysShallowEquals, untilNoBufferedStateChanges} from "./utils";
 
 
 describe("Facade", () => {
 
-    it("ID must be unique", () => {
-        const mount = createTestMount({});
+    it("slice path must be unique", () => {
+        const store = createTyduxStore();
 
         class TestFacade extends Facade<any, any> {
         }
 
-        const tf1 = new TestFacade(mount, "TestFacade", Commands);
-        const tf2 = new TestFacade(mount, "TestFacade", Commands);
-        expect(tf1.facadeId).not.toEqual(tf2.facadeId);
+        const tf1 = new TestFacade(store.createMountPoint("testFacade"), null, Commands);
+        expect(() => {
+            // tslint:disable-next-line
+            new TestFacade(store.createMountPoint("testFacade"), null, Commands);
+        }).toThrowError("already in use");
     });
 
     it("can be destroyed", () => {
@@ -307,7 +309,7 @@ describe("Facade", () => {
 
         class TestFacade extends Facade<TestState, Commands<TestState>> {
             constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint("test"), "test", new Commands(), {value: 0});
+                super(tydux.createMountPoint("test"), "test", new Commands(), {value: 0});
 
             }
         }
@@ -335,7 +337,7 @@ describe("Facade", () => {
 
         class TestFacade extends Facade<TestState, Commands<TestState>> {
             constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint("test"), "test", new Commands(), () => ({value: 99}));
+                super(tydux.createMountPoint("test"), "test", new Commands(), () => ({value: 99}));
 
             }
         }
@@ -367,7 +369,7 @@ describe("Facade", () => {
 
         class TestFacade extends Facade<TestState, Commands<TestState>> {
             constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint("test"), "test", new Commands(), initialValuePromise);
+                super(tydux.createMountPoint("test"), "test", new Commands(), initialValuePromise);
 
             }
         }
@@ -471,7 +473,7 @@ describe("Facade", () => {
         const tyduxBridge = new TyduxReducerBridge();
         const reduxStore: ReduxStore<typeof initialState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
         const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createMountPoint(s => s, (_, s) => ({...s}));
+        const mount = connected.internalCreateMountPoint(s => s, (_, s) => ({...s}));
 
         class TestCommands extends Commands<{ list1: number[], list2: number[] }> {
             setList1(list: number[]) {

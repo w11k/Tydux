@@ -52,8 +52,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
-        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createMountPoint("state2"), "facade2", new Commands2());
 
         const view = new View({
             fac1: fac1,
@@ -80,8 +80,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
-        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createMountPoint("state2"), "facade2", new Commands2());
 
         fac1.action1();
         await untilNoBufferedStateChanges(fac1);
@@ -120,7 +120,7 @@ describe("View", function () {
             state1: new State1()
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
 
         const view = new View({
             child1: {
@@ -149,8 +149,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
-        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createMountPoint("state2"), "facade2", new Commands2());
         const view = new View({fac1, fac2});
 
         const values: any[] = [];
@@ -181,8 +181,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
-        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createMountPoint("state2"), "facade2", new Commands2());
         const view = new View({fac1, fac2});
 
         view
@@ -201,8 +201,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
-        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createMountPoint("state2"), "facade2", new Commands2());
         const view = new View({fac1, fac2});
 
         let firstCalled = false;
@@ -232,8 +232,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
-        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createMountPoint("state2"), "facade2", new Commands2());
         const view = new View({fac1, fac2});
         expect(view.internalSubscriptionCount).toEqual(0);
 
@@ -256,8 +256,8 @@ describe("View", function () {
             state2: new State2(),
         });
 
-        const fac1 = new Facade1(store.createRootMountPoint("state1"), "facade1", new Commands1());
-        const fac2 = new Facade2(store.createRootMountPoint("state2"), "facade2", new Commands2());
+        const fac1 = new Facade1(store.createMountPoint("state1"), "facade1", new Commands1());
+        const fac2 = new Facade2(store.createMountPoint("state2"), "facade2", new Commands2());
         const view = new View({fac1, fac2});
 
         expect(view.internalSubscriptionCount).toEqual(0);

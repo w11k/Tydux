@@ -19,7 +19,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
         expect(() => facade.action()).toThrow();
     });
@@ -32,7 +32,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
         expect(() => facade.action()).toThrow();
     });
@@ -61,7 +61,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore(new MyState());
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", new TestCommands());
         let collected = collect(facade.select(s => s.count));
         facade.action();
@@ -85,7 +85,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
         facade.action();
         expect(facade.counterA).toEqual(10);
@@ -111,7 +111,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const store = new TestFacade(mount, "TestFacade", Commands);
         store.action();
     });
@@ -132,7 +132,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const store = new TestFacade(mount, "TestFacade", Commands);
         store.action();
     });
@@ -162,7 +162,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
         facade.action();
     });
@@ -179,7 +179,7 @@ describe("Facade - sanity tests", function () {
         }
 
         const tyduxStore = createTyduxStore({});
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const facade = new TestFacade(mount, "TestFacade", Commands);
 
         try {

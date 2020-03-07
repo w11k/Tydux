@@ -3,7 +3,8 @@ import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer,
 import {EnhancerOptions} from "redux-devtools-extension";
 import {Observable} from "rxjs";
 import {CommandReducer} from "./commands";
-import {checkDevModeAndCreateDevToolsEnabledComposeFn} from "./development";
+import {checkDevModeAndCreateDevToolsEnabledComposeFn, isTyduxDevelopmentModeEnabled} from "./development";
+import {getDeep, setDeep} from "./utils";
 
 export interface MountPoint<L, S = any, A extends Action = Action<string>> {
     addReducer: (commandReducer: CommandReducer<any>) => void;
@@ -12,13 +13,23 @@ export interface MountPoint<L, S = any, A extends Action = Action<string>> {
     extractState: (globalState: S) => L;
     setState: (globalState: S, localState: L) => S;
     subscribe: (listener: () => void) => Unsubscribe;
+    freeSlicePath: () => void;
 }
 
 export interface NamedMountPoint<L, S = any, A extends Action = Action<string>> extends MountPoint<L, S, A> {
     sliceName: string;
 }
 
+function throwErrorOnInvalidSliceNamePath(sliceNamePath: string) {
+    // TODO: check all characters instead of only ' '
+    if (sliceNamePath.indexOf(" ") !== -1) {
+        throw new Error("sliceNamePath contains whitespace");
+    }
+}
+
 export class TyduxStore<S = any, A extends Action = Action<string>> {
+
+    private readonly knownSlicePaths: { [name: string]: boolean; } = {};
 
     constructor(readonly store: Store<S, A>,
                 private readonly facadeReducers: CommandReducer<any>[]) {
@@ -37,8 +48,9 @@ export class TyduxStore<S = any, A extends Action = Action<string>> {
         });
     }
 
-    createMountPoint<L>(stateGetter: (globalState: S) => L,
-                        stateSetter: (globalState: S, localState: L) => S): MountPoint<L, S, A> {
+    private internalCreateMountPoint<L>(stateGetter: (globalState: S) => L,
+                                        stateSetter: (globalState: S, localState: L) => S,
+                                        freeSlicePath: () => void): MountPoint<L, S, A> {
         return {
             addReducer: (commandReducer: CommandReducer<any>) => this.facadeReducers.push(commandReducer),
             dispatch: <T extends A>(action: T) => this.store.dispatch(action),
@@ -46,19 +58,47 @@ export class TyduxStore<S = any, A extends Action = Action<string>> {
             extractState: (state: S) => stateGetter(state),
             setState: stateSetter,
             subscribe: this.store.subscribe.bind(this.store),
+            freeSlicePath
         };
     }
 
-    createRootMountPoint<K extends keyof S>(slice: K): NamedMountPoint<S[K], S, A> {
+    private registerSlicePath(path: string) {
+        if (this.knownSlicePaths[path] === true) {
+            throw new Error("slice path already in use");
+        }
+        this.knownSlicePaths[path] = true;
+    }
+
+    createMountPoint<K extends keyof S>(sliceName: K): NamedMountPoint<S[K], S, A> {
+        this.registerSlicePath(sliceName as string);
         return ({
-                sliceName: slice.toString(),
-                ...this.createMountPoint(
-                    s => s[slice],
+                sliceName: sliceName.toString(),
+                ...this.internalCreateMountPoint(
+                    s => s[sliceName],
                     (s, l) => {
                         const state = Object.assign({}, s);
-                        state[slice] = l;
+                        state[sliceName] = l;
                         return state;
-                    }
+                    },
+                    () => this.knownSlicePaths[sliceName as string] = false,
+                ),
+            }
+        );
+    }
+
+    createDeepMountPoint(sliceNamePath: string): NamedMountPoint<any, S, A> {
+        if (isTyduxDevelopmentModeEnabled()) {
+            throwErrorOnInvalidSliceNamePath(sliceNamePath);
+        }
+        this.registerSlicePath(sliceNamePath);
+        return ({
+                sliceName: sliceNamePath,
+                ...this.internalCreateMountPoint(
+                    s => getDeep(s, sliceNamePath),
+                    (s, l) => {
+                        return setDeep(s, sliceNamePath, l);
+                    },
+                    () => this.knownSlicePaths[sliceNamePath as string] = false,
                 )
             }
         );
@@ -99,7 +139,7 @@ export class TyduxReducerBridge {
 
 }
 
-export function createTyduxStore<S = unknown, A extends Action = AnyAction>(
+export function createTyduxStore<S = any, A extends Action = AnyAction>(
     initialState: S = {} as any,
     config: {
         name?: EnhancerOptions["name"],

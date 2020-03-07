@@ -4,25 +4,25 @@ import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReduce
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
-import {MountPoint, TyduxStore} from "./store";
+import {MountPoint, NamedMountPoint, TyduxStore} from "./store";
 import {createProxy, functionNamesDeep, selectToObservable} from "./utils";
 
-const uniqueFacadeIds: { [id: string]: number } = {};
+// const uniqueFacadeIds: { [id: string]: number } = {};
 
-function createUniqueFacadeId(name: string) {
-    if (uniqueFacadeIds[name] === undefined) {
-        uniqueFacadeIds[name] = 1;
-    } else {
-        uniqueFacadeIds[name] += 1;
-    }
-
-    const count = uniqueFacadeIds[name];
-    if (count === 1) {
-        return name;
-    } else {
-        return `${name}(${count})`;
-    }
-}
+// function createUniqueFacadeId(name: string) {
+//     if (uniqueFacadeIds[name] === undefined) {
+//         uniqueFacadeIds[name] = 1;
+//     } else {
+//         uniqueFacadeIds[name] += 1;
+//     }
+//
+//     const count = uniqueFacadeIds[name];
+//     if (count === 1) {
+//         return name;
+//     } else {
+//         return `${name}(${count})`;
+//     }
+// }
 
 /**
  * One of:
@@ -53,7 +53,7 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     private readonly mountPointSubscription: Unsubscribe;
 
-    private mountPoint: MountPoint<S, any>;
+    // private mountPoint: MountPoint<S, any>;
 
     private _state!: S;
 
@@ -61,25 +61,25 @@ export abstract class Facade<S, C extends Commands<S>> {
         return this._state;
     }
 
-    constructor(mountPoint: MountPoint<S, unknown>, name: string, commands: C);
+    // constructor(mountPoint: MountPoint<S, unknown>, name: string, commands: C);
 
-    constructor(tydux: TyduxStore, name: string, commands: C, initialState: InitialStateValue<S>);
+    // constructor(tydux: TyduxStore, name: string, commands: C, initialState: InitialStateValue<S>);
 
-    constructor(mountPoint: MountPoint<S | undefined, unknown>, name: string, commands: C, initialState: InitialStateValue<S>);
+    // constructor(mountPoint: MountPoint<S | undefined, unknown>, name: string, commands: C, initialState: InitialStateValue<S>);
 
-    constructor(readonly mountPointOrRootStore: MountPoint<S, any> | TyduxStore,
-                name: string,
-                commands: C,
-                initialState?: InitialStateValue<S>) {
+    constructor(readonly mountPoint: NamedMountPoint<S>,
+                initialState: InitialStateValue<S> | undefined,
+                commands: C) {
 
-        this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
+        // this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
+        this.facadeId = mountPoint.sliceName;
         registerFacadeCommands(this.facadeId, commands);
         // this.enrichInstanceMethods();
 
-        this.mountPoint =
-            mountPointOrRootStore instanceof TyduxStore
-                ? mountPointOrRootStore.createRootMountPoint(name)
-                : mountPointOrRootStore;
+        // this.mountPoint =
+        //     mountPointOrRootStore instanceof TyduxStore
+        //         ? mountPointOrRootStore.createMountPoint(name)
+        //         : mountPointOrRootStore;
 
 
         const commandsInvoker = new CommandsInvoker(commands);
@@ -139,6 +139,7 @@ export abstract class Facade<S, C extends Commands<S>> {
      */
     destroy(): void {
         this.mountPointSubscription();
+        this.mountPoint.freeSlicePath();
         this.destroyedState = true;
         this.reduxStoreStateSubject.complete();
         this.destroyedSubject.next(true);

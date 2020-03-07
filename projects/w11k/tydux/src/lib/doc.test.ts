@@ -45,7 +45,7 @@ describe("Documentation", function () {
         class MyFacade extends Facade<ManagedByTyduxState, MyCommands> {
 
             constructor(tyduxStore: TyduxStore<typeof initialState>) {
-                super(tyduxStore.createRootMountPoint("managedByTydux"), "MyFacade", new MyCommands());
+                super(tyduxStore.createMountPoint("managedByTydux"), "MyFacade", new MyCommands());
             }
 
             trigger(incBy: number) {

@@ -171,6 +171,32 @@ export async function untilNoBufferedStateChanges(facade: Facade<any, any>): Pro
     );
 }
 
+export function getDeep(root: any, path: string): any {
+    let val = root;
+    const levels = path.split(".").reverse();
+
+    while (levels.length > 0) {
+        const level = levels.pop();
+        val = val[level];
+    }
+
+    return val;
+}
+
+export function setDeep<R>(root: R, path: string, value: any): any {
+    const [head, ...tail] = path.split(".");
+    if (tail.length === 0) {
+        return {
+            ...root,
+            [head]: value
+        };
+    }
+
+    return {
+        ...root,
+        [head]: setDeep(root[head], tail.join("."), value),
+    };
+}
 
 export function selectToObservable<S, R = Readonly<S>>(input$: Observable<S>,
                                                        selector?: (state: Readonly<S>) => R) {

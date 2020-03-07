@@ -24,7 +24,7 @@ describe("Store", function () {
         }
 
         const tyduxStore = createTyduxStore(initialState);
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
         myFacade.action();
 
@@ -52,7 +52,7 @@ describe("Store", function () {
         }
 
         const tyduxStore = createTyduxStore(globalState);
-        const mount = tyduxStore.createMountPoint(
+        const mount = tyduxStore.internalCreateMountPoint(
             s => s.myState,
             (global, facade) => ({...global, myState: facade}));
 
@@ -100,7 +100,7 @@ describe("Store", function () {
             collected.push(state.val);
         });
 
-        const mount = tyduxStore.createMountPoint(s => s, (state, facade) => ({...facade}));
+        const mount = tyduxStore.internalCreateMountPoint(s => s, (state, facade) => ({...facade}));
         const myFacade = new MyFacade(mount, "TestFacade", new MyCommands());
         myFacade.action();
 
@@ -130,7 +130,7 @@ describe("Store", function () {
         }
 
         const tyduxStore = createTyduxStore(initialState);
-        const mount = tyduxStore.createMountPoint(
+        const mount = tyduxStore.internalCreateMountPoint(
             s => s.facade,
             (state, facade) => ({...state, facade}));
 
@@ -156,7 +156,7 @@ describe("Store", function () {
         const tyduxBridge = new TyduxReducerBridge();
         const reduxStore = createStore(tyduxBridge.createTyduxReducer(initialState));
         const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createRootMountPoint("managedByFacade");
+        const mount = connected.createMountPoint("managedByFacade");
 
         class MyCommands extends Commands<ManagedByFacadeState> {
             inc(by: number) {
@@ -203,7 +203,7 @@ describe("Store", function () {
         }
 
         const store = createTyduxStore(initialState, {reducer: plainReducer});
-        const mount = store.createRootMountPoint("managedByFacade");
+        const mount = store.createMountPoint("managedByFacade");
 
         store.store.dispatch({type: "inc", payload: 5});
 
@@ -255,7 +255,7 @@ describe("Store", function () {
         const tyduxBridge = new TyduxReducerBridge();
         const reduxStore: ReduxStore<AppState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
         const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createRootMountPoint("managedByFacade");
+        const mount = connected.createMountPoint("managedByFacade");
 
         reduxStore.dispatch({type: "inc", payload: 5});
 
@@ -310,7 +310,7 @@ describe("Store", function () {
 
         const reduxStore: ReduxStore<AppState, Action> = createStore(rootReducer);
         const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createRootMountPoint("managedByFacade");
+        const mount = connected.createMountPoint("managedByFacade");
 
         reduxStore.dispatch({type: "inc", payload: 5});
 
