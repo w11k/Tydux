@@ -1,3 +1,7 @@
+# Version 13.1.0
+
+- added first POC for RepositoryFacade
+
 # Version 13.0.0
 
 - simplified facade creation

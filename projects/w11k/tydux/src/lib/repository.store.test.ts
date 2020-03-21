@@ -63,7 +63,46 @@ describe("RepositoryFacade", () => {
         expect(esf.state.byId).toEqual({0: p0});
     });
 
+    it("add list", () => {
+        const tydux = createTyduxStore();
+        const esf = new RepositoryFacade<Person>(
+            tydux.createMountPoint("persons"),
+            "id"
+        );
+        const list = [
+            new Person(0, "Joe"),
+            new Person(1, "John"),
+            new Person(2, "Jonnie"),
+        ];
+        esf.addList(list);
+        expect(esf.state.list).toEqual(list);
+        expect(esf.state.byId).toEqual({
+            0: list[0],
+            1: list[1],
+            2: list[2],
+        });
+    });
 
+    it("setList() replaces the state", () => {
+        const tydux = createTyduxStore();
+        const esf = new RepositoryFacade<Person>(
+            tydux.createMountPoint("persons"),
+            "id"
+        );
+        const list1 = [
+            new Person(0, "Joe"),
+            new Person(1, "John"),
+        ];
+        esf.addList(list1);
 
+        const list2 = [
+            new Person(2, "Jonnie"),
+        ];
+        esf.setList(list2);
+        expect(esf.state.list).toEqual(list2);
+        expect(esf.state.byId).toEqual({
+            2: list2[0],
+        });
+    });
 
 });

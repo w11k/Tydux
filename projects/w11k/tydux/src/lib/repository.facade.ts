@@ -27,13 +27,19 @@ class EntityStoreCommands<E> extends Commands<EntityStoreState<E>> {
         }
     }
 
-    add(id: string, entity: E) {
-        this.prepare();
+    addSingleToList(entity: E) {
         this.state.list = [...this.state.list!, entity];
+    }
+
+    addSingleToMap(id: string, entity: E) {
         this.state.byId = {
             ...this.state.byId!,
             [id]: entity,
         };
+    }
+
+    addMultipleToList(list: E[]) {
+        this.state.list = [...this.state.list!, ...list];
     }
 
 
@@ -41,17 +47,18 @@ class EntityStoreCommands<E> extends Commands<EntityStoreState<E>> {
 
 export class RepositoryFacade<E> extends Facade<EntityStoreState<E>, EntityStoreCommands<E>> {
 
-    constructor(mountPoint: NamedMountPoint<EntityStoreState<E>>,
-                private readonly idSelector: ((entity: E) => string | number) | keyof E) {
-        super(mountPoint, new EntityStoreState(), new EntityStoreCommands());
-    }
+    private readonly getId: (entity: E) => string;
 
-    private getId(entity: E): string {
-        if (typeof this.idSelector === "function") {
-            return this.idSelector(entity).toString();
+    constructor(mountPoint: NamedMountPoint<EntityStoreState<E>>,
+                idSelector: ((entity: E) => string | number) | keyof E) {
+        super(mountPoint, new EntityStoreState(), new EntityStoreCommands());
+
+        if (typeof idSelector === "function") {
+            this.getId = e => idSelector(e).toString();
         } else {
-            return (entity[this.idSelector] as any).toString();
+            this.getId = e => (e[idSelector] as any).toString();
         }
+
     }
 
     isPristine() {
@@ -62,10 +69,23 @@ export class RepositoryFacade<E> extends Facade<EntityStoreState<E>, EntityStore
         this.commands.reset();
     }
 
-    add(entity: E) {
-        this.commands.add(this.getId(entity), entity);
+    setList(entities: E[]) {
+        this.commands.reset();
+        this.commands.prepare();
+        this.addList(entities);
     }
 
+    add(entity: E) {
+        this.commands.prepare();
+        this.commands.addSingleToList(entity);
+        this.commands.addSingleToMap(this.getId(entity), entity);
+    }
+
+    addList(entities: E[]) {
+        this.commands.prepare();
+        this.commands.addMultipleToList(entities);
+        entities.forEach(e => this.commands.addSingleToMap(this.getId(e), e));
+    }
 
 }
 
