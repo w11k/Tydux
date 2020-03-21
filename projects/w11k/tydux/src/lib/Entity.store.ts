@@ -1,142 +1,71 @@
-/*
-import {map} from "rxjs/operators";
 import {Commands} from "./commands";
-import {ObservableSelection} from "./ObservableSelection";
 import {Facade} from "./Facade";
+import {NamedMountPoint} from "./store";
 
-export interface EntityMap<T> {
-    [id: string]: T;
+export class EntityStoreState<E> {
+
+    list: E[] | null;
+    byId: { [id: string]: E } | null;
+
+    constructor() {
+        this.list = null;
+        this.byId = null;
+    }
+
 }
 
-export interface EntityState<T> {
-    ids: string[];
-    entities: EntityMap<T>;
-}
+class EntityStoreCommands<E> extends Commands<EntityStoreState<E>> {
 
-export class EntityMutators<T> extends Commands<EntityState<T>> {
-
-    clear() {
-        this.state.ids = [];
-        this.state.entities = {};
+    reset() {
+        this.state = new EntityStoreState();
     }
 
-    load(objs: { [id: string]: T }) {
-        this.state.entities = objs;
-        this.state.ids = Object.keys(objs);
+    prepare() {
+        if (this.state.list === null) {
+            this.state.list = [];
+            this.state.byId = {};
+        }
     }
 
-    add(id: string, obj: T) {
-        this.state.ids = [...this.state.ids, id];
-        const entities = {
-            ...this.state.entities
-        };
-        entities[id] = obj;
-
-        this.state.entities = entities;
-
-    }
-
-    update(id: string, obj: T) {
-        this.state.entities = {
-            ...this.state.entities,
-            id: obj
+    add(id: string, entity: E) {
+        this.prepare();
+        this.state.list = [...this.state.list!, entity];
+        this.state.byId = {
+            ...this.state.byId!,
+            [id]: entity,
         };
     }
 
-    remove(id: string): boolean {
-        const idx = this.state.ids.indexOf(id);
-        if (idx === -1) {
-            return false;
-        }
-
-        const before = this.state.ids.slice(0, idx);
-        const after = this.state.ids.slice(idx + 1);
-        this.state.ids = [...before, ...after];
-
-        // const entities = clone(this.state.entities);
-        const entities = {...this.state.entities};
-        delete entities[id];
-        this.state.entities = entities;
-
-        return true;
-    }
 
 }
 
-export type Constructor<T> = {
-    new(...args: any[]): T;
-};
+export class EntityStoreFacade<E> extends Facade<EntityStoreState<E>, EntityStoreCommands<E>> {
 
-export class EntityStore<T, I extends keyof T> extends Facade<EntityMutators<T>, EntityState<T>> {
-
-    constructor(storeId: string, readonly constructor: Constructor<T>, readonly entityIdField: I) {
-        super(storeId, new EntityMutators(), {
-            ids: [],
-            entities: {}
-        });
+    constructor(mountPoint: NamedMountPoint<EntityStoreState<E>>,
+                private readonly idSelector: ((entity: E) => string | number) | keyof E) {
+        super(mountPoint, new EntityStoreState(), new EntityStoreCommands());
     }
 
-    clear(): void {
-        this.commands.clear();
-    }
-
-    load(objs: { [id: string]: T }): void {
-        this.commands.load(objs);
-    }
-
-    add(obj: T | T[]): void {
-        if (!(obj instanceof Array)) {
-            return this.add([obj]);
+    private getId(entity: E): string {
+        if (typeof this.idSelector === "function") {
+            return this.idSelector(entity).toString();
+        } else {
+            return (entity[this.idSelector] as any).toString();
         }
-
-        obj.forEach((o: T) => {
-            const key = o[this.entityIdField].toString();
-            this.commands.add(key, o);
-        });
     }
 
-    update(obj: T | T[]): void {
-        if (!(obj instanceof Array)) {
-            return this.update([obj]);
-        }
-
-        obj.forEach((o: T) => {
-            const key = o[this.entityIdField];
-            this.commands.update(key.toString(), o);
-        });
+    isPristine() {
+        return this.state.list === null;
     }
 
-    remove(obj: T | T[]): void {
-        if (!(obj instanceof Array)) {
-            return this.remove([obj]);
-        }
-
-        obj.forEach((o: T) => {
-            const key = o[this.entityIdField];
-            this.commands.remove(key.toString());
-        });
+    reset() {
+        this.commands.reset();
     }
 
-    selectById(id: string) {
-        return this.select(s => s.entities[id]);
+    add(entity: E) {
+        this.commands.add(this.getId(entity), entity);
     }
 
-    selectAll() {
-        return new ObservableSelection(this.select()
 
-            .pipe(
-                map(state => {
-                    return state.ids.map((id) => state.entities[id]);
-                })
-            ));
-    }
-
-    // bounded(operator: OperatorFunction<EntityState<T>, EntityState<T>>) {
-    //     return new ObservableSelection(this.mutatorEvents$.pipe(map(e => e.state)), operator);
-    // }
-
-    // unbounded() {
-    //     return new EntityStoreObserver(this.mutatorEvents$.pipe(map(e => e.state)));
-    // }
 }
-*/
+

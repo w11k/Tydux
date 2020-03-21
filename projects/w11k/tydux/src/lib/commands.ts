@@ -32,7 +32,7 @@ export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsIn
     };
 }
 
-type StateType<T extends Commands<any>> = T extends Commands<infer S> ? S : any;
+type StateType<T extends Commands<any>> = T extends Commands<infer S> ? S : never;
 
 export class CommandsInvoker<C extends Commands<any>> {
 
@@ -41,7 +41,7 @@ export class CommandsInvoker<C extends Commands<any>> {
     }
 
     invoke(state: StateType<C>,
-           withStateOp: (command: C) => void): StateType<C> {
+           withStateOp: (commands: C) => void): StateType<C> {
 
         (this.commands as any).state = state;
         let postState: any;

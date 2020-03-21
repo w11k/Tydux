@@ -5,12 +5,11 @@ import { TyduxModule } from '../../../projects/w11k/tydux-angular/src/public_api
 
 describe('TodoService', () => {
   beforeEach(() => {
-    console.log(TyduxModule);
     TestBed.configureTestingModule({
       imports: [
         TyduxModule.forRootWithoutConfig()
       ]
-    })
+    });
   });
 
   it('should be created', () => {

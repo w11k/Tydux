@@ -4,7 +4,8 @@ import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReduce
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
-import {MountPoint, NamedMountPoint, TyduxStore} from "./store";
+import {MountPoint, NamedMountPoint} from "./store";
+import {getGlobalStore} from "./store-global";
 import {createProxy, functionNamesDeep, selectToObservable} from "./utils";
 
 // const uniqueFacadeIds: { [id: string]: number } = {};
@@ -43,6 +44,10 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     private readonly destroyedSubject = new ReplaySubject<true>(1);
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * @deprecated use Facade#observeDestroyed()
+     */
     protected readonly destroyed = this.destroyedSubject.asObservable();
 
     private destroyedState = false;
@@ -53,7 +58,7 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     private readonly mountPointSubscription: Unsubscribe;
 
-    // private mountPoint: MountPoint<S, any>;
+    private mountPoint: MountPoint<S>;
 
     private _state!: S;
 
@@ -61,26 +66,52 @@ export abstract class Facade<S, C extends Commands<S>> {
         return this._state;
     }
 
-    // constructor(mountPoint: MountPoint<S, unknown>, name: string, commands: C);
-
-    // constructor(tydux: TyduxStore, name: string, commands: C, initialState: InitialStateValue<S>);
-
-    // constructor(mountPoint: MountPoint<S | undefined, unknown>, name: string, commands: C, initialState: InitialStateValue<S>);
-
-    constructor(readonly mountPoint: NamedMountPoint<S>,
+    constructor(mountPointName: string,
                 initialState: InitialStateValue<S> | undefined,
-                commands: C) {
+                commands: C);
 
-        // this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
-        this.facadeId = mountPoint.sliceName;
+    constructor(mountPoint: NamedMountPoint<S>,
+                initialState: InitialStateValue<S> | undefined,
+                commands: C);
+
+    /**
+     * @deprecated since 13.0.0
+     */
+    constructor(mountPointName: string,
+                commands: C,
+                initialState: InitialStateValue<S> | undefined);
+
+    /**
+     * @deprecated since 13.0.0
+     */
+    constructor(mountPoint: NamedMountPoint<S>,
+                commands: C,
+                initialState: InitialStateValue<S> | undefined);
+
+    constructor(mountPointOrName: NamedMountPoint<S> | string,
+                initialStateOrCommands1: (InitialStateValue<S> | undefined) | C,
+                initialStateOrCommands2: (InitialStateValue<S> | undefined) | C) {
+
+        let commands: C;
+        let initialState: InitialStateValue<S> | undefined;
+        if (initialStateOrCommands1 instanceof Commands) {
+            commands = initialStateOrCommands1;
+            initialState = initialStateOrCommands2 as any;
+        } else {
+            commands = initialStateOrCommands2 as any;
+            initialState = initialStateOrCommands1;
+        }
+
+
+        if (typeof mountPointOrName === "string") {
+            this.facadeId = mountPointOrName;
+            this.mountPoint = getGlobalStore().createDeepMountPoint(mountPointOrName);
+        } else {
+            this.facadeId = mountPointOrName.sliceName;
+            this.mountPoint = mountPointOrName;
+        }
+
         registerFacadeCommands(this.facadeId, commands);
-        // this.enrichInstanceMethods();
-
-        // this.mountPoint =
-        //     mountPointOrRootStore instanceof TyduxStore
-        //         ? mountPointOrRootStore.createMountPoint(name)
-        //         : mountPointOrRootStore;
-
 
         const commandsInvoker = new CommandsInvoker(commands);
         this.commands = this.createCommandsProxy(commandsInvoker);
@@ -92,9 +123,9 @@ export abstract class Facade<S, C extends Commands<S>> {
         if (initialState !== undefined) {
             const initialFacadeStateAction = this.createActionName("@@SET_STATE");
 
-            this.mountPoint.addReducer((state: S, action: Action & { state: S }) => {
+            this.mountPoint.addReducer((state: S, action: Action) => {
                 if (action.type === initialFacadeStateAction) {
-                    const stateValue = action.state;
+                    const stateValue = (action as any).initialState;
                     this.setState(stateValue);
                     this.reduxStoreStateSubject.next(this.state);
                     return this.mountPoint.setState(state, stateValue);
@@ -109,14 +140,17 @@ export abstract class Facade<S, C extends Commands<S>> {
                 this.bufferedStateChanges++;
                 initialState
                     .then(value => {
-                        this.mountPoint.dispatch({type: initialFacadeStateAction, state: value});
+                        this.mountPoint.dispatch({type: initialFacadeStateAction, initialState: value});
                     })
                     .finally(() => this.bufferedStateChanges--);
             } else {
                 const initialStateValue: S = initialState instanceof Function
                     ? initialState()
                     : initialState;
-                this.mountPoint.dispatch({type: initialFacadeStateAction, state: initialStateValue});
+                this.mountPoint.dispatch({
+                    type: initialFacadeStateAction,
+                    initialState: initialStateValue
+                });
             }
         }
 
@@ -153,6 +187,10 @@ export abstract class Facade<S, C extends Commands<S>> {
     // tslint:disable-next-line:use-life-cycle-interface use-lifecycle-interface
     ngOnDestroy(): void {
         this.destroy();
+    }
+
+    observeDestroyed() {
+        return this.destroyedSubject.asObservable();
     }
 
     hasBufferedStateChanges() {

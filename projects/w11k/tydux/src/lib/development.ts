@@ -37,7 +37,7 @@ export function isTyduxDevelopmentModeEnabled() {
 
 export function checkDevModeAndCreateDevToolsEnabledComposeFn(options: Partial<EnhancerOptions> = {}) {
     if (isTyduxDevelopmentModeEnabled()
-        && devModeConfig.autoUseDevToolsInDevelopmentMode
+        && devModeConfig!.autoUseDevToolsInDevelopmentMode
         && window.hasOwnProperty(DEV_TOOLS_COMPOSE)) {
 
         const defaultOptions =
@@ -51,7 +51,7 @@ export function checkDevModeAndCreateDevToolsEnabledComposeFn(options: Partial<E
             ...options,
         };
 
-        return window[DEV_TOOLS_COMPOSE](options);
+        return (window as any)[DEV_TOOLS_COMPOSE](options);
     }
 
     return compose;

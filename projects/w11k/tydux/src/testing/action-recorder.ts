@@ -1,6 +1,6 @@
 export type StateAndAction<S> = { state: S, action: { type: string } };
 
-export class ActionRecorder<S> {
+export class ActionRecorder<S = any> {
 
     private readonly stateAndAction: StateAndAction<S>[] = [];
 

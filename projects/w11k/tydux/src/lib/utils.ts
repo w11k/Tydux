@@ -1,5 +1,5 @@
 import {isNil} from "@w11k/rx-ninja";
-import {Observable, Operator, Subscriber} from "rxjs";
+import {Observable} from "rxjs";
 import {distinctUntilChanged, filter, map, take} from "rxjs/operators";
 import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
 import {Facade} from "./Facade";
@@ -7,6 +7,7 @@ import {isPlainObject} from "./lodash/lodash";
 
 let hasProxySupport = false;
 try {
+    // tslint:disable-next-line
     new Proxy({}, {});
     hasProxySupport = true;
 } catch (e) {
@@ -96,13 +97,13 @@ export function createFailingProxy(): object {
     return new Proxy(target, handler);
 }
 
-export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Observable<T>) => () => void): Operator<T, T> {
-    return {
-        call: (subscriber: Subscriber<T>, source: Observable<T>) => {
-            return fn(subscriber, source);
-        }
-    };
-}
+// export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Observable<T>) => () => void): Operator<T, T> {
+//     return {
+//         call: (subscriber: Subscriber<T>, source: Observable<T>) => {
+//             return fn(subscriber, source);
+//         }
+//     };
+// }
 
 export function last(array: any[]) {
     const length = array == null ? 0 : array.length;
@@ -116,7 +117,8 @@ export function functionNamesShallow(object: any): string[] {
         return [];
     }
     return Object.getOwnPropertyNames(object).filter((key) => {
-        return typeof Object.getOwnPropertyDescriptor(object, key).value === "function" && excludeMethodNames.indexOf(key) === -1;
+        const opd = Object.getOwnPropertyDescriptor(object, key);
+        return opd && typeof opd.value === "function" && excludeMethodNames.indexOf(key) === -1;
     });
 }
 
@@ -177,7 +179,7 @@ export function getDeep(root: any, path: string): any {
 
     while (levels.length > 0) {
         const level = levels.pop();
-        val = val[level];
+        val = val[level!];
     }
 
     return val;
@@ -194,7 +196,7 @@ export function setDeep<R>(root: R, path: string, value: any): any {
 
     return {
         ...root,
-        [head]: setDeep(root[head], tail.join("."), value),
+        [head]: setDeep((root as any)[head], tail.join("."), value),
     };
 }
 

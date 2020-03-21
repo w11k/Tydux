@@ -63,7 +63,7 @@ export class TyduxStore<S = any, A extends Action = Action<string>> {
     }
 
     private registerSlicePath(path: string) {
-        if (this.knownSlicePaths[path] === true) {
+        if (this.knownSlicePaths[path]) {
             throw new Error("slice path already in use");
         }
         this.knownSlicePaths[path] = true;
@@ -121,7 +121,7 @@ export class TyduxReducerBridge {
             for (const reducer of this.facadeReducers) {
                 state = reducer(state, action);
             }
-            return state;
+            return state as S;
         };
     }
 
