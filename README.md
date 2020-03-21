@@ -92,7 +92,7 @@ After we created the state and commands, we combine them within a facade.
 export class TodoFacade extends Facade<TodoState, TodoCommands> {
 
   constructor(tydux: TyduxStore) {
-    super(tydux, 'todos', new TodoCommands(), new TodoState());
+    super(tydux.createMountPoint('todos'), new TodoState(), new TodoCommands());
   }
 
   /**
@@ -123,7 +123,7 @@ After we created the state, commands and facade, we can bootstrap Tydux.
 
 ```
 // Use {} as initial global state
-const tyduxStore = createTyduxStore({});
+const tyduxStore = createTyduxStore();
 
 // instatiate every facade once
 const todoFacade = new TodoFacade(tyduxStore);  
