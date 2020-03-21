@@ -39,7 +39,7 @@ class EntityStoreCommands<E> extends Commands<EntityStoreState<E>> {
 
 }
 
-export class EntityStoreFacade<E> extends Facade<EntityStoreState<E>, EntityStoreCommands<E>> {
+export class RepositoryFacade<E> extends Facade<EntityStoreState<E>, EntityStoreCommands<E>> {
 
     constructor(mountPoint: NamedMountPoint<EntityStoreState<E>>,
                 private readonly idSelector: ((entity: E) => string | number) | keyof E) {

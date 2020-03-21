@@ -11,7 +11,7 @@ export function collect<T>(observable: Observable<T>) {
         getValues() {
             return calls;
         },
-        assert(...expected: (T | null | undefined)[]) {
+        assert(...expected: (T | null | undefined | {})[]) {
             subscription.unsubscribe();
             return assert.deepEqual(calls, expected);
         }

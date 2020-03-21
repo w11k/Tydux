@@ -1,4 +1,4 @@
-import {EntityStoreFacade} from "./Entity.store";
+import {RepositoryFacade} from "./repository.facade";
 import {createTyduxStore} from "./store";
 
 class Person {
@@ -6,24 +6,24 @@ class Person {
     }
 }
 
-describe("EntityStoreFacade", () => {
+describe("RepositoryFacade", () => {
 
     it("state fields are null initially", () => {
         const tydux = createTyduxStore();
-        const esf = new EntityStoreFacade<Person>(tydux.createMountPoint("persons"), "id");
+        const esf = new RepositoryFacade<Person>(tydux.createMountPoint("persons"), "id");
         expect(esf.state.list).toBeNull();
         expect(esf.state.byId).toBeNull();
     });
 
     it("isPristine() at start", () => {
         const tydux = createTyduxStore();
-        const esf = new EntityStoreFacade<Person>(tydux.createMountPoint("persons"), "id");
+        const esf = new RepositoryFacade<Person>(tydux.createMountPoint("persons"), "id");
         expect(esf.isPristine).toBeTruthy();
     });
 
     it("is not pristine once an entity was added", () => {
         const tydux = createTyduxStore();
-        const esf = new EntityStoreFacade<Person>(tydux.createMountPoint("persons"), "id");
+        const esf = new RepositoryFacade<Person>(tydux.createMountPoint("persons"), "id");
         const p0 = new Person(0, "Joe");
         esf.add(p0);
         expect(esf.isPristine()).toBeFalsy();
@@ -31,7 +31,7 @@ describe("EntityStoreFacade", () => {
 
     it("is pristine after reset()", () => {
         const tydux = createTyduxStore();
-        const esf = new EntityStoreFacade<Person>(tydux.createMountPoint("persons"), "id");
+        const esf = new RepositoryFacade<Person>(tydux.createMountPoint("persons"), "id");
         const p0 = new Person(0, "Joe");
         esf.add(p0);
         expect(esf.isPristine()).toBeFalsy();
@@ -41,7 +41,7 @@ describe("EntityStoreFacade", () => {
 
     it("add entry with idSelector function", () => {
         const tydux = createTyduxStore();
-        const esf = new EntityStoreFacade<Person>(
+        const esf = new RepositoryFacade<Person>(
             tydux.createMountPoint("persons"),
             e => e.id
         );
@@ -53,7 +53,7 @@ describe("EntityStoreFacade", () => {
 
     it("add entry with idSelector field", () => {
         const tydux = createTyduxStore();
-        const esf = new EntityStoreFacade<Person>(
+        const esf = new RepositoryFacade<Person>(
             tydux.createMountPoint("persons"),
             "id"
         );

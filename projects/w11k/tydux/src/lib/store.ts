@@ -7,6 +7,7 @@ import {checkDevModeAndCreateDevToolsEnabledComposeFn, isTyduxDevelopmentModeEna
 import {getDeep, setDeep} from "./utils";
 
 export interface MountPoint<L, S = any, A extends Action = Action<string>> {
+    tyduxStore: TyduxStore<S, A>;
     addReducer: (commandReducer: CommandReducer<any>) => void;
     dispatch: Dispatch<A>;
     getState: () => L;
@@ -52,6 +53,7 @@ export class TyduxStore<S = any, A extends Action = Action<string>> {
                                         stateSetter: (globalState: S, localState: L) => S,
                                         freeSlicePath: () => void): MountPoint<L, S, A> {
         return {
+            tyduxStore: this,
             addReducer: (commandReducer: CommandReducer<any>) => this.facadeReducers.push(commandReducer),
             dispatch: <T extends A>(action: T) => this.store.dispatch(action),
             getState: () => stateGetter(this.store.getState()),

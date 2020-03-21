@@ -557,6 +557,162 @@ describe("Facade", () => {
 
 });
 
+describe("nesting Facade", () => {
+
+    it("a facade can contain a nested facade", () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacade extends Facade<ChildFacadeState, any> {
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<RootFacadeState, any> {
+
+            // noinspection JSUnusedGlobalSymbols
+            readonly childFacade = new ChildFacade(this.createMountPoint("childFacadeState"), new ChildFacadeState(), new Commands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        expect(rootFacade.state.childFacadeState.foo).toEqual(1);
+    });
+
+    it("a nested facade can change the state", () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacadeCommands extends Commands<ChildFacadeState> {
+            inc() {
+                this.state.foo++;
+            }
+        }
+
+        class ChildFacade extends Facade<ChildFacadeState, ChildFacadeCommands> {
+            inc() {
+                this.commands.inc();
+            }
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<RootFacadeState, any> {
+
+            readonly childFacade = new ChildFacade(
+                this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        expect(rootFacade.state.childFacadeState.foo).toEqual(1);
+        rootFacade.childFacade.inc();
+        expect(rootFacade.state.childFacadeState.foo).toEqual(2);
+    });
+
+    it("state changes of a nested facade can be subscribed", async () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacadeCommands extends Commands<ChildFacadeState> {
+            inc() {
+                this.state.foo++;
+            }
+        }
+
+        class ChildFacade extends Facade<ChildFacadeState, ChildFacadeCommands> {
+            inc() {
+                this.commands.inc();
+            }
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<RootFacadeState, any> {
+
+            readonly childFacade = new ChildFacade(
+                this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        const collected = collect(rootFacade.childFacade.select());
+        rootFacade.childFacade.inc();
+
+        await untilNoBufferedStateChanges(rootFacade.childFacade);
+        collected.assert(
+            {foo: 1},
+            {foo: 2},
+        );
+    });
+
+    it("state changes of a nested facade are propagated to subscribers of the parent facade", async () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacadeCommands extends Commands<ChildFacadeState> {
+            inc() {
+                this.state.foo++;
+            }
+        }
+
+        class ChildFacade extends Facade<ChildFacadeState, ChildFacadeCommands> {
+            inc() {
+                this.commands.inc();
+            }
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<RootFacadeState, any> {
+
+            readonly childFacade = new ChildFacade(
+                this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        const collected = collect(rootFacade.select());
+        rootFacade.childFacade.inc();
+
+        await untilNoBufferedStateChanges(rootFacade);
+        collected.assert(
+            {},
+            {childFacadeState: {foo: 1}},
+            {childFacadeState: {foo: 2}},
+        );
+    });
+
+});
+
 describe("Facade - sanity tests", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());
