@@ -22,7 +22,7 @@ export function createCommandsActionTypeNames<C extends Commands<S>, S>(facade: 
     const actionTypes = {};
 
     for (const methodName of functionNamesDeep(commands)) {
-        actionTypes[methodName] = facade.createActionName(methodName);
+        (actionTypes as any)[methodName] = facade.createActionName(methodName);
     }
 
     return actionTypes as any;

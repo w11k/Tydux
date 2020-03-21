@@ -26,10 +26,12 @@ describe("ActionRecorder", () => {
             }
         }
 
-        const recorder = new ActionRecorder<{ MyTest: typeof state }>();
-        const tyduxStore = createTyduxStore({}, recorder.getReducer());
+        const recorder = new ActionRecorder();
+        const tyduxStore = createTyduxStore({MyTest: state}, {
+            reducer: recorder.getReducer()
+        });
 
-        const testFacade = new MyFacade(tyduxStore, "MyTest", new MyCommands(), state);
+        const testFacade = new MyFacade(tyduxStore.createMountPoint("MyTest"), state, new MyCommands());
         const actionTypes = createCommandsActionTypeNames(testFacade);
 
         testFacade.op1();
@@ -38,11 +40,10 @@ describe("ActionRecorder", () => {
         expect(incrementCount).toEqual(3);
 
         const first = recorder.getFirstActionAndStateForType(actionTypes.incrementBy);
-        expect(first.state.MyTest.a).toEqual(1);
+        expect(first!.state.MyTest.a).toEqual(1);
 
         const last = recorder.getLastActionAndStateForType(actionTypes.incrementBy);
-        expect(last.state.MyTest.a).toEqual(4);
-
+        expect(last!.state.MyTest.a).toEqual(4);
 
 
     });

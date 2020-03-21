@@ -14,28 +14,16 @@
 npm install @w11k/tydux @w11k/tydux-angular @w11k/rx-ninja rxjs redux redux-devtools-extension
 ```
 
-**Define your initial state**
-
-```
-// your application state
-export function createInitialState() {
-  return {
-    state1: new State1()
-  };
-}
-
-// useful type alias 
-export type AppState = ReturnType<typeof createInitialState>;
-```
-
 **Create a Tydux configuration factory function**
 
 ```
 export function createTyduxConfig(): TyduxConfiguration {
   return {
-    preloadedState: createInitialState(),
-    storeEnhancer: environment.production ? undefined : composeWithDevTools(),
-    developmentMode: !environment.production
+    developmentMode: !environment.production,
+    devToolsOptions: {
+        trace: true,
+        traceLimit: 10,
+    }
   };
 }
 ```

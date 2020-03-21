@@ -1,3 +1,19 @@
+# Version 13.1.0
+
+- added first POC for RepositoryFacade
+
+# Version 13.0.0
+
+- simplified facade creation
+- added global store feature
+
+**BREAKING CHANGE**
+
+- Facade constructor:
+    - old: `super(tydux, "slice", commands, state);`
+    - new: `super(tydux.createMountPoint("slice"), state, commands);`
+    
+    
 # Version 12.0.1
 
 fixing peer dependency warnings

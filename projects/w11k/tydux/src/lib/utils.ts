@@ -1,5 +1,5 @@
 import {isNil} from "@w11k/rx-ninja";
-import {Observable, Operator, Subscriber} from "rxjs";
+import {Observable} from "rxjs";
 import {distinctUntilChanged, filter, map, take} from "rxjs/operators";
 import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
 import {Facade} from "./Facade";
@@ -7,6 +7,7 @@ import {isPlainObject} from "./lodash/lodash";
 
 let hasProxySupport = false;
 try {
+    // tslint:disable-next-line
     new Proxy({}, {});
     hasProxySupport = true;
 } catch (e) {
@@ -70,7 +71,6 @@ export function createProxy<T>(target: T): T {
     const proxy: any = {};
     // re-assign members. Otherwise these members would be marked as read only.
     // Also flattens the new state object.
-    // assignIn(proxy, target);
     Object.assign(proxy, target);
 
     // TODO remove 'as any' when compiler bug is fixed
@@ -97,13 +97,13 @@ export function createFailingProxy(): object {
     return new Proxy(target, handler);
 }
 
-export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Observable<T>) => () => void): Operator<T, T> {
-    return {
-        call: (subscriber: Subscriber<T>, source: Observable<T>) => {
-            return fn(subscriber, source);
-        }
-    };
-}
+// export function operatorFactory<T>(fn: (subscriber: Subscriber<T>, source: Observable<T>) => () => void): Operator<T, T> {
+//     return {
+//         call: (subscriber: Subscriber<T>, source: Observable<T>) => {
+//             return fn(subscriber, source);
+//         }
+//     };
+// }
 
 export function last(array: any[]) {
     const length = array == null ? 0 : array.length;
@@ -117,7 +117,8 @@ export function functionNamesShallow(object: any): string[] {
         return [];
     }
     return Object.getOwnPropertyNames(object).filter((key) => {
-        return typeof Object.getOwnPropertyDescriptor(object, key).value === "function" && excludeMethodNames.indexOf(key) === -1;
+        const opd = Object.getOwnPropertyDescriptor(object, key);
+        return opd && typeof opd.value === "function" && excludeMethodNames.indexOf(key) === -1;
     });
 }
 
@@ -172,6 +173,32 @@ export async function untilNoBufferedStateChanges(facade: Facade<any, any>): Pro
     );
 }
 
+export function getDeep(root: any, path: string): any {
+    let val = root;
+    const levels = path.split(".").reverse();
+
+    while (levels.length > 0) {
+        const level = levels.pop();
+        val = val[level!];
+    }
+
+    return val;
+}
+
+export function setDeep<R>(root: R, path: string, value: any): any {
+    const [head, ...tail] = path.split(".");
+    if (tail.length === 0) {
+        return {
+            ...root,
+            [head]: value
+        };
+    }
+
+    return {
+        ...root,
+        [head]: setDeep((root as any)[head], tail.join("."), value),
+    };
+}
 
 export function selectToObservable<S, R = Readonly<S>>(input$: Observable<S>,
                                                        selector?: (state: Readonly<S>) => R) {

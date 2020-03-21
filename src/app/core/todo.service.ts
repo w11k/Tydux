@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {Commands, Facade, TyduxStore} from "@w11k/tydux";
+import {Commands, Facade} from "@w11k/tydux";
 import {ToDo} from "./todo.entity";
 
 @Injectable({
@@ -7,8 +7,8 @@ import {ToDo} from "./todo.entity";
 })
 export class TodoService extends Facade<TodoState, TodoCommands> {
 
-    constructor(tydux: TyduxStore) {
-        super(tydux, "todos", new TodoCommands(), new TodoState());
+    constructor() {
+        super("todos", new TodoCommands(), new TodoState());
     }
 
     async loadAllTodos(userId: number) {

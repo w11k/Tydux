@@ -1,6 +1,7 @@
 import {Commands, CommandsInvoker, createReducerFromCommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 
+
 describe("ReducerFromCommands", function () {
 
     beforeEach(() => enableTyduxDevelopmentMode());

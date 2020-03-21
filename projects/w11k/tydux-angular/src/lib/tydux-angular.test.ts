@@ -1,4 +1,4 @@
-import {Commands, Facade, createTestMount, untilNoBufferedStateChanges} from "@w11k/tydux";
+import {Commands, createTyduxStore, Facade, untilNoBufferedStateChanges} from "@w11k/tydux";
 import {assert} from "chai";
 
 describe("Tydux Angular", function () {
@@ -16,8 +16,8 @@ describe("Tydux Angular", function () {
             }
         }
 
-        const mount = createTestMount({n1: 0});
-        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
+        const tydux = createTyduxStore();
+        const facade = new TestFacade(tydux.createMountPoint("test"), {n1: 0}, new TestCommands());
 
         const values: any = [];
         facade.select((currentState) => {

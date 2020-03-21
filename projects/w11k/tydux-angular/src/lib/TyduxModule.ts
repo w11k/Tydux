@@ -1,35 +1,38 @@
 import {InjectionToken, Injector, ModuleWithProviders, NgModule} from "@angular/core";
-import {enableTyduxDevelopmentMode, TyduxReducerBridge, TyduxStore} from "@w11k/tydux";
-import {createStore, Reducer, Store, StoreEnhancer} from "redux";
+import {createTyduxStore, enableTyduxDevelopmentMode, setGlobalStore, TyduxDevModeConfig, TyduxStore} from "@w11k/tydux";
+import {Reducer, StoreEnhancer} from "redux";
 
-export const REDUX_STORE = new InjectionToken("ReduxStoreByTyduxToken");
 export const tyduxModuleConfiguration = new InjectionToken<() => TyduxConfiguration>("TyduxModuleConfiguration");
 
 export interface TyduxConfiguration {
+    name?: string;
     reducer?: Reducer;
     preloadedState?: any;
-    storeEnhancer?: StoreEnhancer;
+    enhancer?: StoreEnhancer;
     developmentMode?: boolean;
+    skipGlobalStoreRegistration?: boolean;
+
+    devToolsOptions?: TyduxDevModeConfig["devToolsOptions"];
+    autoUseDevToolsInDevelopmentMode?: TyduxDevModeConfig["autoUseDevToolsInDevelopmentMode"];
 }
 
 const staticProviders = [
-    TyduxReducerBridge,
-    {
-        provide: REDUX_STORE,
-        deps: [
-            Injector, // To provide optional tyduxModuleConfiguration get Injector
-            TyduxReducerBridge
-        ],
-        useFactory: factoryReduxStore,
-    },
     {
         provide: TyduxStore,
-        deps: [REDUX_STORE, TyduxReducerBridge],
-        useFactory: factoryTyduxStore
-    }];
+        deps: [
+            Injector, // To provide optional tyduxModuleConfiguration get Injector
+        ],
+        useFactory: factoryTyduxStore,
+    },
+];
 
 @NgModule({})
 export class TyduxModule {
+
+    constructor(injector: Injector) {
+        // Trigger eager Tydux creation. Required for global store registration.
+        injector.get(TyduxStore);
+    }
 
     static forRootWithConfig(configFactory: () => TyduxConfiguration): ModuleWithProviders {
         return {
@@ -54,22 +57,25 @@ export class TyduxModule {
     }
 }
 
-export function factoryReduxStore(injector: Injector, bridge: TyduxReducerBridge) {
+export function factoryTyduxStore(injector: Injector) {
     const configFactory = injector.get(tyduxModuleConfiguration, () => ({} as TyduxConfiguration));
     const config = configFactory();
     const initialState = Object.assign({}, config.preloadedState);
-    const reducer = config.reducer !== undefined ? config.reducer : (state: any) => state;
 
     if (config.developmentMode === true) {
-        enableTyduxDevelopmentMode(config.developmentMode);
+        enableTyduxDevelopmentMode(config);
     }
 
-    return createStore(
-        bridge.wrapReducer(reducer),
-        initialState,
-        config.storeEnhancer);
+    const tyduxStore = createTyduxStore(initialState, {
+        name: config.name,
+        reducer: config.reducer,
+        enhancer: config.enhancer,
+    });
+
+    if (config.skipGlobalStoreRegistration !== true) {
+        setGlobalStore(tyduxStore);
+    }
+
+    return tyduxStore;
 }
 
-export function factoryTyduxStore(redux: Store, bridge: TyduxReducerBridge) {
-    return bridge.connectStore(redux);
-}

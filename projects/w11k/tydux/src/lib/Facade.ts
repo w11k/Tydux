@@ -4,25 +4,26 @@ import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReduce
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
-import {MountPoint, TyduxStore} from "./store";
-import {createProxy, functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
+import {MountPoint, NamedMountPoint} from "./store";
+import {getGlobalStore} from "./store-global";
+import {createProxy, functionNamesDeep, selectToObservable} from "./utils";
 
-const uniqueFacadeIds: { [id: string]: number } = {};
+// const uniqueFacadeIds: { [id: string]: number } = {};
 
-function createUniqueFacadeId(name: string) {
-    if (uniqueFacadeIds[name] === undefined) {
-        uniqueFacadeIds[name] = 1;
-    } else {
-        uniqueFacadeIds[name] += 1;
-    }
-
-    const count = uniqueFacadeIds[name];
-    if (count === 1) {
-        return name;
-    } else {
-        return `${name}(${count})`;
-    }
-}
+// function createUniqueFacadeId(name: string) {
+//     if (uniqueFacadeIds[name] === undefined) {
+//         uniqueFacadeIds[name] = 1;
+//     } else {
+//         uniqueFacadeIds[name] += 1;
+//     }
+//
+//     const count = uniqueFacadeIds[name];
+//     if (count === 1) {
+//         return name;
+//     } else {
+//         return `${name}(${count})`;
+//     }
+// }
 
 /**
  * One of:
@@ -43,19 +44,21 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     private readonly destroyedSubject = new ReplaySubject<true>(1);
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * @deprecated use Facade#observeDestroyed()
+     */
     protected readonly destroyed = this.destroyedSubject.asObservable();
 
     private destroyedState = false;
 
     private bufferedStateChanges = 0;
 
-    private readonly commandContextCallstack: string[] = [];
-
     private readonly reduxStoreStateSubject: Subject<S> = new ReplaySubject<S>(1);
 
     private readonly mountPointSubscription: Unsubscribe;
 
-    private mountPoint: MountPoint<S, any>;
+    private mountPoint: MountPoint<S>;
 
     private _state!: S;
 
@@ -63,26 +66,52 @@ export abstract class Facade<S, C extends Commands<S>> {
         return this._state;
     }
 
-    constructor(mountPoint: MountPoint<S, any>, name: string, commands: C);
+    constructor(mountPointName: string,
+                initialState: InitialStateValue<S> | undefined,
+                commands: C);
 
-    constructor(tydux: TyduxStore, name: string, commands: C, initialState: InitialStateValue<S>);
+    constructor(mountPoint: NamedMountPoint<S>,
+                initialState: InitialStateValue<S> | undefined,
+                commands: C);
 
-    constructor(mountPoint: MountPoint<S | undefined, any>, name: string, commands: C, initialState: InitialStateValue<S>);
-
-    constructor(readonly mountPointOrRootStore: MountPoint<S, any> | TyduxStore,
-                name: string,
+    /**
+     * @deprecated since 13.0.0
+     */
+    constructor(mountPointName: string,
                 commands: C,
-                initialState?: InitialStateValue<S>) {
+                initialState: InitialStateValue<S> | undefined);
 
-        this.facadeId = createUniqueFacadeId(name.replace(" ", "_"));
+    /**
+     * @deprecated since 13.0.0
+     */
+    constructor(mountPoint: NamedMountPoint<S>,
+                commands: C,
+                initialState: InitialStateValue<S> | undefined);
+
+    constructor(mountPointOrName: NamedMountPoint<S> | string,
+                initialStateOrCommands1: (InitialStateValue<S> | undefined) | C,
+                initialStateOrCommands2: (InitialStateValue<S> | undefined) | C) {
+
+        let commands: C;
+        let initialState: InitialStateValue<S> | undefined;
+        if (initialStateOrCommands1 instanceof Commands) {
+            commands = initialStateOrCommands1;
+            initialState = initialStateOrCommands2 as any;
+        } else {
+            commands = initialStateOrCommands2 as any;
+            initialState = initialStateOrCommands1;
+        }
+
+
+        if (typeof mountPointOrName === "string") {
+            this.facadeId = mountPointOrName;
+            this.mountPoint = getGlobalStore().createDeepMountPoint(mountPointOrName);
+        } else {
+            this.facadeId = mountPointOrName.sliceName;
+            this.mountPoint = mountPointOrName;
+        }
+
         registerFacadeCommands(this.facadeId, commands);
-        this.enrichInstanceMethods();
-
-        this.mountPoint =
-            mountPointOrRootStore instanceof TyduxStore
-                ? mountPointOrRootStore.createRootMountPoint(name)
-                : mountPointOrRootStore;
-
 
         const commandsInvoker = new CommandsInvoker(commands);
         this.commands = this.createCommandsProxy(commandsInvoker);
@@ -94,9 +123,9 @@ export abstract class Facade<S, C extends Commands<S>> {
         if (initialState !== undefined) {
             const initialFacadeStateAction = this.createActionName("@@SET_STATE");
 
-            this.mountPoint.addReducer((state: S, action: Action & { state: S }) => {
+            this.mountPoint.addReducer((state: S, action: Action) => {
                 if (action.type === initialFacadeStateAction) {
-                    const stateValue = action.state;
+                    const stateValue = (action as any).initialState;
                     this.setState(stateValue);
                     this.reduxStoreStateSubject.next(this.state);
                     return this.mountPoint.setState(state, stateValue);
@@ -111,14 +140,17 @@ export abstract class Facade<S, C extends Commands<S>> {
                 this.bufferedStateChanges++;
                 initialState
                     .then(value => {
-                        this.mountPoint.dispatch({type: initialFacadeStateAction, state: value});
+                        this.mountPoint.dispatch({type: initialFacadeStateAction, initialState: value});
                     })
                     .finally(() => this.bufferedStateChanges--);
             } else {
                 const initialStateValue: S = initialState instanceof Function
                     ? initialState()
                     : initialState;
-                this.mountPoint.dispatch({type: initialFacadeStateAction, state: initialStateValue});
+                this.mountPoint.dispatch({
+                    type: initialFacadeStateAction,
+                    initialState: initialStateValue
+                });
             }
         }
 
@@ -141,6 +173,7 @@ export abstract class Facade<S, C extends Commands<S>> {
      */
     destroy(): void {
         this.mountPointSubscription();
+        this.mountPoint.freeSlicePath();
         this.destroyedState = true;
         this.reduxStoreStateSubject.complete();
         this.destroyedSubject.next(true);
@@ -154,6 +187,10 @@ export abstract class Facade<S, C extends Commands<S>> {
     // tslint:disable-next-line:use-life-cycle-interface use-lifecycle-interface
     ngOnDestroy(): void {
         this.destroy();
+    }
+
+    observeDestroyed() {
+        return this.destroyedSubject.asObservable();
     }
 
     hasBufferedStateChanges() {
@@ -176,46 +213,45 @@ export abstract class Facade<S, C extends Commands<S>> {
         return `[${this.facadeId}] ${mutatorMethodName}`;
     }
 
+    createMountPoint(slice: keyof S) {
+        return this.mountPoint.tyduxStore.createDeepMountPoint(this.facadeId + "." + slice);
+    }
+
     private setState(state: S) {
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
     }
 
-    private enrichInstanceMethods() {
-        const methodNamesUntilStoreParent: string[] = [];
-        let level: any = this;
-        while (level instanceof Facade) {
-            methodNamesUntilStoreParent.push(...functionNamesShallow(level));
-            level = Object.getPrototypeOf(level);
-        }
+    // private enrichInstanceMethods() {
+    // const methodNamesUntilStoreParent: string[] = [];
+    // let level: any = this;
+    // while (level instanceof Facade) {
+    // methodNamesUntilStoreParent.push(...functionNamesShallow(level));
+    // level = Object.getPrototypeOf(level);
+    // }
 
-        for (const fnMemberName of methodNamesUntilStoreParent) {
-            this.enrichInstanceMethod(fnMemberName);
-        }
-    }
+    // for (const fnMemberName of methodNamesUntilStoreParent) {
+    //     this.enrichInstanceMethod(fnMemberName);
+    // }
+    // }
 
-    private enrichInstanceMethod(name: string) {
-        const self = this;
-        const member = (this as any)[name];
-        Object.getPrototypeOf(this)[name] = function () {
-            self.commandContextCallstack.push(name);
-            try {
-                const result = member.apply(this, arguments);
-                if (result instanceof Promise) {
-                    return new Promise(resolve => {
-                        self.commandContextCallstack.push(name);
-                        resolve(result);
-                    }).then(value => {
-                        self.commandContextCallstack.pop();
-                        return value;
-                    });
-                } else {
-                    return result;
-                }
-            } finally {
-                self.commandContextCallstack.pop();
-            }
-        };
-    }
+    // private enrichInstanceMethod(name: string) {
+    //     const member = (this as any)[name];
+    //     Object.getPrototypeOf(this)[name] = function () {
+    //         try {
+    //             const result = member.apply(this, arguments);
+    //             if (result instanceof Promise) {
+    //                 return new Promise(resolve => {
+    //                     resolve(result);
+    //                 }).then(value => {
+    //                     return value;
+    //                 });
+    //             } else {
+    //                 return result;
+    //             }
+    //         } finally {
+    //         }
+    //     };
+    // }
 
     private createCommandsProxy(commandsInvoker: CommandsInvoker<C>): C {
         const proxyObj = {} as any;
@@ -224,10 +260,9 @@ export abstract class Facade<S, C extends Commands<S>> {
         for (const mutatorMethodName of functionNamesDeep(protoOfCommandsInstance)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
-                const storeMethodName = self.commandContextCallstack[self.commandContextCallstack.length - 1];
                 const actionType = self.createActionName(mutatorMethodName);
                 const args = Array.prototype.slice.call(arguments);
-                const mutatorAction: FacadeAction = {type: actionType, payload: args, facadeMethod: storeMethodName};
+                const mutatorAction: FacadeAction = {type: actionType, payload: args};
                 return self.mountPoint.dispatch(mutatorAction);
             };
         }
