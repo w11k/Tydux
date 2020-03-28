@@ -1,3 +1,7 @@
+# Version 13.2.2
+
+- fixed wrong release
+
 # Version 13.1.0
 
 - added first POC for RepositoryFacade
