@@ -213,7 +213,7 @@ export abstract class Facade<S, C extends Commands<S>> {
         return `[${this.facadeId}] ${mutatorMethodName}`;
     }
 
-    createMountPoint(slice: keyof S) {
+    createMountPoint<P extends keyof S>(slice: P): NamedMountPoint<S[P], S> {
         return this.mountPoint.tyduxStore.createDeepMountPoint(this.facadeId + "." + slice);
     }
 

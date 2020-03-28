@@ -2,7 +2,10 @@ import {Commands} from "./commands";
 import {Facade} from "./Facade";
 import {NamedMountPoint} from "./store";
 
-export class EntityStoreState<E> {
+/**
+ * @alpha !
+ */
+export class OrderedMapState<E> {
 
     list: E[] | null;
     byId: { [id: string]: E } | null;
@@ -14,10 +17,13 @@ export class EntityStoreState<E> {
 
 }
 
-class EntityStoreCommands<E> extends Commands<EntityStoreState<E>> {
+/**
+ * @alpha !
+ */
+class OrderedMapCommands<E> extends Commands<OrderedMapState<E>> {
 
     reset() {
-        this.state = new EntityStoreState();
+        this.state = new OrderedMapState();
     }
 
     prepare() {
@@ -45,13 +51,16 @@ class EntityStoreCommands<E> extends Commands<EntityStoreState<E>> {
 
 }
 
-export class RepositoryFacade<E> extends Facade<EntityStoreState<E>, EntityStoreCommands<E>> {
+/**
+ * @alpha !
+ */
+export class OrderedMapFacade<E> extends Facade<OrderedMapState<E>, OrderedMapCommands<E>> {
 
     private readonly getId: (entity: E) => string;
 
-    constructor(mountPoint: NamedMountPoint<EntityStoreState<E>>,
+    constructor(mountPoint: NamedMountPoint<OrderedMapState<E>>,
                 idSelector: ((entity: E) => string | number) | keyof E) {
-        super(mountPoint, new EntityStoreState(), new EntityStoreCommands());
+        super(mountPoint, new OrderedMapState(), new OrderedMapCommands());
 
         if (typeof idSelector === "function") {
             this.getId = e => idSelector(e).toString();
@@ -76,15 +85,21 @@ export class RepositoryFacade<E> extends Facade<EntityStoreState<E>, EntityStore
     }
 
     add(entity: E) {
-        this.commands.prepare();
+        this.prepare();
         this.commands.addSingleToList(entity);
         this.commands.addSingleToMap(this.getId(entity), entity);
     }
 
     addList(entities: E[]) {
-        this.commands.prepare();
+        this.prepare();
         this.commands.addMultipleToList(entities);
         entities.forEach(e => this.commands.addSingleToMap(this.getId(e), e));
+    }
+
+    private prepare() {
+        if (this.isPristine()) {
+            this.commands.prepare();
+        }
     }
 
 }
