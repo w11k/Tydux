@@ -18,7 +18,12 @@
         "cp:license": "cpx LICENSE dist/w11k/tydux && cpx LICENSE dist/w11k/tydux-angular",
         "cp:readme": "cpx README.md dist/w11k/tydux",
         "lint": "ng lint",
-        "e2e": "ng e2e"
+        "e2e": "ng e2e",
+        "publish.tydux": "cd dist/w11k/tydux && npm publish",
+        "publish.tydux-angular": "cd dist/w11k/tydux-angular && npm publish",
+        "git.tag": "git tag v`npm info . version`",
+        "git.commit":
+        "publish.all": "npm run test:all && npm run build:lib && npm run publish.tydux && npm run publish.tydux-angular && git.tag && git push --tags"
     },
     "private": true,
     "dependencies": {
@@ -54,6 +59,7 @@
         "chai": "4.1.2",
         "codelyzer": "^5.0.1",
         "cpx": "^1.5.0",
+        "get-version": "1.1.3",
         "jasmine-core": "~2.99.1",
         "jasmine-spec-reporter": "~4.2.1",
         "jest": "^23.1.0",
