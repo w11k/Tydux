@@ -8,17 +8,10 @@ class Person {
 
 describe("OrderedMapFacade", () => {
 
-    it("state fields are null initially", () => {
-        const tydux = createTyduxStore();
-        const esf = new OrderedMapFacade<Person>(tydux.createMountPoint("persons"), "id");
-        expect(esf.state.list).toBeNull();
-        expect(esf.state.byId).toBeNull();
-    });
-
     it("isPristine() at start", () => {
         const tydux = createTyduxStore();
         const esf = new OrderedMapFacade<Person>(tydux.createMountPoint("persons"), "id");
-        expect(esf.isPristine).toBeTruthy();
+        expect(esf.isPristine()).toBeTruthy();
     });
 
     it("is not pristine once an entity was added", () => {
@@ -74,7 +67,7 @@ describe("OrderedMapFacade", () => {
             new Person(1, "John"),
             new Person(2, "Jonnie"),
         ];
-        esf.addList(list);
+        esf.appendList(list);
         expect(esf.state.list).toEqual(list);
         expect(esf.state.byId).toEqual({
             0: list[0],
@@ -93,7 +86,7 @@ describe("OrderedMapFacade", () => {
             new Person(0, "Joe"),
             new Person(1, "John"),
         ];
-        esf.addList(list1);
+        esf.appendList(list1);
 
         const list2 = [
             new Person(2, "Jonnie"),

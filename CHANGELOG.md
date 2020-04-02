@@ -1,3 +1,7 @@
+# Version 13.2.3
+
+- changes to OrderedMapFacade
+
 # Version 13.2.2
 
 - fixed wrong release

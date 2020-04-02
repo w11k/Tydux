@@ -7,13 +7,9 @@ import {NamedMountPoint} from "./store";
  */
 export class OrderedMapState<E> {
 
-    list: E[] | null;
-    byId: { [id: string]: E } | null;
-
-    constructor() {
-        this.list = null;
-        this.byId = null;
-    }
+    pristine = true;
+    list: E[] = [];
+    byId: { [id: string]: E } = {};
 
 }
 
@@ -26,28 +22,43 @@ class OrderedMapCommands<E> extends Commands<OrderedMapState<E>> {
         this.state = new OrderedMapState();
     }
 
-    prepare() {
-        if (this.state.list === null) {
-            this.state.list = [];
-            this.state.byId = {};
-        }
+    markDirty() {
+        this.state.pristine = false;
     }
 
-    addSingleToList(entity: E) {
-        this.state.list = [...this.state.list!, entity];
+    setList(ids: string[], entities: E[]) {
+        this.markDirty();
+
+        this.state.list = entities;
+        this.state.byId = {};
+        ids.forEach((value, idx) => {
+            this.state.byId[value] = entities[idx];
+        });
     }
 
-    addSingleToMap(id: string, entity: E) {
+    add(id: string, entity: E) {
+        this.markDirty();
+
+        this.state.list = [
+            ...this.state.list,
+            entity
+        ];
+
         this.state.byId = {
-            ...this.state.byId!,
+            ...this.state.byId,
             [id]: entity,
         };
     }
 
-    addMultipleToList(list: E[]) {
-        this.state.list = [...this.state.list!, ...list];
-    }
+    appendList(ids: string[], entities: E[]) {
+        this.markDirty();
 
+        this.state.list = [...this.state.list, ...entities];
+        this.state.byId = {...this.state.byId};
+        ids.forEach((value, idx) => {
+            this.state.byId[value] = entities[idx];
+        });
+    }
 
 }
 
@@ -71,7 +82,7 @@ export class OrderedMapFacade<E> extends Facade<OrderedMapState<E>, OrderedMapCo
     }
 
     isPristine() {
-        return this.state.list === null;
+        return this.state.pristine;
     }
 
     reset() {
@@ -79,28 +90,21 @@ export class OrderedMapFacade<E> extends Facade<OrderedMapState<E>, OrderedMapCo
     }
 
     setList(entities: E[]) {
-        this.commands.reset();
-        this.commands.prepare();
-        this.addList(entities);
+        const ids = this.getIdsForEntities(entities);
+        this.commands.setList(ids, entities);
     }
 
     add(entity: E) {
-        this.prepare();
-        this.commands.addSingleToList(entity);
-        this.commands.addSingleToMap(this.getId(entity), entity);
+        this.commands.add(this.getId(entity), entity);
     }
 
-    addList(entities: E[]) {
-        this.prepare();
-        this.commands.addMultipleToList(entities);
-        entities.forEach(e => this.commands.addSingleToMap(this.getId(e), e));
+    appendList(entities: E[]) {
+        const ids = this.getIdsForEntities(entities);
+        this.commands.appendList(ids, entities);
     }
 
-    private prepare() {
-        if (this.isPristine()) {
-            this.commands.prepare();
-        }
+    private getIdsForEntities(entities: E[]) {
+        return entities.map(e => this.getId(e));
     }
-
 }
 
