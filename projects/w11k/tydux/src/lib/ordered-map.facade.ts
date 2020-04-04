@@ -7,9 +7,8 @@ import {NamedMountPoint} from "./store";
  */
 export class OrderedMapState<E> {
 
-    pristine = true;
-    list: E[] = [];
-    byId: { [id: string]: E } = {};
+    list: E[] | null = null;
+    byId: { [id: string]: E } | null = null;
 
 }
 
@@ -22,25 +21,28 @@ class OrderedMapCommands<E> extends Commands<OrderedMapState<E>> {
         this.state = new OrderedMapState();
     }
 
-    markDirty() {
-        this.state.pristine = false;
+    private prepare() {
+        if (this.state.list === null) {
+            this.state.list = [];
+            this.state.byId = {};
+        }
     }
 
     setList(ids: string[], entities: E[]) {
-        this.markDirty();
+        this.prepare();
 
         this.state.list = entities;
         this.state.byId = {};
         ids.forEach((value, idx) => {
-            this.state.byId[value] = entities[idx];
+            this.state.byId![value] = entities[idx];
         });
     }
 
     add(id: string, entity: E) {
-        this.markDirty();
+        this.prepare();
 
         this.state.list = [
-            ...this.state.list,
+            ...this.state.list!,
             entity
         ];
 
@@ -51,12 +53,12 @@ class OrderedMapCommands<E> extends Commands<OrderedMapState<E>> {
     }
 
     appendList(ids: string[], entities: E[]) {
-        this.markDirty();
+        this.prepare();
 
-        this.state.list = [...this.state.list, ...entities];
+        this.state.list = [...this.state.list!, ...entities];
         this.state.byId = {...this.state.byId};
         ids.forEach((value, idx) => {
-            this.state.byId[value] = entities[idx];
+            this.state.byId![value] = entities[idx];
         });
     }
 
@@ -82,7 +84,7 @@ export class OrderedMapFacade<E> extends Facade<OrderedMapState<E>, OrderedMapCo
     }
 
     isPristine() {
-        return this.state.pristine;
+        return this.state.list === null;
     }
 
     reset() {

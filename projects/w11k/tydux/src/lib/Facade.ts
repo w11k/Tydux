@@ -1,12 +1,14 @@
+import {skipNil} from "@w11k/rx-ninja";
 import {Action, Unsubscribe} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
+import {take} from "rxjs/operators";
 import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReducerFromCommandsInvoker, FacadeAction} from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
 import {MountPoint, NamedMountPoint} from "./store";
 import {getGlobalStore} from "./store-global";
-import {createProxy, functionNamesDeep, selectToObservable} from "./utils";
+import {createProxy, functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
 
 // const uniqueFacadeIds: { [id: string]: number } = {};
 
@@ -111,6 +113,10 @@ export abstract class Facade<S, C extends Commands<S>> {
             this.mountPoint = mountPointOrName;
         }
 
+        this.mountPoint.destroySubject
+            .pipe(take(1))
+            .subscribe(() => this.destroy());
+
         registerFacadeCommands(this.facadeId, commands);
 
         const commandsInvoker = new CommandsInvoker(commands);
@@ -165,6 +171,8 @@ export abstract class Facade<S, C extends Commands<S>> {
                 this.reduxStoreStateSubject.next(currentState);
             });
         });
+
+        this.moveMethodsFromPrototypeToInstance();
     }
 
     /**
@@ -193,6 +201,10 @@ export abstract class Facade<S, C extends Commands<S>> {
         return this.destroyedSubject.asObservable();
     }
 
+    isDestroyed() {
+        return this.destroyedState;
+    }
+
     hasBufferedStateChanges() {
         return this.bufferedStateChanges > 0;
     }
@@ -209,16 +221,47 @@ export abstract class Facade<S, C extends Commands<S>> {
         return selectToObservable(this.reduxStoreStateSubject, selector);
     }
 
+    /**
+     * - operates on the micro-task queue
+     * - only emits values when they change (identity-based)
+     * - only emits nonNil values (null or undefined)
+     */
+    selectNonNil<R>(selector?: (state: Readonly<S>) => R | null | undefined): Observable<R> {
+        return selectToObservable(this.reduxStoreStateSubject, selector)
+            .pipe(skipNil());
+    }
+
     createActionName(mutatorMethodName: string) {
         return `[${this.facadeId}] ${mutatorMethodName}`;
     }
 
     createMountPoint<P extends keyof S>(slice: P): NamedMountPoint<S[P], S> {
-        return this.mountPoint.tyduxStore.createDeepMountPoint(this.facadeId + "." + slice);
+        const mountPoint = this.mountPoint.tyduxStore.createDeepMountPoint(this.facadeId + "." + slice);
+        this.observeDestroyed()
+            .pipe(take(1))
+            .subscribe(() => mountPoint.destroySubject.next());
+        return mountPoint;
     }
 
     private setState(state: S) {
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
+    }
+
+    private moveMethodsFromPrototypeToInstance() {
+        const methodNamesUntilStoreParent: string[] = [];
+        let level: any = this;
+        while (level instanceof Facade) {
+            methodNamesUntilStoreParent.push(...functionNamesShallow(level));
+            level = Object.getPrototypeOf(level);
+        }
+
+        const self = this;
+        for (const fnMemberName of methodNamesUntilStoreParent) {
+            const method = (this as any)[fnMemberName];
+            (this as any)[fnMemberName] = function () {
+                return method.apply(self, arguments);
+            };
+        }
     }
 
     // private enrichInstanceMethods() {

@@ -235,6 +235,37 @@ describe("Facade", () => {
         });
     });
 
+    it("selectNonNil() only emit non nil values", (done) => {
+        class TestState {
+            list: string[] | null = null;
+        }
+
+        class TestCommands extends Commands<TestState> {
+            setList() {
+                this.state.list = ["a"];
+            }
+        }
+
+        class TestFacade extends Facade<TestState, TestCommands> {
+            setList() {
+                this.commands.setList();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(new TestState()), undefined, new TestCommands());
+
+        facade.selectNonNil(s => s.list)
+            .subscribe(list => {
+                list.push("b"); // leave here for compiler check (filter out null case)
+                expect(list).toEqual(["a", "b"]);
+                done();
+            });
+
+        expect(facade.state.list).toBeNull();
+        facade.setList();
+
+    });
+
     it("keeps state between action invocations", async () => {
         class TestState {
             // noinspection JSMismatchedCollectionQueryUpdate
@@ -555,6 +586,21 @@ describe("Facade", () => {
         }, 0);
     });
 
+    it("methods are pulled to the instance", () => {
+        class TestFacade extends Facade<any, any> {
+
+            private foo = 1;
+
+            method1() {
+                return this.foo + 1;
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(), undefined, new Commands());
+        const ref = facade.method1;
+        expect(ref()).toEqual(2);
+    });
+
 });
 
 describe("nesting Facade", () => {
@@ -584,6 +630,30 @@ describe("nesting Facade", () => {
         const store = createTyduxStore();
         const rootFacade = new RootFacade(store);
         expect(rootFacade.state.childFacadeState.foo).toEqual(1);
+    });
+
+    it("a nested facade gets destroyed when the parent facade gets destroyed", () => {
+
+        class ChildFacade extends Facade<any, any> {
+        }
+
+        class RootFacade extends Facade<any, any> {
+
+            readonly childFacade = new ChildFacade(this.createMountPoint("childFacadeState"), {}, new Commands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), {}, new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        expect(rootFacade.isDestroyed()).toBeFalsy();
+        expect(rootFacade.childFacade.isDestroyed()).toBeFalsy();
+
+        rootFacade.destroy();
+        expect(rootFacade.isDestroyed()).toBeTruthy();
+        expect(rootFacade.childFacade.isDestroyed()).toBeTruthy();
     });
 
     it("a nested facade can change the state", () => {

@@ -1,3 +1,9 @@
+# Version 13.3.0
+
+- added selectNonNil method to facade
+- facade methods are now pulled up to the instance to ease using them as callbacks
+- child facades are now destroyed when the parent facade gets destroyed
+
 # Version 13.2.3
 
 - changes to OrderedMapFacade

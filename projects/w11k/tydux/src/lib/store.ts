@@ -1,7 +1,7 @@
 import {isNil} from "@w11k/rx-ninja";
 import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
 import {EnhancerOptions} from "redux-devtools-extension";
-import {Observable} from "rxjs";
+import {Observable, ReplaySubject, Subject} from "rxjs";
 import {CommandReducer} from "./commands";
 import {checkDevModeAndCreateDevToolsEnabledComposeFn, isTyduxDevelopmentModeEnabled} from "./development";
 import {getDeep, setDeep} from "./utils";
@@ -15,6 +15,7 @@ export interface MountPoint<L, S = any, A extends Action = Action<string>> {
     setState: (globalState: S, localState: L) => S;
     subscribe: (listener: () => void) => Unsubscribe;
     freeSlicePath: () => void;
+    destroySubject: Subject<void>;
 }
 
 export interface NamedMountPoint<L, S = any, A extends Action = Action<string>> extends MountPoint<L, S, A> {
@@ -52,6 +53,7 @@ export class TyduxStore<S = any, A extends Action = Action<string>> {
     private internalCreateMountPoint<L>(stateGetter: (globalState: S) => L,
                                         stateSetter: (globalState: S, localState: L) => S,
                                         freeSlicePath: () => void): MountPoint<L, S, A> {
+
         return {
             tyduxStore: this,
             addReducer: (commandReducer: CommandReducer<any>) => this.facadeReducers.push(commandReducer),
@@ -60,7 +62,8 @@ export class TyduxStore<S = any, A extends Action = Action<string>> {
             extractState: (state: S) => stateGetter(state),
             setState: stateSetter,
             subscribe: this.store.subscribe.bind(this.store),
-            freeSlicePath
+            freeSlicePath,
+            destroySubject: new ReplaySubject(1),
         };
     }
 
