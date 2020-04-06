@@ -105,6 +105,13 @@ export class OrderedMapFacade<E> extends Facade<OrderedMapState<E>, OrderedMapCo
         this.commands.appendList(ids, entities);
     }
 
+    getById(id: string | number): E | undefined {
+        if (this.state.byId === null) {
+            return undefined;
+        }
+        return this.state.byId[id.toString()];
+    }
+
     private getIdsForEntities(entities: E[]) {
         return entities.map(e => this.getId(e));
     }

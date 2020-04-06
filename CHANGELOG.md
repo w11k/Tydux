@@ -1,3 +1,7 @@
+# Version 13.4.0
+
+- added OrderedMapFacade#getById
+
 # Version 13.3.0
 
 - added selectNonNil method to facade
