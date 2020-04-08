@@ -1,6 +1,6 @@
 import {Action} from "redux";
 import {isTyduxDevelopmentModeEnabled} from "./development";
-import {createFailingProxy, failIfInstanceMembersExistExceptState, failIfNotUndefined} from "./utils";
+import {createFailingProxy, failIfInstanceMembersExistExceptStateOrMethods, failIfNotUndefined} from "./utils";
 
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never }[keyof T];
 export type CommandsMethods<T> = Pick<T, FunctionPropertyNames<T>>;
@@ -27,31 +27,31 @@ export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsIn
 
             const result = mutatorFn.apply(commands, action.payload);
             failIfNotUndefined(result);
-            failIfInstanceMembersExistExceptState(commands);
+            failIfInstanceMembersExistExceptStateOrMethods(commands);
         });
     };
 }
 
-type StateType<T extends Commands<any>> = T extends Commands<infer S> ? S : never;
+export type CommandsStateType<T extends Commands<any>> = T extends Commands<infer S> ? S : never;
 
 export class CommandsInvoker<C extends Commands<any>> {
 
     constructor(readonly commands: C) {
-        failIfInstanceMembersExistExceptState(this.commands);
+        failIfInstanceMembersExistExceptStateOrMethods(this.commands);
     }
 
-    invoke(state: StateType<C>,
-           withStateOp: (commands: C) => void): StateType<C> {
+    invoke(state: CommandsStateType<C>,
+           withStateOp: (commands: C) => void): CommandsStateType<C> {
 
         (this.commands as any).state = state;
         let postState: any;
-        const mutatorThisProxy: { state: StateType<C>; } = {state};
+        const mutatorThisProxy: { state: CommandsStateType<C>; } = {state};
         try {
             Object.setPrototypeOf(mutatorThisProxy, this.commands);
             withStateOp(mutatorThisProxy as any);
             postState = (mutatorThisProxy as any).state;
             delete mutatorThisProxy.state;
-            failIfInstanceMembersExistExceptState(mutatorThisProxy);
+            failIfInstanceMembersExistExceptStateOrMethods(mutatorThisProxy);
         } finally {
             if (isTyduxDevelopmentModeEnabled()) {
                 Object.setPrototypeOf(mutatorThisProxy, createFailingProxy());

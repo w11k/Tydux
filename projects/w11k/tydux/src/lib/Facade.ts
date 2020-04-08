@@ -298,9 +298,9 @@ export abstract class Facade<S, C extends Commands<S>> {
 
     private createCommandsProxy(commandsInvoker: CommandsInvoker<C>): C {
         const proxyObj = {} as any;
-        const protoOfCommandsInstance = Object.getPrototypeOf(commandsInvoker.commands);
+        // const protoOfCommandsInstance = Object.getPrototypeOf(commandsInvoker.commands);
 
-        for (const mutatorMethodName of functionNamesDeep(protoOfCommandsInstance)) {
+        for (const mutatorMethodName of functionNamesDeep(commandsInvoker.commands)) {
             const self = this;
             proxyObj[mutatorMethodName] = function () {
                 const actionType = self.createActionName(mutatorMethodName);

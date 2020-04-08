@@ -1,7 +1,7 @@
 import {isNil} from "@w11k/rx-ninja";
 import {Observable} from "rxjs";
 import {distinctUntilChanged, filter, map, take} from "rxjs/operators";
-import {illegalAccessToThis, mutatorHasInstanceMembers, mutatorWrongReturnType} from "./error-messages";
+import {illegalAccessToThis, commandHasInstanceMembers, commandWrongReturnType} from "./error-messages";
 import {Facade} from "./Facade";
 import {isPlainObject} from "./lodash/lodash";
 
@@ -37,15 +37,20 @@ export function arePlainObjectsShallowEquals(obj1: any, obj2: any): boolean {
 
 export function failIfNotUndefined(value: any): void {
     if (value !== undefined) {
-        throw new Error(mutatorWrongReturnType);
+        throw new Error(commandWrongReturnType);
     }
 }
 
-export function failIfInstanceMembersExistExceptState(obj: any) {
+export function failIfInstanceMembersExistExceptStateOrMethods(obj: any) {
     const members = Object.keys(obj).filter(key => key !== "state");
-    if (members.length > 0) {
-        throw new Error(mutatorHasInstanceMembers + ": " + members.join(", "));
-    }
+
+    Object.entries(obj).forEach(([name, value]) => {
+        if (name !== "state" && typeof value !== "function") {
+            throw new Error(commandHasInstanceMembers + ": " + name);
+        }
+    });
+
+
 }
 
 // export function assignStateValue<S>(obj: { state: S }, state: S) {
