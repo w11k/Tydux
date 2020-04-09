@@ -58,6 +58,7 @@ export function orderedMapSetList<E>(om: OrderedMapState<E>, entities: E[]): Ord
 export function orderedMapPatchEntities<E>(om: OrderedMapState<E>, entities: { [id: string]: Partial<E> }): OrderedMapState<E> {
     om = orderedMapPrepare(om);
     om.list = [...om.list!];
+    om.byId = {...om.byId};
 
     for (const id of Object.keys(entities)) {
         const entry = om.byId![id];

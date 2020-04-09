@@ -69,8 +69,8 @@ describe("OrderedMapFacade", () => {
 
         om = orderedMapSetList(om, list1);
         om = orderedMapPatchEntities(om, {
-            0: new Person(0, "Joe2"),
-            1: new Person(1, "John2"),
+            0: {name: "Joe2"},
+            1: {name: "John2"},
         });
 
         expect(om.list).toEqual([
