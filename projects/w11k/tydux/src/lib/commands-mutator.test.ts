@@ -1,6 +1,6 @@
 import {createTestMount} from "../testing";
 import {Commands} from "./commands";
-import {assignFieldCommand} from "./commands-mutators";
+import {createAssignFieldCommand} from "./commands-mutators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 
@@ -11,7 +11,7 @@ describe("Commands mutators", () => {
 
     it("assignFieldCommand", () => {
         class TestCommands extends Commands<{ n1: number }> {
-            setN1 = assignFieldCommand(this, "n1");
+            setN1 = createAssignFieldCommand(this, "n1");
         }
 
         class TestFacade extends Facade<{ n1: number }, TestCommands> {
