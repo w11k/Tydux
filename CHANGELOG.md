@@ -1,3 +1,7 @@
+# Version 13.5.3
+
+- added orderedMapPatchEntities
+
 # Version 13.5.2
 
 - changed OrderedMapFacade to command mutator

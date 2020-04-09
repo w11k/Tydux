@@ -55,18 +55,33 @@ export function orderedMapSetList<E>(om: OrderedMapState<E>, entities: E[]): Ord
     return om;
 }
 
-// export function orderedMapAppendList<E>(om: OrderedMapState<E>, entities: E[]): OrderedMapState<E> {
-//     om = orderedMapPrepare(om);
-//     om.list = [
-//         ...om.list!,
-//         ...entities
-//     ];
-//     entities.forEach(entity => {
-//         const id = orderedMapGetIdForEntity(om, entity);
-//         om.byId![id] = entity;
-//     });
-//     return om;
-// }
+export function orderedMapPatchEntities<E>(om: OrderedMapState<E>, entities: { [id: string]: Partial<E> }): OrderedMapState<E> {
+    om = orderedMapPrepare(om);
+    om.list = [...om.list!];
+
+    for (const id of Object.keys(entities)) {
+        const entry = om.byId![id];
+        if (entry === undefined) {
+            continue;
+        }
+
+        const index = entry[0];
+        om.list[index] = {
+            ...entry[1],
+            ...entities[id],
+        };
+
+        om.byId![id] = [
+            entry[0],
+            {
+                ...entry[1],
+                ...entities[id]
+            }
+        ];
+    }
+
+    return om;
+}
 
 export function orderedMapAdd<E>(om: OrderedMapState<E>, entity: E): OrderedMapState<E> {
     om = orderedMapPrepare(om);
