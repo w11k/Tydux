@@ -1,22 +1,29 @@
-import {createTestMount} from "../testing";
+import {createTestFacade, createTestMount} from "../testing";
 import {Commands} from "./commands";
-import {createAssignFieldCommand} from "./commands-mutators";
+import {applyMutator, arrayAppend, arrayPrepend, arrayRemoveFirst, createAssignCommand, createMutatorCommand} from "./commands-mutators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 
+class TestState {
+    numberField = 0;
+    obj = {
+        fieldA: 123,
+        fieldB: "abc",
+    };
+}
 
-describe("Commands mutators", () => {
+describe("commands mutators", () => {
 
     beforeEach(() => enableTyduxDevelopmentMode());
 
-    it("assignFieldCommand", () => {
-        class TestCommands extends Commands<{ n1: number }> {
-            setN1 = createAssignFieldCommand(this, "n1");
+    it("createAssignCommand", () => {
+        class TestCommands extends Commands<TestState> {
+            setN1 = createAssignCommand(this, "numberField");
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestState, TestCommands> {
             constructor() {
-                super(createTestMount({n1: 1}), undefined, new TestCommands());
+                super(createTestMount(new TestState()), undefined, new TestCommands());
             }
 
             op1() {
@@ -25,9 +32,89 @@ describe("Commands mutators", () => {
         }
 
         const tf = new TestFacade();
-        expect(tf.state.n1).toEqual(1);
         tf.op1();
-        expect(tf.state.n1).toEqual(99);
+        expect(tf.state.numberField).toEqual(99);
     });
+
+    it("createMutatorCommand", () => {
+
+        const incNumberFn = (n: number) => () => n + 1;
+        const incByNumberFn = (n: number) => (by: number) => n + by;
+
+        class TestCommands extends Commands<TestState> {
+            incNumberField = createMutatorCommand(this, "numberField", incNumberFn);
+            incByNumberField = createMutatorCommand(this, "numberField", incByNumberFn);
+        }
+
+        class TestFacade extends Facade<TestState, TestCommands> {
+            constructor() {
+                super(createTestMount(new TestState()), undefined, new TestCommands());
+            }
+
+            op1() {
+                this.commands.incNumberField();
+                this.commands.incByNumberField(5);
+            }
+        }
+
+        const tf = new TestFacade();
+        tf.op1();
+        expect(tf.state.numberField).toEqual(6);
+    });
+
+    it("applyMutator without args", () => {
+        const tf = createTestFacade(new class extends Commands<TestState> {
+            command() {
+                const incByNumberFn = (n: number) => () => n + 10;
+                applyMutator(this, "numberField", incByNumberFn);
+            }
+        }, new TestState());
+
+        tf.commands.command();
+        expect(tf.state.numberField).toEqual(10);
+    });
+
+    it("applyMutator with 2 args", () => {
+        const tf = createTestFacade(new class extends Commands<TestState> {
+            command() {
+                const incByNumberFn = (n: number) => (by1: number, by2: number) => n + by1 + by2;
+                applyMutator(this, "numberField", incByNumberFn, 3, 7);
+            }
+        }, new TestState());
+
+        tf.commands.command();
+        expect(tf.state.numberField).toEqual(10);
+    });
+
+});
+
+describe("operator functions for applyMutator", () => {
+
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    it("arrayAppend", () => {
+        expect(arrayAppend(["a"])(["b"])).toEqual(["a", "b"]);
+    });
+
+    it("arrayPrepend", () => {
+        expect(arrayPrepend(["a"])(["b"])).toEqual(["b", "a"]);
+    });
+
+    it("arrayRemoveFirst", () => {
+        expect(arrayRemoveFirst(["a", "b"])()).toEqual(["b"]);
+    });
+
+    // it("objectPatch", () => {
+    //     expect(objectPatch({a: 1, b: "b"})({b: "bb"})).toEqual({a: 1, b: "bb"});
+    //
+    //     const tf = createTestFacade(new class extends Commands<TestState> {
+    //         command() {
+    //             applyMutator(this, "obj", objectPatch, {fieldB: "def"});
+    //         }
+    //     }, new TestState());
+    //
+    //     tf.commands.command();
+    //     expect(tf.state.obj).toEqual({fieldA: 123, fieldB: "def"});
+    // });
 
 });
