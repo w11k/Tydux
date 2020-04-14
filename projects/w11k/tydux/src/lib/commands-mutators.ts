@@ -1,10 +1,11 @@
-import {Commands, CommandsStateType} from "./commands";
+import {Commands, CommandsState} from "./commands";
 
-export function createAssignCommand<T extends Commands<any>, F extends keyof CommandsStateType<T>>(
-    commands: T, field: F
-): (value: CommandsStateType<T>[F]) => void {
+export function createAssignCommand<T extends Commands<any>, F extends keyof CommandsState<T>>(
+    commands: T,
+    field: F
+): (value: CommandsState<T>[F]) => void {
 
-    return function (this: any, value: CommandsStateType<T>[F]) {
+    return function (this: any, value: CommandsState<T>[F]) {
         (this as any).state = {
             ...(this as any).state,
             [field]: value,
@@ -12,8 +13,10 @@ export function createAssignCommand<T extends Commands<any>, F extends keyof Com
     };
 }
 
-export function createMutatorCommand<C extends Commands<any>, F extends keyof CommandsStateType<C>, U extends any[]>(
-    commands: C, field: F, withFn: (value: CommandsStateType<C>[F]) => (...args: U) => CommandsStateType<C>[F]
+export function createMutator<C extends Commands<any>, F extends keyof CommandsState<C>, U extends any[]>(
+    commands: C,
+    field: F,
+    withFn: (value: CommandsState<C>[F]) => (...args: U) => CommandsState<C>[F]
 ): (...args: U) => void {
 
     return function (this: any, ...args: U) {
@@ -24,15 +27,25 @@ export function createMutatorCommand<C extends Commands<any>, F extends keyof Co
     };
 }
 
-export function applyMutator<C extends Commands<any>, F extends keyof CommandsStateType<C>, U extends any[]>(
-    commands: C, field: F, withFn: (value: CommandsStateType<C>[F]) => (...args: U) => CommandsStateType<C>[F], ...args: U
-): void {
+// export function applyMutator<C extends Commands<any>,
+//     F extends keyof CommandsState<C>,
+//     V extends CommandsState<C>[F],
+//     U extends any[]>(
+//     commands: C,
+//     field: F,
+//     withFn: (value: V) => (...args: U) => V,
+//     ...args: U
+// ): void {
+//
+//     (commands as any).state = {
+//         ...(commands as any).state,
+//         [field]: withFn((commands as any).state[field])(...args),
+//     };
+// }
 
-    (commands as any).state = {
-        ...(commands as any).state,
-        [field]: withFn((commands as any).state[field])(...args),
-    };
-}
+///////////////////////////////////////////////////////////////////////////
+// operators
+///////////////////////////////////////////////////////////////////////////
 
 export function arrayAppend<E>(source: E[]) {
     return (append: E[]) => {
@@ -53,14 +66,14 @@ export function arrayRemoveFirst<E>(source: E[]) {
     };
 }
 
-// export function objectPatch<E extends object>(source: E) {
-//     return (patch: Partial<E>) => {
-//         return {
-//             ...source,
-//             ...patch,
-//         };
-//     };
-// }
+export function objectPatch<E>(source: E): (patch: Partial<E>) => E {
+    return (patch: Partial<E>) => {
+        return {
+            ...source,
+            ...patch,
+        };
+    };
+}
 
 // type FilterFlags<Base, Condition> = {
 //     [Key in keyof Base]:

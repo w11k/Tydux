@@ -32,7 +32,7 @@ export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsIn
     };
 }
 
-export type CommandsStateType<T extends Commands<any>> = T extends Commands<infer S> ? S : never;
+export type CommandsState<T extends Commands<any>> = T extends Commands<infer S> ? S : never;
 
 export class CommandsInvoker<C extends Commands<any>> {
 
@@ -40,12 +40,12 @@ export class CommandsInvoker<C extends Commands<any>> {
         failIfInstanceMembersExistExceptStateOrMethods(this.commands);
     }
 
-    invoke(state: CommandsStateType<C>,
-           withStateOp: (commands: C) => void): CommandsStateType<C> {
+    invoke(state: CommandsState<C>,
+           withStateOp: (commands: C) => void): CommandsState<C> {
 
         (this.commands as any).state = state;
         let postState: any;
-        const mutatorThisProxy: { state: CommandsStateType<C>; } = {state};
+        const mutatorThisProxy: { state: CommandsState<C>; } = {state};
         try {
             Object.setPrototypeOf(mutatorThisProxy, this.commands);
             withStateOp(mutatorThisProxy as any);
