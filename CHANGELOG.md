@@ -1,3 +1,7 @@
+# Version 13.5.7
+
+- fixed peer of tydux-angular
+
 # Version 13.5.6
 
 - alpha: WIP mutators
