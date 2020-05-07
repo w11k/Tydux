@@ -18,7 +18,7 @@ describe("Store", function () {
             }
         }
 
-        class MyFacade extends Facade<typeof initialState, MyCommands> {
+        class MyFacade extends Facade<MyCommands> {
             action() {
                 this.commands.inc(100);
             }
@@ -46,7 +46,7 @@ describe("Store", function () {
             }
         }
 
-        class MyFacade extends Facade<typeof initialState, MyCommands> {
+        class MyFacade extends Facade<MyCommands> {
             action() {
                 this.commands.inc(100);
             }
@@ -89,7 +89,7 @@ describe("Store", function () {
             }
         }
 
-        class MyFacade extends Facade<typeof initialState, MyCommands> {
+        class MyFacade extends Facade<MyCommands> {
             action() {
                 this.commands.inc(100);
             }
@@ -139,7 +139,7 @@ describe("Store", function () {
             }
         }
 
-        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+        class MyFacade extends Facade<MyCommands> {
             action() {
                 this.commands.inc(100);
             }
@@ -192,7 +192,7 @@ describe("Store", function () {
             }
         }
 
-        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+        class MyFacade extends Facade<MyCommands> {
             action() {
                 this.commands.inc(100);
             }
@@ -247,7 +247,7 @@ describe("Store", function () {
             }
         }
 
-        class MyFacade extends Facade<ManagedByFacadeState, MyCommands> {
+        class MyFacade extends Facade<MyCommands> {
             action() {
                 this.commands.inc(100);
             }

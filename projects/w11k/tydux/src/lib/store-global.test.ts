@@ -2,12 +2,12 @@ import {createStore} from "redux";
 import {Commands} from "./commands";
 import {Facade} from "./Facade";
 import {createTyduxStore, TyduxReducerBridge} from "./store";
-import {setGlobalStore} from "./store-global";
+import {removeGlobalStore, setGlobalStore} from "./store-global";
 
 describe("global store", () => {
 
     afterEach(() => {
-        setGlobalStore(undefined);
+        removeGlobalStore();
     });
 
     it("only one global store is allowed", () => {
@@ -26,7 +26,7 @@ describe("global store", () => {
         class TestCommands extends Commands<TestState> {
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
         }
 
         const tyduxBridge = new TyduxReducerBridge();

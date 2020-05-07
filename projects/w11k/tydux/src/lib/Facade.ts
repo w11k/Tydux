@@ -2,7 +2,15 @@ import {skipNil} from "@w11k/rx-ninja";
 import {Action, Unsubscribe} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
 import {take} from "rxjs/operators";
-import {CommandReducer, Commands, CommandsInvoker, CommandsMethods, createReducerFromCommandsInvoker, FacadeAction} from "./commands";
+import {
+    CommandReducer,
+    Commands,
+    CommandsInvoker,
+    CommandsMethods,
+    CommandsState,
+    createReducerFromCommandsInvoker,
+    FacadeAction
+} from "./commands";
 import {deepFreeze} from "./deep-freeze";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
@@ -38,7 +46,7 @@ export type InitialStateValue<S> = S | (() => S) | Promise<S>;
 /**
  * Tydux Facade
  */
-export abstract class Facade<S, C extends Commands<S>> {
+export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
 
     readonly facadeId: string;
 

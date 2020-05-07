@@ -29,7 +29,7 @@ describe("commands mutators", () => {
             setN1 = createAssignCommand(this, "numberField");
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             constructor() {
                 super(createTestMount(new TestState()), undefined, new TestCommands());
             }
@@ -54,7 +54,7 @@ describe("commands mutators", () => {
             incByNumberField = createMutator(this, "numberField", incByNumberFn);
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             constructor() {
                 super(createTestMount(new TestState()), undefined, new TestCommands());
             }

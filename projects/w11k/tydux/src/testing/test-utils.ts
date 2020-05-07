@@ -1,4 +1,4 @@
-import {Commands} from "../lib/commands";
+import {Commands, CommandsState} from "../lib/commands";
 import {Facade} from "../lib/Facade";
 import {createTyduxStore, NamedMountPoint} from "../lib/store";
 
@@ -18,7 +18,7 @@ export function createAsyncPromise<T>(returns: T): Promise<T> {
     });
 }
 
-class TestFacade<S, C extends Commands<S>> extends Facade<S, C> {
+class TestFacade<C extends Commands<any>> extends Facade<C> {
 
     private _commands!: C;
 
@@ -32,6 +32,6 @@ class TestFacade<S, C extends Commands<S>> extends Facade<S, C> {
 
 }
 
-export function createTestFacade<C extends Commands<S>, S>(commands: C, initialState: S) {
+export function createTestFacade<C extends Commands<any>>(commands: C, initialState: CommandsState<C>) {
     return new TestFacade(createTestMount(initialState), initialState, commands);
 }

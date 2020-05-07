@@ -54,7 +54,7 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<State, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action1() {
                 this.commands.mut1();
             }
@@ -92,7 +92,7 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
@@ -111,7 +111,7 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number[] }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
@@ -138,7 +138,7 @@ describe("Commands", () => {
             }
         }
 
-        class TestStore extends Facade<{ n1: string }, TestCommands> {
+        class TestStore extends Facade<TestCommands> {
             action1() {
                 this.commands.mod1();
             }
@@ -162,7 +162,7 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<{ a: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
@@ -179,7 +179,7 @@ describe("Commands", () => {
             abc = 1;
         }
 
-        class TestFacade extends Facade<any, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
         }
 
         expect(
@@ -196,7 +196,7 @@ describe("Commands", () => {
 
         }
 
-        class TestFacade extends Facade<any, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 expect(() => this.commands.mut()).toThrow();
             }
@@ -222,7 +222,7 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut();
             }
@@ -243,7 +243,7 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<{ root: { child: number[] } }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut();
             }
@@ -264,7 +264,7 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut();
             }
@@ -284,7 +284,7 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
@@ -308,7 +308,7 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
@@ -337,7 +337,7 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
@@ -354,7 +354,7 @@ describe("Commands - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<any, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 expect(() => this.commands.mod1()).toThrow();
             }

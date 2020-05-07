@@ -10,7 +10,7 @@ describe("Tydux Angular", function () {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionInc() {
                 this.commands.inc();
             }

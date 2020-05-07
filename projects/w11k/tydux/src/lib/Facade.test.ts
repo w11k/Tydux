@@ -14,7 +14,7 @@ describe("Facade", () => {
     it("slice path must be unique", () => {
         const store = createTyduxStore();
 
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
         }
 
         // tslint:disable-next-line:no-unused-expression
@@ -28,7 +28,7 @@ describe("Facade", () => {
     it("can be destroyed", () => {
         let called = false;
 
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
             constructor() {
                 super(createTestMount(), {}, Commands);
                 this.observeDestroyed().subscribe(() => called = true);
@@ -47,7 +47,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionInc() {
                 this.commands.inc();
             }
@@ -77,7 +77,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionInc() {
                 this.commands.inc();
             }
@@ -104,7 +104,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ a: number; b: number; c: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -137,7 +137,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ a: number; b: number; c: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -173,7 +173,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ root: { child: { val1: number } } }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.dummy();
             }
@@ -206,7 +206,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.increment();
                 this.commands.increment();
@@ -246,7 +246,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             setList() {
                 this.commands.setList();
             }
@@ -283,7 +283,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             setList() {
                 this.commands.setList([1, 2, 3]);
             }
@@ -314,7 +314,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             met1() {
                 this.commands.setValue(9);
                 expect(this.state.value).toEqual(9);
@@ -329,7 +329,7 @@ describe("Facade", () => {
     it("can set their initial state during super call", () => {
         type TestState = { value: number };
 
-        class TestFacade extends Facade<TestState, Commands<TestState>> {
+        class TestFacade extends Facade<Commands<TestState>> {
             constructor(tyduxStore: TyduxStore) {
                 super(tyduxStore.createMountPoint("test"), {value: 0}, new Commands());
 
@@ -356,7 +356,7 @@ describe("Facade", () => {
     it("undefined as initialState does not alter the state", () => {
         type TestState = { value: number };
 
-        class TestFacade extends Facade<TestState, Commands<TestState>> {
+        class TestFacade extends Facade<Commands<TestState>> {
             constructor(tyduxStore: TyduxStore) {
                 super(tyduxStore.createMountPoint("test"), undefined, new Commands());
 
@@ -389,7 +389,7 @@ describe("Facade", () => {
 
         type TestState = { value: number };
 
-        class TestFacade extends Facade<TestState, Commands<TestState>> {
+        class TestFacade extends Facade<Commands<TestState>> {
             constructor(tyduxStore: TyduxStore) {
                 super(tyduxStore.createMountPoint("test"), () => ({value: 99}), new Commands());
 
@@ -421,7 +421,7 @@ describe("Facade", () => {
             setTimeout(() => resolve({value: 77}), 0);
         });
 
-        class TestFacade extends Facade<TestState, Commands<TestState>> {
+        class TestFacade extends Facade<Commands<TestState>> {
             constructor(tyduxStore: TyduxStore) {
                 super(tyduxStore.createMountPoint("test"), initialValuePromise, new Commands());
 
@@ -460,7 +460,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             op() {
                 this.commands.set(99);
                 throw new Error();
@@ -494,7 +494,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             async setList() {
                 const list = await createAsyncPromise([1, 2, 3]);
                 this.commands.setList(list);
@@ -539,7 +539,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ list1: number[], list2: number[] }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
 
             private counter = 0;
 
@@ -587,7 +587,7 @@ describe("Facade", () => {
     });
 
     it("methods are pulled to the instance", () => {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
 
             private foo = 1;
 
@@ -610,14 +610,14 @@ describe("nesting Facade", () => {
             foo = 1;
         }
 
-        class ChildFacade extends Facade<ChildFacadeState, any> {
+        class ChildFacade extends Facade<Commands<ChildFacadeState>> {
         }
 
         class RootFacadeState {
             childFacadeState!: ChildFacadeState;
         }
 
-        class RootFacade extends Facade<RootFacadeState, any> {
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
 
             // noinspection JSUnusedGlobalSymbols
             readonly childFacade = new ChildFacade(this.createMountPoint("childFacadeState"), new ChildFacadeState(), new Commands());
@@ -634,10 +634,10 @@ describe("nesting Facade", () => {
 
     it("a nested facade gets destroyed when the parent facade gets destroyed", () => {
 
-        class ChildFacade extends Facade<any, any> {
+        class ChildFacade extends Facade<any> {
         }
 
-        class RootFacade extends Facade<any, any> {
+        class RootFacade extends Facade<Commands<any>> {
 
             readonly childFacade = new ChildFacade(this.createMountPoint("childFacadeState"), {}, new Commands());
 
@@ -667,7 +667,7 @@ describe("nesting Facade", () => {
             }
         }
 
-        class ChildFacade extends Facade<ChildFacadeState, ChildFacadeCommands> {
+        class ChildFacade extends Facade<ChildFacadeCommands> {
             inc() {
                 this.commands.inc();
             }
@@ -677,7 +677,7 @@ describe("nesting Facade", () => {
             childFacadeState!: ChildFacadeState;
         }
 
-        class RootFacade extends Facade<RootFacadeState, any> {
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
 
             readonly childFacade = new ChildFacade(
                 this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
@@ -705,7 +705,7 @@ describe("nesting Facade", () => {
             }
         }
 
-        class ChildFacade extends Facade<ChildFacadeState, ChildFacadeCommands> {
+        class ChildFacade extends Facade<ChildFacadeCommands> {
             inc() {
                 this.commands.inc();
             }
@@ -715,7 +715,7 @@ describe("nesting Facade", () => {
             childFacadeState!: ChildFacadeState;
         }
 
-        class RootFacade extends Facade<RootFacadeState, any> {
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
 
             readonly childFacade = new ChildFacade(
                 this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
@@ -748,7 +748,7 @@ describe("nesting Facade", () => {
             }
         }
 
-        class ChildFacade extends Facade<ChildFacadeState, ChildFacadeCommands> {
+        class ChildFacade extends Facade<ChildFacadeCommands> {
             inc() {
                 this.commands.inc();
             }
@@ -758,7 +758,7 @@ describe("nesting Facade", () => {
             childFacadeState!: ChildFacadeState;
         }
 
-        class RootFacade extends Facade<RootFacadeState, any> {
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
 
             readonly childFacade = new ChildFacade(
                 this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
@@ -788,7 +788,7 @@ describe("Facade - sanity tests", function () {
     beforeEach(() => enableTyduxDevelopmentMode());
 
     it("can not modify the state directly", function () {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
             action() {
                 (this.state as any).count = 1;
             }
@@ -799,7 +799,7 @@ describe("Facade - sanity tests", function () {
     });
 
     it("can not assign the state", function () {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
             action() {
                 (this.state as any) = {};
             }
@@ -820,7 +820,7 @@ describe("Facade - sanity tests", function () {
             }
         }
 
-        class TestFacade extends Facade<MyState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             async action() {
                 this.commands.incrementBy(1);
                 const by = await createAsyncPromise(10);
@@ -839,7 +839,7 @@ describe("Facade - sanity tests", function () {
     });
 
     it("member method can use member variables", function () {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
 
             counterA?: number;
 
@@ -862,7 +862,7 @@ describe("Facade - sanity tests", function () {
     });
 
     it("member method can use async/await and instance variables", function (done) {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
 
             counter = 0;
 
@@ -884,7 +884,7 @@ describe("Facade - sanity tests", function () {
     });
 
     it("member methods and invoked sibling methods access the same instance variables", function () {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
 
             counter = 0;
 
@@ -903,7 +903,7 @@ describe("Facade - sanity tests", function () {
     });
 
     it("member method can use async/await and call sibling methods", function (done) {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
 
             chars = "A";
 
@@ -931,7 +931,7 @@ describe("Facade - sanity tests", function () {
     });
 
     it("exception in action method does not revert changes to instance variables", function () {
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
 
             chars = "";
 

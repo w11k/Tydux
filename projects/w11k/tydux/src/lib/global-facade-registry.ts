@@ -16,7 +16,7 @@ export function deregisterFacadeCommands(facadeId: string) {
     delete facadeToCommands[facadeId];
 }
 
-export function createCommandsActionTypeNames<C extends Commands<S>, S>(facade: Facade<S, C>): CommandsActionTypeNames<C> {
+export function createCommandsActionTypeNames<C extends Commands<any>>(facade: Facade<C>): CommandsActionTypeNames<C> {
     const commands = facadeToCommands[facade.facadeId];
 
     const actionTypes = {};

@@ -17,7 +17,7 @@ describe("ActionRecorder", () => {
             }
         }
 
-        class MyFacade extends Facade<typeof state, MyCommands> {
+        class MyFacade extends Facade<MyCommands> {
             op1() {
                 this.commands.incrementBy(1);
                 this.commands.incrementBy(2);
