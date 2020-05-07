@@ -215,7 +215,7 @@ export function selectToObservable<S, R = Readonly<S>>(input$: Observable<S>,
             distinctUntilChanged((oldVal, newVal) => {
                 if (Array.isArray(oldVal) && Array.isArray(newVal)) {
                     return areArraysShallowEquals(oldVal, newVal);
-                } else if (isPlainObject(newVal) && isPlainObject(newVal)) {
+                } else if (isPlainObject(oldVal) && isPlainObject(newVal)) {
                     return arePlainObjectsShallowEquals(oldVal, newVal);
                 } else {
                     return oldVal === newVal;
