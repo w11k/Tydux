@@ -13,34 +13,20 @@
 npm install @w11k/tydux @w11k/tydux-angular @w11k/rx-ninja rxjs redux redux-devtools-extension
 ```
 
-**Create a Tydux configuration factory function**
-
-```
-export function createTyduxConfig(): TyduxConfiguration {
-  return {
-    developmentMode: !environment.production,
-    devToolsOptions: {
-        trace: true,
-        traceLimit: 10,
-    }
-  };
-}
-```
-
-
 **Add the Tydux Angular module**
 
 ```
 @NgModule({
-  imports: [
-    TyduxModule.forRootWithConfig(createTyduxConfig) // !!! do not call factory function !!!
-  ],
-  ...
+    imports: [
+        TyduxModule.forRootWithConfig({
+            developmentMode: !environment.production
+        })
+    ],
+    ...
 })
 export class AppModule {
 }
 ```
-
 
 **Create facades just like any Angular service**
 
@@ -57,3 +43,33 @@ export class MyFacade extends Facade<MyCommands> {
 
 }
 ```
+
+**use the facade in your components**
+
+```
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent {
+
+  constructor(private readonly myFacade: MyFacade) {
+  }
+
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
