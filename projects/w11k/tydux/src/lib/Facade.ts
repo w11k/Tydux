@@ -76,24 +76,24 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         return this._state;
     }
 
+    /**
+     * @deprecated since 14.0.0
+     */
     constructor(mountPointName: string,
                 initialState: InitialStateValue<S> | undefined,
                 commands: C);
 
+    /**
+     * @deprecated since 14.0.0
+     */
     constructor(mountPoint: NamedMountPoint<S>,
                 initialState: InitialStateValue<S> | undefined,
                 commands: C);
 
-    /**
-     * @deprecated since 13.0.0
-     */
     constructor(mountPointName: string,
                 commands: C,
                 initialState: InitialStateValue<S> | undefined);
 
-    /**
-     * @deprecated since 13.0.0
-     */
     constructor(mountPoint: NamedMountPoint<S>,
                 commands: C,
                 initialState: InitialStateValue<S> | undefined);
@@ -252,7 +252,7 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
     }
 
     private setState(state: S) {
-        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) : state;
+        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) as any : state;
     }
 
     private moveMethodsFromPrototypeToInstance() {
@@ -271,38 +271,6 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
             };
         }
     }
-
-    // private enrichInstanceMethods() {
-    // const methodNamesUntilStoreParent: string[] = [];
-    // let level: any = this;
-    // while (level instanceof Facade) {
-    // methodNamesUntilStoreParent.push(...functionNamesShallow(level));
-    // level = Object.getPrototypeOf(level);
-    // }
-
-    // for (const fnMemberName of methodNamesUntilStoreParent) {
-    //     this.enrichInstanceMethod(fnMemberName);
-    // }
-    // }
-
-    // private enrichInstanceMethod(name: string) {
-    //     const member = (this as any)[name];
-    //     Object.getPrototypeOf(this)[name] = function () {
-    //         try {
-    //             const result = member.apply(this, arguments);
-    //             if (result instanceof Promise) {
-    //                 return new Promise(resolve => {
-    //                     resolve(result);
-    //                 }).then(value => {
-    //                     return value;
-    //                 });
-    //             } else {
-    //                 return result;
-    //             }
-    //         } finally {
-    //         }
-    //     };
-    // }
 
     private createCommandsProxy(commandsInvoker: CommandsInvoker<C>): C {
         const proxyObj = {} as any;

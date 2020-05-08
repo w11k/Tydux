@@ -1,3 +1,12 @@
+# Version 14.0.0
+
+**BREAKING CHANGE**
+
+https://github.com/w11k/Tydux/tree/master/doc/migration_14.md
+
+- the generic state type parameter is now optional and comes last (if specified)
+- added several command utils
+
 # Version 13.5.7
 
 - fixed peer of tydux-angular

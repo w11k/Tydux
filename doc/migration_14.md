@@ -20,6 +20,25 @@ class MyFacade extends Facade<MyCommands> {}
 
 ## Global Tydux store
 
+A Tydux store can now be registered as the "global store":
+
+```
+const store = createTyduxStore();
+setGlobalStore(store);
+```
+
+When a global store is registered, facades only need to pass their mount point name during the `super` call:
+
+```
+class MyFacade extends Facade<MyCommands> {
+    constructor() {
+        super("myFacade", new MyCommands(), new MyState());
+    }
+}
+```
+
+**Note for Angular uses:** The `TyduxModule` will automatically register a global store.
+
 
 
 

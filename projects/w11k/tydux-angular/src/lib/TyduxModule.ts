@@ -2,7 +2,7 @@ import {InjectionToken, Injector, ModuleWithProviders, NgModule} from "@angular/
 import {createTyduxStore, enableTyduxDevelopmentMode, setGlobalStore, TyduxDevModeConfig, TyduxStore} from "@w11k/tydux";
 import {Reducer, StoreEnhancer} from "redux";
 
-export const tyduxModuleConfiguration = new InjectionToken<() => TyduxConfiguration>("TyduxModuleConfiguration");
+export const tyduxModuleConfiguration = new InjectionToken<TyduxConfiguration | (() => TyduxConfiguration)>("TyduxModuleConfiguration");
 
 export interface TyduxConfiguration {
     name?: string;
@@ -34,7 +34,7 @@ export class TyduxModule {
         injector.get(TyduxStore);
     }
 
-    static forRootWithConfig(configFactory: () => TyduxConfiguration): ModuleWithProviders {
+    static forRootWithConfig(configFactory: TyduxConfiguration | (() => TyduxConfiguration)): ModuleWithProviders {
         return {
             ngModule: TyduxModule,
             providers: [
@@ -59,7 +59,7 @@ export class TyduxModule {
 
 export function factoryTyduxStore(injector: Injector) {
     const configFactory = injector.get(tyduxModuleConfiguration, () => ({} as TyduxConfiguration));
-    const config = configFactory();
+    const config = typeof configFactory === "function" ? configFactory() : configFactory;
     const initialState = Object.assign({}, config.preloadedState);
 
     if (config.developmentMode === true) {

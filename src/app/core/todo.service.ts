@@ -5,7 +5,7 @@ import {ToDo} from "./todo.entity";
 @Injectable({
     providedIn: "root"
 })
-export class TodoService extends Facade<TodoState, TodoCommands> {
+export class TodoService extends Facade<TodoCommands> {
 
     constructor() {
         super("todos", new TodoCommands(), new TodoState());

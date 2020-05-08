@@ -1,7 +1,7 @@
 import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
-import {TyduxConfiguration, TyduxModule} from "@w11k/tydux-angular";
+import {TyduxModule} from "@w11k/tydux-angular";
 import {environment} from "../environments/environment";
 
 import {AppComponent} from "./app.component";
@@ -19,7 +19,9 @@ import {TodoListComponent} from "./todo-list/todo-list.component";
         BrowserModule,
         CoreModule,
         FormsModule,
-        TyduxModule.forRootWithConfig(createTyduxConfig)
+        TyduxModule.forRootWithConfig({
+            developmentMode: !environment.production,
+        })
     ],
     providers: [],
     bootstrap: [AppComponent]
@@ -28,12 +30,12 @@ export class AppModule {
 }
 
 
-export function createTyduxConfig(): TyduxConfiguration {
-    return {
-        developmentMode: !environment.production,
-        devToolsOptions: {
-            trace: true,
-            traceLimit: 10,
-        }
-    };
-}
+// export function createTyduxConfig(): TyduxConfiguration {
+//     return {
+//         developmentMode: !environment.production,
+//         devToolsOptions: {
+//             trace: true,
+//             traceLimit: 10,
+//         }
+//     };
+// }
