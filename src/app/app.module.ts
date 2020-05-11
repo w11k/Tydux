@@ -19,9 +19,7 @@ import {TodoListComponent} from "./todo-list/todo-list.component";
         BrowserModule,
         CoreModule,
         FormsModule,
-        TyduxModule.forRootWithConfig({
-            developmentMode: !environment.production,
-        })
+        TyduxModule.forRootWithConfig({environment})
     ],
     providers: [],
     bootstrap: [AppComponent]

@@ -16,11 +16,11 @@ npm install @w11k/tydux @w11k/tydux-angular @w11k/rx-ninja rxjs redux redux-devt
 **Add the Tydux Angular module**
 
 ```
+import {environment} from "../environments/environment";
+
 @NgModule({
     imports: [
-        TyduxModule.forRootWithConfig({
-            developmentMode: !environment.production
-        })
+        TyduxModule.forRootWithConfig({environment})
     ],
     ...
 })

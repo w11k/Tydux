@@ -1,3 +1,7 @@
+# Version 14.1.0
+
+- TyduxModule.forRoot*() configuration now accepts an environment property to simplify development mode configuration 
+
 # Version 14.0.0
 
 **BREAKING CHANGE**

@@ -9,6 +9,9 @@ export interface TyduxConfiguration {
     reducer?: Reducer;
     preloadedState?: any;
     enhancer?: StoreEnhancer;
+    environment?: {
+        production: boolean,
+    };
     developmentMode?: boolean;
     skipGlobalStoreRegistration?: boolean;
 
@@ -62,7 +65,9 @@ export function factoryTyduxStore(injector: Injector) {
     const config = typeof configFactory === "function" ? configFactory() : configFactory;
     const initialState = Object.assign({}, config.preloadedState);
 
-    if (config.developmentMode === true) {
+    if (config.developmentMode === undefined && config.environment !== undefined && !config.environment.production) {
+        enableTyduxDevelopmentMode(config);
+    } else if (config.developmentMode === true) {
         enableTyduxDevelopmentMode(config);
     }
 
