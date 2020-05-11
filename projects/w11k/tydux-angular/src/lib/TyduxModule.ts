@@ -37,14 +37,14 @@ export class TyduxModule {
         injector.get(TyduxStore);
     }
 
-    static forRootWithConfig(configFactory: TyduxConfiguration | (() => TyduxConfiguration)): ModuleWithProviders {
+    static forRootWithConfig(config: TyduxConfiguration | (() => TyduxConfiguration)): ModuleWithProviders {
         return {
             ngModule: TyduxModule,
             providers: [
                 ...staticProviders,
                 {
                     provide: tyduxModuleConfiguration,
-                    useValue: configFactory
+                    useValue: config
                 }
             ]
         };
