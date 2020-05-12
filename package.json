@@ -25,7 +25,7 @@
         "publish.tydux-angular": "cd dist/w11k/tydux-angular && npm publish",
         "publish.all": "npm run publish.tydux && npm run publish.tydux-angular",
         "git.tag": "cd dist/w11k/tydux && git tag v`npm info . version`",
-        "git.flow": "npm run git.tag && git push --tags",
+        "git.flow": "npm run git.tag && git push --tags && git push",
         "release": "npm test && npm run publish.all && npm run git.flow"
     },
     "private": true,
