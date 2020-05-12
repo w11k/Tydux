@@ -1,6 +1,6 @@
 {
     "name": "@w11k/tydux",
-    "version": "14.1.0",
+    "version": "14.1.1",
     "author": "W11K GmbH",
     "contributors": [
         "Roman Roelofson",
@@ -15,7 +15,7 @@
     },
     "peerDependencies": {
         "rxjs": ">= 6.2.0",
-        "@w11k/rx-ninja": "4.0.2",
-        "redux": "4.x.x"
+        "@w11k/rx-ninja": "^4.0.0",
+        "redux": "^4.0.0"
     }
 }

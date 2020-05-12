@@ -1,6 +1,6 @@
 {
     "name": "@w11k/tydux-angular",
-    "version": "14.1.0",
+    "version": "14.1.1",
     "author": "W11K GmbH",
     "contributors": [
         "Roman Roelofson",
@@ -15,8 +15,6 @@
     },
     "peerDependencies": {
         "@w11k/tydux": "14.x.x",
-        "rxjs": ">= 6.2.0",
-        "redux": "4.x.x",
         "@angular/core": ">= 6.0.0",
         "@angular/common": ">= 6.0.0"
     }
