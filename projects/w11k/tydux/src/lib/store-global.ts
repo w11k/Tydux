@@ -4,7 +4,7 @@ let globalStore: TyduxStore | undefined;
 
 export function setGlobalStore(store: TyduxStore) {
     if (globalStore !== undefined && store !== undefined) {
-        throw new Error("a global store is already defined");
+        throw new Error("A global store is already defined! Call 'removeGlobalStore()' to remove the currently registered store.");
     }
     globalStore = store;
 }

@@ -1,3 +1,8 @@
+# Version 14.1.2
+
+- improved error message when a global store is already registered
+
+
 # Version 14.1.1
 
 - version bump @w11k/rx-ninja to ^4.1.0
