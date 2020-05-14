@@ -1,5 +1,5 @@
-import {Commands, CommandsState} from "../lib/commands";
 import {BehaviorSubject, Observable} from "rxjs";
+import {Commands, CommandsState} from "../lib/commands";
 import {Facade} from "../lib/Facade";
 import {createTyduxStore, NamedMountPoint} from "../lib/store";
 import {selectToObservable} from "../lib/utils";
@@ -42,8 +42,8 @@ export class FacadeMock<S> {
     private _state: S;
     subject: BehaviorSubject<S>;
 
-    constructor(initialState?: S) {
-        this._state = initialState || {} as S;
+    constructor(initialState: S) {
+        this._state = initialState;
         this.subject = new BehaviorSubject<S>(this._state);
     }
 
