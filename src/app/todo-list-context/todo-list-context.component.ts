@@ -1,6 +1,4 @@
 import {Component, OnDestroy, OnInit} from "@angular/core";
-import {untilComponentDestroyed} from "@w11k/ngx-componentdestroyed";
-import {skipNil} from "@w11k/rx-ninja";
 import {ToDo} from "../core/todo.entity";
 import {TodoService} from "../core/todo.service";
 
@@ -11,24 +9,20 @@ import {TodoService} from "../core/todo.service";
 })
 export class TodoListContextComponent implements OnInit, OnDestroy {
 
-    todos: ToDo[] = [];
+    todos$ = this.todoService.select(it => it.todos);
+    loading$ = this.todoService.select(it => it.loading);
 
-  constructor(private readonly todoService: TodoService) {
-  }
+    constructor(private readonly todoService: TodoService) {
+    }
 
-  ngOnInit() {
-      this.todoService.select(it => it.todos).pipe(
-          skipNil,
-          untilComponentDestroyed(this)
-      ).subscribe(it => {
-          this.todos = it
-      });
-  }
+    ngOnInit() {
+        this.todoService.loadAllTodos(1);
+    }
 
-  ngOnDestroy(): void {
-  }
+    ngOnDestroy(): void {
+    }
 
-  updateTodo($event: ToDo) {
-    this.todoService.toggleDoneStateOf($event);
-  }
+    updateTodo($event: ToDo) {
+        this.todoService.updateTodo($event);
+    }
 }

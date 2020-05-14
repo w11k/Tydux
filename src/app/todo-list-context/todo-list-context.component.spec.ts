@@ -1,5 +1,6 @@
 import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 import {MockComponent} from "ng-mocks";
+import {ToDo} from "../core/todo.entity";
 import {TodoService, TodoState} from "../core/todo.service";
 import {TodoServiceMock} from "../core/todo.service.mock";
 import {TodoListComponent} from "../todo-list/todo-list.component";
@@ -36,16 +37,18 @@ describe("TodoListContextComponent", () => {
 
     it("should update todo via service", () => {
         const mock: TodoServiceMock = TestBed.get(TodoServiceMock);
-        const todoForUpdate = {name: "Test Tydux with mocked facade", description: "", isDone: true};
+        const todoForUpdate: ToDo = {
+            userId: 1,
+            id: 20,
+            title: "ullam nobis libero sapiente ad optio sint",
+            completed: true
+        };
         component.updateTodo(todoForUpdate);
-        expect(mock.lastToggleTodo).toBe(todoForUpdate);
+        expect(mock.lastUpdatedTodo).toBe(todoForUpdate);
     });
 
     it("should receive update via select", () => {
         const mock: TodoServiceMock = TestBed.get(TodoServiceMock);
-        expect(component.todos).toEqual(new TodoState().todos);
-        const emptyListState: TodoState = {todos: []};
-        mock.setState(emptyListState);
-        expect(component.todos).toEqual([]);
     });
 });
+

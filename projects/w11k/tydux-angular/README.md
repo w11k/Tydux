@@ -1,5 +1,4 @@
-
-[![Build Status](https://travis-ci.org/w11k/Tydux-angular.svg?branch=master)](https://travis-ci.org/w11k/Tydux-angular)
+[![Build Status](https://travis-ci.org/w11k/Tydux.svg?branch=master)](https://travis-ci.org/w11k/Tydux)
 [![npm version](https://badge.fury.io/js/%40w11k%2Ftydux-angular.svg)](https://badge.fury.io/js/%40w11k%2Ftydux-angular)
 
 ![Tydux Logo](https://raw.githubusercontent.com/w11k/Tydux/master/doc/tydux_logo.png)
@@ -14,59 +13,63 @@
 npm install @w11k/tydux @w11k/tydux-angular @w11k/rx-ninja rxjs redux redux-devtools-extension
 ```
 
-**Define your initial state**
+**Add the Tydux Angular module**
 
 ```
-// your application state
-export function createInitialState() {
-  return {
-    state1: new State1()
-  };
-}
+import {environment} from "../environments/environment";
 
-// useful type alias 
-export type AppState = ReturnType<typeof createInitialState>;
-```
-
-**Create a Tydux configuration factory function**
-
-```
-export function createTyduxConfig(): TyduxConfiguration {
-  return {
-    preloadedState: createInitialState(),
-    storeEnhancer: environment.production ? undefined : composeWithDevTools(),
-    developmentMode: !environment.production
-  };
-}
-```
-
-
-**Add Tydux Angular module**
-
-```
 @NgModule({
-  imports: [
-    TyduxModule.forRootWithConfig(createTyduxConfig) // !!! do not call factory function !!!
-  ],
-  ...
+    imports: [
+        TyduxModule.forRootWithConfig({environment})
+    ],
+    ...
 })
 export class AppModule {
 }
 ```
 
-
-**Mark your facade as Injectable() and inject the TyduxStore**
+**Create facades just like any Angular service**
 
 ```
 @Injectable({providedIn: 'root'})
-export class MyFacade extends Facade<State1, MyCommands> {
+export class MyFacade extends Facade<MyCommands> {
 
-  constructor(tydux: TyduxStore<AppState>) {         // inject TyduxStore
-    super(tydux,                                     // pass store
-          'state1',                                  // mountpoint name
-          new State1();                              // initial state
-          new MyCommands());                         // commands instance
+  constructor() {
+    super('myFacade',                                // mountpoint name
+          new MyCommands(),                          // commands instance
+          new State1()                               // initial state
+    );
   }
 
 }
 ```
+
+**use the facade in your components**
+
+```
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent {
+
+  constructor(private readonly myFacade: MyFacade) {
+  }
+
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

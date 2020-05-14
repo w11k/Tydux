@@ -49,7 +49,8 @@
             true,
             "ignore-params"
         ],
-        "no-non-null-assertion": true,
+        "no-non-null-assertion": false,
+        "new-parens": false,
         "no-redundant-jsdoc": true,
         "no-switch-case-fall-through": true,
         "no-use-before-declare": true,
@@ -61,10 +62,12 @@
         "object-literal-sort-keys": false,
         "ordered-imports": false,
         "quotemark": [
-            true,
+            false,
+            "single",
             "double"
         ],
         "trailing-comma": false,
+        "no-trailing-whitespace": false,
         "no-output-on-prefix": true,
         "no-inputs-metadata-property": true,
         "no-outputs-metadata-property": true,

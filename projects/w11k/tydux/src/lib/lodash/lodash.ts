@@ -1,25 +1,25 @@
 /* tslint:disable */
 
-export function forEach<T>(obj: T, fn: (val: any, key: keyof T) => void) {
-    for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            fn(obj[key], key);
-        }
-    }
-}
+// export function forEach<T>(obj: T, fn: (val: any, key: keyof T) => void) {
+//     for (let key in obj) {
+//         if (obj.hasOwnProperty(key)) {
+//             fn(obj[key], key);
+//         }
+//     }
+// }
+//
+// export function forEachIn(obj: any, fn: (val: any, key: any) => void) {
+//     forEach(obj, fn);
+//
+//     let proto = Object.getPrototypeOf(obj);
+//     if (proto !== null) {
+//         forEachIn(proto, fn);
+//     }
+// }
 
-export function forEachIn(obj: any, fn: (val: any, key: any) => void) {
-    forEach(obj, fn);
-
-    let proto = Object.getPrototypeOf(obj);
-    if (proto !== null) {
-        forEachIn(proto, fn);
-    }
-}
-
-export function has(obj: any, key: any) {
-    return obj[key] !== undefined;
-}
+// export function has(obj: any, key: any) {
+//     return obj[key] !== undefined;
+// }
 
 export function isObjectLike(value: any) {
     return typeof value === "object" && value !== null;
@@ -68,6 +68,6 @@ function baseGetTag(value: any) {
     return result;
 }
 
-export function eq(value: any, other: any) {
-    return value === other || (value !== value && other !== other);
-}
+// export function eq(value: any, other: any) {
+//     return value === other || (value !== value && other !== other);
+// }

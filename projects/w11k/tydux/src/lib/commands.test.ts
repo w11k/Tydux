@@ -1,11 +1,12 @@
-import {notNil} from "@w11k/rx-ninja";
-import {filter, take} from "rxjs/operators";
-import {createTestFacade, createTestMount, FacadeMock} from "../testing";
+import {isNotNil} from "@w11k/rx-ninja";
+import {filter} from "rxjs/operators";
+import {createAsyncPromise, createTestFacade, createTestMount} from "../testing";
 import {collect} from "../testing/test-utils-internal";
 import {Commands, CommandsInvoker} from "./commands";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 import {untilNoBufferedStateChanges} from "./utils";
+
 
 describe("Commands", () => {
 
@@ -34,29 +35,7 @@ describe("Commands", () => {
         const facade = createTestFacade(new TestCommands(), {n1: 0});
         facade.commands.mut1();
 
-        await untilNoBufferedStateChanges(facade);
         expect(facade.state).toEqual({n1: 1});
-    });
-
-    it("setting mock.state should trigger select observables", async () => {
-        class MockFacade extends FacadeMock<{ n1: number }> {
-            constructor() {
-                super({n1: 1});
-            }
-        }
-
-        const facade = new MockFacade();
-        let i = 1;
-        const expectChanges$ = facade.select(s => s.n1)
-            .pipe(take(2))
-            .forEach(it => {
-                expect(it).toBe(i);
-                i++;
-            });
-        expect(facade.state).toEqual({n1: 1});
-        facade.setState({n1: 2});
-        expect(facade.state).toEqual({n1: 2});
-        await expectChanges$;
     });
 
     it("methods can assign state properties successively", async () => {
@@ -75,7 +54,7 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<State, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action1() {
                 this.commands.mut1();
             }
@@ -85,11 +64,11 @@ describe("Commands", () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount(new State()), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount(new State()), undefined, new TestCommands());
 
         facade.select(s => s.list1)
             .pipe(
-                filter(s => notNil(s))
+                filter(s => isNotNil(s))
             )
 
             .subscribe(() => {
@@ -113,13 +92,13 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
         }
 
-        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
         facade.action();
         await untilNoBufferedStateChanges(facade);
         expect(facade.state).toEqual({n1: 99});
@@ -132,13 +111,13 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number[] }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
         }
 
-        const facade = new TestFacade(createTestMount({n1: [1, 2]}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({n1: [1, 2]}), undefined, new TestCommands());
         facade.action();
     });
 
@@ -159,13 +138,13 @@ describe("Commands", () => {
             }
         }
 
-        class TestStore extends Facade<{ n1: string }, TestCommands> {
+        class TestStore extends Facade<TestCommands> {
             action1() {
                 this.commands.mod1();
             }
         }
 
-        const facade = new TestStore(createTestMount({n1: ""}), "TestFacade", new TestCommands());
+        const facade = new TestStore(createTestMount({n1: ""}), undefined, new TestCommands());
         const collected = collect(facade.select(s => s.n1));
         facade.action1();
         await untilNoBufferedStateChanges(facade);
@@ -183,13 +162,13 @@ describe("Commands", () => {
             }
         }
 
-        class TestFacade extends Facade<{ a: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.mut1();
             }
         }
 
-        const facade = new TestFacade(createTestMount({a: 0}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({a: 0}), undefined, new TestCommands());
         expect(() => facade.action()).toThrow();
         expect(facade.state.a).toEqual(0);
     });
@@ -200,7 +179,7 @@ describe("Commands", () => {
             abc = 1;
         }
 
-        class TestFacade extends Facade<any, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
         }
 
         expect(
@@ -217,9 +196,167 @@ describe("Commands", () => {
 
         }
 
-        class TestFacade extends Facade<any, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 expect(() => this.commands.mut()).toThrow();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({}), "TestFacade", new TestCommands());
+        facade.action();
+    });
+
+});
+
+describe("Commands - sanity tests", function () {
+
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    it("can not access the state asynchronously", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut() {
+                setTimeout(() => {
+                    expect(() => this.state).toThrow();
+                    done();
+                }, 0);
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                this.commands.mut();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
+        facade.action();
+    });
+
+    it("can not modify the state asynchronously by keeping a reference to a nested state property", function (done) {
+        class TestCommands extends Commands<{ root: { child: number[] } }> {
+            mut() {
+                const child = this.state.root.child;
+                setTimeout(() => {
+                    expect(() => child.push(3)).toThrow();
+                    done();
+                }, 0);
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                this.commands.mut();
+            }
+        }
+
+        const state = {root: {child: [1, 2]}};
+        const facade = new TestFacade(createTestMount(state), undefined, new TestCommands());
+        facade.action();
+    });
+
+    it("can not replace the state asynchronously", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut() {
+                setTimeout(() => {
+                    expect(() => this.state = {n1: 99}).toThrow();
+                    done();
+                }, 0);
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                this.commands.mut();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
+        facade.action();
+    });
+
+    it("can not change the state in asynchronous promise callbacks", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut1() {
+                createAsyncPromise(1).then(val => {
+                    expect(() => this.state.n1 = val).toThrow();
+                    done();
+                });
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                this.commands.mut1();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
+        facade.action();
+    });
+
+    it("can not access other members asynchronously", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut1() {
+                setTimeout(() => {
+                    expect(() => this.mut2()).toThrow();
+                    done();
+                }, 0);
+            }
+
+            mut2() {
+                // empty
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                this.commands.mut1();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
+        facade.action();
+    });
+
+    it("can not access other members in an asynchronous promise resolve", function (done) {
+        class TestCommands extends Commands<{ n1: number }> {
+            mut1() {
+                createAsyncPromise(1)
+                    .then(() => {
+                        this.mut2();
+                    })
+                    .catch((e: Error) => {
+                        expect(e.message).toMatch(/.*Illegal access.*this.*/);
+                        done();
+                    });
+            }
+
+            mut2() {
+                console.log(3);
+                this.state.n1 = -99;
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                this.commands.mut1();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
+        facade.action();
+    });
+
+    it("must not return a value", function () {
+        class TestCommands extends Commands<any> {
+            mod1() {
+                return 1;
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                expect(() => this.commands.mod1()).toThrow();
             }
         }
 

@@ -1,38 +1,41 @@
-import {Action, createStore, Store as ReduxStore} from "redux";
+import {createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {createAsyncPromise, createTestMount} from "../testing";
 import {collect} from "../testing/test-utils-internal";
 import {Commands} from "./commands";
+import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
-import {MountPoint, TyduxReducerBridge, TyduxStore} from "./store";
+import {createTyduxStore, TyduxReducerBridge, TyduxStore} from "./store";
 import {areArraysShallowEquals, untilNoBufferedStateChanges} from "./utils";
 
 
 describe("Facade", () => {
 
-    it("ID must be unique", () => {
-        const mount = createTestMount({});
+    it("slice path must be unique", () => {
+        const store = createTyduxStore();
 
-        class TestFacade extends Facade<any, any> {
+        class TestFacade extends Facade<any> {
         }
 
-        const tf1 = new TestFacade(mount, "TestFacade", Commands);
-        const tf2 = new TestFacade(mount, "TestFacade", Commands);
-        expect(tf1.facadeId).not.toEqual(tf2.facadeId);
+        // tslint:disable-next-line:no-unused-expression
+        new TestFacade(store.createMountPoint("testFacade"), null, Commands);
+        expect(() => {
+            // tslint:disable-next-line
+            new TestFacade(store.createMountPoint("testFacade"), null, Commands);
+        }).toThrowError("already in use");
     });
 
     it("can be destroyed", () => {
-        const mount = createTestMount({});
         let called = false;
 
-        class TestFacade extends Facade<any, any> {
-            constructor(mountPoint: MountPoint<any, any>, name: string, commands: any) {
-                super(mountPoint, name, commands);
-                this.destroyed.subscribe(() => called = true);
+        class TestFacade extends Facade<any> {
+            constructor() {
+                super(createTestMount(), {}, Commands);
+                this.observeDestroyed().subscribe(() => called = true);
             }
         }
 
-        const facade = new TestFacade(mount, "TestFacade", Commands);
+        const facade = new TestFacade();
         facade.destroy();
         expect(called).toBe(true);
     });
@@ -44,19 +47,16 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionInc() {
                 this.commands.inc();
             }
         }
 
-        const mount = createTestMount({n1: 0});
-        const facade = new TestFacade(mount, "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
 
         const values: any = [];
-        facade.select((currentState) => {
-            values.push(currentState);
-        }).subscribe();
+        facade.select((currentState) => values.push(currentState)).subscribe();
 
         facade.actionInc();
         facade.actionInc();
@@ -77,13 +77,13 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ n1: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionInc() {
                 this.commands.inc();
             }
         }
 
-        const facade = new TestFacade(createTestMount({n1: 0}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({n1: 0}), undefined, new TestCommands());
         const collected = collect(facade.select(s => s.n1));
         facade.actionInc();
         facade.actionInc();
@@ -104,7 +104,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ a: number; b: number; c: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -114,7 +114,7 @@ describe("Facade", () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), undefined, new TestCommands());
         const collected = collect(facade.select(s => [s.a, s.b]));
         facade.actionIncAB();
         facade.actionIncC();
@@ -137,7 +137,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ a: number; b: number; c: number }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             actionIncAB() {
                 this.commands.incAB();
             }
@@ -147,7 +147,7 @@ describe("Facade", () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount({a: 0, b: 10, c: 100}), undefined, new TestCommands());
         const collected = collect(facade.select(s => {
             return {
                 a: s.a,
@@ -173,14 +173,14 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ root: { child: { val1: number } } }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.dummy();
             }
         }
 
         const state = {root: {child: {val1: 1}}};
-        const store = new TestFacade(createTestMount(state), "TestFacade", new TestCommands());
+        const store = new TestFacade(createTestMount(state), undefined, new TestCommands());
         const collected = collect(store.select(s => s.root));
         store.action(); // should not trigger select()
         store.action(); // should not trigger select()
@@ -206,7 +206,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             action() {
                 this.commands.increment();
                 this.commands.increment();
@@ -214,7 +214,7 @@ describe("Facade", () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount(new TestState()), undefined, new TestCommands());
         const collected = collect(facade.select(s => s.count));
         facade.action();
 
@@ -222,8 +222,53 @@ describe("Facade", () => {
         collected.assert(0, 1, 2, 1);
     });
 
+    it("select() first emits the current state", function (done) {
+        const initialState = {
+            val: 10
+        };
+
+        const tyduxStore = createTyduxStore(initialState);
+
+        tyduxStore.select().subscribe(state => {
+            expect(state.val).toEqual(10);
+            done();
+        });
+    });
+
+    it("selectNonNil() only emit non nil values", (done) => {
+        class TestState {
+            list: string[] | null = null;
+        }
+
+        class TestCommands extends Commands<TestState> {
+            setList() {
+                this.state.list = ["a"];
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            setList() {
+                this.commands.setList();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(new TestState()), undefined, new TestCommands());
+
+        facade.selectNonNil(s => s.list)
+            .subscribe(list => {
+                list.push("b"); // leave here for compiler check (filter out null case)
+                expect(list).toEqual(["a", "b"]);
+                done();
+            });
+
+        expect(facade.state.list).toBeNull();
+        facade.setList();
+
+    });
+
     it("keeps state between action invocations", async () => {
         class TestState {
+            // noinspection JSMismatchedCollectionQueryUpdate
             list: number[] = [];
             value?: number;
         }
@@ -238,7 +283,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             setList() {
                 this.commands.setList([1, 2, 3]);
             }
@@ -249,7 +294,7 @@ describe("Facade", () => {
         }
 
 
-        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount(new TestState()), undefined, new TestCommands());
         facade.setList();
         facade.setValue();
 
@@ -269,7 +314,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             met1() {
                 this.commands.setValue(9);
                 expect(this.state.value).toEqual(9);
@@ -277,37 +322,16 @@ describe("Facade", () => {
             }
         }
 
-        const facade = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        const facade = new TestFacade(createTestMount(new TestState()), undefined, new TestCommands());
         facade.met1();
-    });
-
-    it("should provide an overloaded constructor to pass TyduxStore instead of mount point", () => {
-        class TestState {
-        }
-
-        class TestCommands extends Commands<TestState> {
-        }
-
-        class TestFacade extends Facade<TestState, TestCommands> {
-        }
-
-        const tyduxBridge = new TyduxReducerBridge();
-        const reduxStore = createStore(tyduxBridge.createTyduxReducer(), {});
-        const tydux = tyduxBridge.connectStore(reduxStore);
-
-        const facade = new TestFacade(tydux, "test", new TestCommands(), new TestState());
-
-        expect(reduxStore.getState()).toEqual({test: {}});
-
-        expect(facade.state).toEqual({});
     });
 
     it("can set their initial state during super call", () => {
         type TestState = { value: number };
 
-        class TestFacade extends Facade<TestState, Commands<TestState>> {
-            constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint("test"), "test", new Commands(), {value: 0});
+        class TestFacade extends Facade<Commands<TestState>> {
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("test"), {value: 0}, new Commands());
 
             }
         }
@@ -329,13 +353,45 @@ describe("Facade", () => {
         });
     });
 
+    it("undefined as initialState does not alter the state", () => {
+        type TestState = { value: number };
+
+        class TestFacade extends Facade<Commands<TestState>> {
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("test"), undefined, new Commands());
+
+            }
+        }
+
+        const tyduxBridge = new TyduxReducerBridge();
+        const reduxStore = createStore(tyduxBridge.createTyduxReducer({
+            global: true,
+            test: {
+                value: 0
+            }
+        }));
+        const tydux = tyduxBridge.connectStore(reduxStore);
+        const facade = new TestFacade(tydux);
+
+        expect(reduxStore.getState()).toEqual({
+            global: true,
+            test: {
+                value: 0
+            }
+        } as any);
+
+        expect(facade.state).toEqual({
+            value: 0
+        });
+    });
+
     it("can set their initial state during super call with a function", () => {
 
         type TestState = { value: number };
 
-        class TestFacade extends Facade<TestState, Commands<TestState>> {
-            constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint("test"), "test", new Commands(), () => ({value: 99}));
+        class TestFacade extends Facade<Commands<TestState>> {
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("test"), () => ({value: 99}), new Commands());
 
             }
         }
@@ -357,7 +413,7 @@ describe("Facade", () => {
         });
     });
 
-    it("can set their initial state during super call with a proise", (done) => {
+    it("can set their initial state during super call with a promise", (done) => {
 
         type TestState = { value: number };
 
@@ -365,9 +421,9 @@ describe("Facade", () => {
             setTimeout(() => resolve({value: 77}), 0);
         });
 
-        class TestFacade extends Facade<TestState, Commands<TestState>> {
-            constructor(tydux: TyduxStore<any>) {
-                super(tydux.createRootMountPoint("test"), "test", new Commands(), initialValuePromise);
+        class TestFacade extends Facade<Commands<TestState>> {
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("test"), initialValuePromise, new Commands());
 
             }
         }
@@ -404,14 +460,14 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             op() {
                 this.commands.set(99);
                 throw new Error();
             }
         }
 
-        const store = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        const store = new TestFacade(createTestMount(new TestState()), undefined, new TestCommands());
         try {
             store.op();
         } catch (e) {
@@ -438,7 +494,7 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<TestState, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
             async setList() {
                 const list = await createAsyncPromise([1, 2, 3]);
                 this.commands.setList(list);
@@ -450,7 +506,7 @@ describe("Facade", () => {
             }
         }
 
-        const store = new TestFacade(createTestMount(new TestState()), "TestFacade", new TestCommands());
+        const store = new TestFacade(createTestMount(new TestState()), undefined, new TestCommands());
         await store.setList();
         await store.setValue();
 
@@ -469,9 +525,9 @@ describe("Facade", () => {
         }
 
         const tyduxBridge = new TyduxReducerBridge();
-        const reduxStore: ReduxStore<typeof initialState, Action> = createStore(tyduxBridge.wrapReducer(plainReducer));
+        const reduxStore: ReduxStore = createStore(tyduxBridge.wrapReducer(plainReducer));
         const connected = tyduxBridge.connectStore(reduxStore);
-        const mount = connected.createMountPoint(s => s, (_, s) => ({...s}));
+        const mount = connected.createMountPoint("TestMount");
 
         class TestCommands extends Commands<{ list1: number[], list2: number[] }> {
             setList1(list: number[]) {
@@ -483,12 +539,12 @@ describe("Facade", () => {
             }
         }
 
-        class TestFacade extends Facade<{ list1: number[], list2: number[] }, TestCommands> {
+        class TestFacade extends Facade<TestCommands> {
 
             private counter = 0;
 
             constructor() {
-                super(mount, "", new TestCommands());
+                super(mount, initialState, new TestCommands());
 
                 this.select()
 
@@ -530,4 +586,369 @@ describe("Facade", () => {
         }, 0);
     });
 
+    it("methods are pulled to the instance", () => {
+        class TestFacade extends Facade<any> {
+
+            private foo = 1;
+
+            method1() {
+                return this.foo + 1;
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(), undefined, new Commands());
+        const ref = facade.method1;
+        expect(ref()).toEqual(2);
+    });
+
 });
+
+describe("nesting Facade", () => {
+
+    it("a facade can contain a nested facade", () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacade extends Facade<Commands<ChildFacadeState>> {
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
+
+            // noinspection JSUnusedGlobalSymbols
+            readonly childFacade = new ChildFacade(this.createMountPoint("childFacadeState"), new ChildFacadeState(), new Commands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        expect(rootFacade.state.childFacadeState.foo).toEqual(1);
+    });
+
+    it("a nested facade gets destroyed when the parent facade gets destroyed", () => {
+
+        class ChildFacade extends Facade<any> {
+        }
+
+        class RootFacade extends Facade<Commands<any>> {
+
+            readonly childFacade = new ChildFacade(this.createMountPoint("childFacadeState"), {}, new Commands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), {}, new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        expect(rootFacade.isDestroyed()).toBeFalsy();
+        expect(rootFacade.childFacade.isDestroyed()).toBeFalsy();
+
+        rootFacade.destroy();
+        expect(rootFacade.isDestroyed()).toBeTruthy();
+        expect(rootFacade.childFacade.isDestroyed()).toBeTruthy();
+    });
+
+    it("a nested facade can change the state", () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacadeCommands extends Commands<ChildFacadeState> {
+            inc() {
+                this.state.foo++;
+            }
+        }
+
+        class ChildFacade extends Facade<ChildFacadeCommands> {
+            inc() {
+                this.commands.inc();
+            }
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
+
+            readonly childFacade = new ChildFacade(
+                this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        expect(rootFacade.state.childFacadeState.foo).toEqual(1);
+        rootFacade.childFacade.inc();
+        expect(rootFacade.state.childFacadeState.foo).toEqual(2);
+    });
+
+    it("state changes of a nested facade can be subscribed", async () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacadeCommands extends Commands<ChildFacadeState> {
+            inc() {
+                this.state.foo++;
+            }
+        }
+
+        class ChildFacade extends Facade<ChildFacadeCommands> {
+            inc() {
+                this.commands.inc();
+            }
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
+
+            readonly childFacade = new ChildFacade(
+                this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        const collected = collect(rootFacade.childFacade.select());
+        rootFacade.childFacade.inc();
+
+        await untilNoBufferedStateChanges(rootFacade.childFacade);
+        collected.assert(
+            {foo: 1},
+            {foo: 2},
+        );
+    });
+
+    it("state changes of a nested facade are propagated to subscribers of the parent facade", async () => {
+        class ChildFacadeState {
+            foo = 1;
+        }
+
+        class ChildFacadeCommands extends Commands<ChildFacadeState> {
+            inc() {
+                this.state.foo++;
+            }
+        }
+
+        class ChildFacade extends Facade<ChildFacadeCommands> {
+            inc() {
+                this.commands.inc();
+            }
+        }
+
+        class RootFacadeState {
+            childFacadeState!: ChildFacadeState;
+        }
+
+        class RootFacade extends Facade<Commands<RootFacadeState>> {
+
+            readonly childFacade = new ChildFacade(
+                this.createMountPoint("childFacadeState"), new ChildFacadeState(), new ChildFacadeCommands());
+
+            constructor(tyduxStore: TyduxStore) {
+                super(tyduxStore.createMountPoint("rootFacade"), new RootFacadeState(), new Commands());
+            }
+        }
+
+        const store = createTyduxStore();
+        const rootFacade = new RootFacade(store);
+        const collected = collect(rootFacade.select());
+        rootFacade.childFacade.inc();
+
+        await untilNoBufferedStateChanges(rootFacade);
+        collected.assert(
+            {},
+            {childFacadeState: {foo: 1}},
+            {childFacadeState: {foo: 2}},
+        );
+    });
+
+});
+
+describe("Facade - sanity tests", function () {
+
+    beforeEach(() => enableTyduxDevelopmentMode());
+
+    it("can not modify the state directly", function () {
+        class TestFacade extends Facade<any> {
+            action() {
+                (this.state as any).count = 1;
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(), undefined, Commands);
+        expect(() => facade.action()).toThrow();
+    });
+
+    it("can not assign the state", function () {
+        class TestFacade extends Facade<any> {
+            action() {
+                (this.state as any) = {};
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(), undefined, Commands);
+        expect(() => facade.action()).toThrow();
+    });
+
+    it("member method can use async/await", async function (done) {
+        class MyState {
+            count = 0;
+        }
+
+        class TestCommands extends Commands<MyState> {
+            incrementBy(by: number) {
+                this.state.count += by;
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            async action() {
+                this.commands.incrementBy(1);
+                const by = await createAsyncPromise(10);
+                this.commands.incrementBy(by);
+
+                await untilNoBufferedStateChanges(facade);
+
+                collected.assert(0, 1, 11);
+                done();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(new MyState()), undefined, new TestCommands());
+        const collected = collect(facade.select(s => s.count));
+        facade.action();
+    });
+
+    it("member method can use member variables", function () {
+        class TestFacade extends Facade<any> {
+
+            counterA?: number;
+
+            counterB = 1;
+
+            action() {
+                this.counterA = 10;
+                this.innerAction();
+            }
+
+            private innerAction() {
+                this.counterB = 20;
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(), undefined, Commands);
+        facade.action();
+        expect(facade.counterA).toEqual(10);
+        expect(facade.counterB).toEqual(20);
+    });
+
+    it("member method can use async/await and instance variables", function (done) {
+        class TestFacade extends Facade<any> {
+
+            counter = 0;
+
+            async action() {
+                this.counter = 10;
+                await createAsyncPromise(10);
+                this.counter++;
+
+                setTimeout(() => {
+                    expect(this.counter).toEqual(11);
+                    done();
+                }, 0);
+
+            }
+        }
+
+        const store = new TestFacade(createTestMount(), undefined, Commands);
+        store.action();
+    });
+
+    it("member methods and invoked sibling methods access the same instance variables", function () {
+        class TestFacade extends Facade<any> {
+
+            counter = 0;
+
+            action() {
+                this.counter = 10;
+                this.check();
+            }
+
+            private check() {
+                expect(this.counter).toEqual(10);
+            }
+        }
+
+        const store = new TestFacade(createTestMount(), undefined, Commands);
+        store.action();
+    });
+
+    it("member method can use async/await and call sibling methods", function (done) {
+        class TestFacade extends Facade<any> {
+
+            chars = "A";
+
+            async action() {
+                this.chars += "B";
+                this.append();
+                await createAsyncPromise(10);
+                this.chars += "C";
+                this.append();
+                this.chars += "E";
+
+                setTimeout(() => {
+                    expect(this.chars).toEqual("ABXCXE");
+                    done();
+                }, 0);
+            }
+
+            private append() {
+                this.chars += "X";
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(), undefined, Commands);
+        facade.action();
+    });
+
+    it("exception in action method does not revert changes to instance variables", function () {
+        class TestFacade extends Facade<any> {
+
+            chars = "";
+
+            action() {
+                this.chars = "A";
+                throw new Error();
+            }
+        }
+
+        const facade = new TestFacade(createTestMount(), undefined, Commands);
+
+        try {
+            facade.action();
+        } catch (e) {
+            // ignore
+        }
+        expect(facade.chars).toEqual("A");
+    });
+});
+

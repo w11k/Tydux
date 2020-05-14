@@ -41,7 +41,6 @@ Install Tydux and all required peer-dependencies:
 
 `npm install @w11k/tydux @w11k/rx-ninja rxjs redux redux-devtools-extension`.
 
-
 # Quick Overview Demo
 
 Well will need at least a **state**, the **commands** and the **facade**. 
@@ -89,10 +88,14 @@ export class TodoCommands extends Commands<TodoState> {
 After we created the state and commands, we combine them within a facade.
 
 ```
-export class TodoFacade extends Facade<TodoState, TodoCommands> {
+export class TodoFacade extends Facade<TodoCommands> {
 
-  constructor(tydux: TyduxStore) {
-    super(tydux, 'todos', new TodoCommands(), new TodoState());
+  constructor() {
+    super(
+        'todos',                // the 'mount point' within the global state 
+        new TodoCommands(),     // commands instance defined above
+        new TodoState()         // initial state
+    );
   }
 
   /**
@@ -118,15 +121,17 @@ export class TodoFacade extends Facade<TodoState, TodoCommands> {
 
 After we created the state, commands and facade, we can bootstrap Tydux. 
 
-1. We need to create a `TyduxStore` once and provide the global initial state. Every facade's state is part of this global state. 
-2. When instantiating the facade, we need to provide the global TyduxStore instance, a name to identify the facade within the global state, the commands instance and the initial state.
+1. Create a `TyduxStore` and provide the global initial state (optional, defaults to `{}`). Every facade's state is part of this global state.
+2. Register the TyduxStore as global store.
+3. Instantiate the facade(s).
 
 ```
-// Use {} as initial global state
-const tyduxStore = createTyduxStore({});
+// Create and register the tydux store
+const tyduxStore = createTyduxStore();      // 1.
+setGlobalStore(tyduxStore);                 // 2.
 
-// instatiate every facade once
-const todoFacade = new TodoFacade(tyduxStore);  
+// instantiate every facade once
+const todoFacade = new TodoFacade();        // 3.  
 ```
 
 **Usage:**
@@ -146,13 +151,16 @@ todoFacade.loadTodoListFromServer();
 
 # Documentation
 
-### [Angular integration](https://github.com/w11k/Tydux/blob/master/projects/w11k/tydux-angular/README.md)
-### [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
-### [Testing](https://github.com/w11k/Tydux/tree/master/doc/testing.md)
+- [Installation](https://github.com/w11k/Tydux/tree/master/doc/installation.md)
+- [Redux comparison](https://github.com/w11k/Tydux/tree/master/doc/redux_comparison.md)
+- [Angular integration](https://github.com/w11k/Tydux/blob/master/projects/w11k/tydux-angular/README.md)
+- [Migration guide version 14](https://github.com/w11k/Tydux/tree/master/doc/migration_14.md)
+- [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
+- [Testing](https://github.com/w11k/Tydux/tree/master/doc/testing.md)
 
 
 # Patron
 
-❤️ [W11K - The Web Engineers](https://www.w11k.de/)
+### ❤️ [W11K - The Web Engineers](https://www.w11k.de/)
+### ❤️ [theCodeCampus - Trainings for Angular and TypeScript](https://www.thecodecampus.de/)
 
-❤️ [theCodeCampus - Trainings for Angular and TypeScript](https://www.thecodecampus.de/)

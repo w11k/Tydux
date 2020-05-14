@@ -4,13 +4,16 @@ import {TodoService, TodoState} from "./todo.service";
 
 export class TodoServiceMock extends FacadeMock<TodoState> implements Partial<TodoService> {
 
-    lastToggleTodo: ToDo | null = null;
+    lastUpdatedTodo: ToDo | null = null;
 
     constructor() {
         super(new TodoState());
     }
 
-    async toggleDoneStateOf(todo: ToDo) {
-        this.lastToggleTodo = todo;
+    async loadAllTodos() {
+    }
+
+    async updateTodo(todo: ToDo) {
+        this.lastUpdatedTodo = todo;
     }
 }

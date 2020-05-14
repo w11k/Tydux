@@ -1,3 +1,95 @@
+# Version 14.1.1
+
+- version bump @w11k/rx-ninja to ^4.1.0
+
+
+# Version 14.1.0
+
+- TyduxModule.forRoot*() configuration now accepts an environment property to simplify development mode configuration 
+
+# Version 14.0.0
+
+**BREAKING CHANGE**
+
+https://github.com/w11k/Tydux/tree/master/doc/migration_14.md
+
+- the generic state type parameter is now optional and comes last (if specified)
+- added several command utils
+
+# Version 13.5.7
+
+- fixed peer of tydux-angular
+
+# Version 13.5.6
+
+- alpha: WIP mutators
+
+# Version 13.5.5
+
+- alpha: mutators
+
+# Version 13.5.3
+
+- added orderedMapPatchEntities
+
+# Version 13.5.2
+
+- changed OrderedMapFacade to command mutator
+- assignFieldCommand -> createAssignFieldCommand
+
+# Version 13.5.0
+
+- added mutator: assignFieldCommand
+
+# Version 13.4.0
+
+- added OrderedMapFacade#getById
+
+# Version 13.3.0
+
+- added selectNonNil method to facade
+- facade methods are now pulled up to the instance to ease using them as callbacks
+- child facades are now destroyed when the parent facade gets destroyed
+
+# Version 13.2.3
+
+- changes to OrderedMapFacade
+
+# Version 13.2.2
+
+- fixed wrong release
+
+# Version 13.1.0
+
+- added first POC for RepositoryFacade
+
+# Version 13.0.0
+
+- simplified facade creation
+- added global store feature
+
+**BREAKING CHANGE**
+
+- Facade constructor:
+    - old: `super(tydux, "slice", commands, state);`
+    - new: `super(tydux.createMountPoint("slice"), state, commands);`
+    
+    
+# Version 12.0.1
+
+fixing peer dependency warnings
+
+
+# Version 12.0.0
+
+- **breaking change** Changed API 
+
+`createTyduxStore(initialState, enhancer, reducer)`
+
+to
+
+`createTyduxStore(initialState, reducer, enhancer)`
+
 # Version 11.4.1
 
 **FIX** Release 11.4.0 was broken
@@ -8,7 +100,7 @@
 
 # Version 11.3.0
 
-Fix error of missing functions in proxy object when compiing to ES5.
+Fix error of missing functions in proxy object when compiling to ES5.
 
 # Version 11.2.0
 

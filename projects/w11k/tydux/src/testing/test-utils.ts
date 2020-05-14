@@ -1,12 +1,14 @@
+import {Commands, CommandsState} from "../lib/commands";
 import {BehaviorSubject, Observable} from "rxjs";
-import {Commands} from "../lib/commands";
 import {Facade} from "../lib/Facade";
-import {createTyduxStore, MountPoint} from "../lib/store";
+import {createTyduxStore, NamedMountPoint} from "../lib/store";
 import {selectToObservable} from "../lib/utils";
 
-export function createTestMount<S>(initialState: S): MountPoint<S, S> {
-    const tyduxStore = createTyduxStore(initialState);
-    return tyduxStore.createMountPoint(s => s, (s, l) => Object.assign({}, l));
+export function createTestMount<S extends {}>(initialState: S = {} as any): NamedMountPoint<S, { TestMount: S }> {
+    const tyduxStore = createTyduxStore({
+        TestMount: initialState
+    });
+    return tyduxStore.createMountPoint("TestMount");
 }
 
 export function createAsyncPromise<T>(returns: T): Promise<T> {
@@ -18,9 +20,9 @@ export function createAsyncPromise<T>(returns: T): Promise<T> {
     });
 }
 
-class TestFacade<S, C extends Commands<S>> extends Facade<S, C> {
+class TestFacade<C extends Commands<any>> extends Facade<C> {
 
-    private _commands: C;
+    private _commands!: C;
 
     get commands(): C {
         return this._commands;
@@ -32,13 +34,17 @@ class TestFacade<S, C extends Commands<S>> extends Facade<S, C> {
 
 }
 
+export function createTestFacade<C extends Commands<any>>(commands: C, initialState: CommandsState<C>) {
+    return new TestFacade(createTestMount(initialState), initialState, commands);
+}
+
 export class FacadeMock<S> {
     private _state: S;
     subject: BehaviorSubject<S>;
 
     constructor(initialState?: S) {
-        this._state = initialState;
-        this.subject = new BehaviorSubject<S>(initialState);
+        this._state = initialState || {} as S;
+        this.subject = new BehaviorSubject<S>(this._state);
     }
 
     /**
@@ -59,8 +65,4 @@ export class FacadeMock<S> {
     select<R>(selector?: (s: S) => R): Observable<R> {
         return selectToObservable(this.subject, selector);
     }
-}
-
-export function createTestFacade<C extends Commands<S>, S>(commands: C, initialState: S) {
-    return new TestFacade(createTestMount(initialState), "TestFacade", commands);
 }
