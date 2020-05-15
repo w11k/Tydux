@@ -1,4 +1,5 @@
 import {async, ComponentFixture, TestBed} from "@angular/core/testing";
+import {By} from "@angular/platform-browser";
 import {MockComponent} from "ng-mocks";
 import {ToDo} from "../core/todo.entity";
 import {TodoService, TodoState} from "../core/todo.service";
@@ -37,18 +38,32 @@ describe("TodoListContextComponent", () => {
 
     it("should update todo via service", () => {
         const mock: TodoServiceMock = TestBed.get(TodoServiceMock);
+        const listComponent = fixture.debugElement.query(By.directive(TodoListComponent)).componentInstance as TodoListComponent;
         const todoForUpdate: ToDo = {
             userId: 1,
             id: 20,
             title: "ullam nobis libero sapiente ad optio sint",
             completed: true
         };
-        component.updateTodo(todoForUpdate);
+        listComponent.todoClicked.emit(todoForUpdate);
+        fixture.detectChanges();
         expect(mock.lastUpdatedTodo).toBe(todoForUpdate);
     });
 
-    it("should receive update via select", () => {
+    it("should display loading indicator while loading", () => {
         const mock: TodoServiceMock = TestBed.get(TodoServiceMock);
+        const state = new TodoState();
+        const findLoadingMessage = () => fixture.debugElement.query(By.css(".loading-message"));
+
+        expect(findLoadingMessage()).toBeNull();
+        mock.setState({...state, loading: true});
+
+        fixture.detectChanges();
+        expect(findLoadingMessage()).toBeTruthy();
+
+        mock.setState({...state, loading: false});
+        fixture.detectChanges();
+        expect(findLoadingMessage()).toBeNull();
     });
 });
 
