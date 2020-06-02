@@ -1,4 +1,5 @@
-import {Commands, createTestFacade} from "../public_api";
+import {take} from "rxjs/operators";
+import {Commands, createTestFacade, FacadeMock} from "../public_api";
 
 describe("test utils", () => {
 
@@ -16,4 +17,24 @@ describe("test utils", () => {
         expect(facade.state.a).toEqual(2);
     });
 
+    it("FacadeMock", async () => {
+        const initialState = {a: 1};
+
+        class MyMockedFacade extends FacadeMock<{ a: number }> {
+            constructor(initialState: { a: number }) {
+                super(initialState);
+            }
+        }
+
+        const facade = new MyMockedFacade(initialState);
+        expect(facade.state).toEqual(initialState);
+        const updatedState = {a: 2};
+        const update$ = facade.select(s => s.a).pipe(take(2)).toPromise();
+        facade.setState(updatedState);
+
+        expect(facade.state).toEqual(updatedState);
+
+        const updatedValue = await update$;
+        expect(updatedValue).toBe(2);
+    });
 });
