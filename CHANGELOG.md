@@ -1,3 +1,7 @@
+# Version 14.2.0
+
+- added FacadeMock test util
+
 # Version 14.1.2
 
 - improved error message when a global store is already registered
