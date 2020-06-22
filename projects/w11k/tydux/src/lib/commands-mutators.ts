@@ -75,17 +75,35 @@ export function objectPatch<E>(source: E): (patch: Partial<E>) => E {
     };
 }
 
-// type FilterFlags<Base, Condition> = {
-//     [Key in keyof Base]:
-//     Base[Key] extends Condition ? Key : never
-// };
-//
-// type AllowedNames<Base, Condition> =
-//     FilterFlags<Base, Condition>[keyof Base];
-//
-// export type SubType<Base, Condition> =
-//     Pick<Base, AllowedNames<Base, Condition>>;
-//
+type FilterFlags<Base, Condition> = {
+    [Key in keyof Base]:
+    Base[Key] extends Condition ? Key : never
+};
+
+type AllowedNames<Base, Condition> =
+    FilterFlags<Base, Condition>[keyof Base];
+
+export type SubType<Base, Condition> =
+    Pick<Base, AllowedNames<Base, Condition>>;
+
+
+class Person {
+    id!: string;
+    id2!: number;
+    aaa!: boolean;
+    bbb!: string[];
+}
+
+declare const foo: SubType<Person, string | number>;
+
+
+
+
+
+
+
+
+
 // export type ArrayType<A> = A extends (infer R)[] ? R : never;
 //
 // class X {
