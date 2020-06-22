@@ -1,3 +1,7 @@
+# Version 14.3.0
+
+- added groupByUniqueId
+
 # Version 14.2.0
 
 - added FacadeMock test util
