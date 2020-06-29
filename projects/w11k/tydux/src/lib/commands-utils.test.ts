@@ -1,5 +1,4 @@
-import {enableTyduxDevelopmentMode} from "@w11k/tydux";
-import {groupByUniqueId} from "./commands-utils";
+import {groupById, groupByUniqueId} from "./commands-utils";
 
 describe("commands utils", () => {
 
@@ -29,6 +28,24 @@ describe("commands utils", () => {
 
             expect(() => groupByUniqueId(list, e => e.id))
                 .toThrow("duplicate");
+        });
+
+    });
+
+    describe("groupById", () => {
+
+        it("groups list by id", () => {
+            const list = [
+                {key: 0, name: "a"},
+                {key: 1, name: "b"},
+                {key: 1, name: "c"},
+            ];
+
+            const grouped = groupById(list, e => e.key);
+            expect(grouped).toEqual({
+                0: [{key: 0, name: "a"}],
+                1: [{key: 1, name: "b"}, {key: 1, name: "c"}]
+            });
         });
 
     });

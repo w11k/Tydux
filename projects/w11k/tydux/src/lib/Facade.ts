@@ -1,5 +1,5 @@
 import {skipNil} from "@w11k/rx-ninja";
-import {Action, Unsubscribe} from "redux";
+import {Action, DeepPartial, Unsubscribe} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
 import {take} from "rxjs/operators";
 import {

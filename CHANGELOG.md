@@ -1,3 +1,7 @@
+# Version 14.4.0
+
+- added groupById
+
 # Version 14.3.0
 
 - added groupByUniqueId

@@ -263,7 +263,6 @@ describe("Facade", () => {
 
         expect(facade.state.list).toBeNull();
         facade.setList();
-
     });
 
     it("keeps state between action invocations", async () => {
@@ -587,7 +586,7 @@ describe("Facade", () => {
     });
 
     it("methods are pulled to the instance", () => {
-        class TestFacade extends Facade<any> {
+        class TestFacade extends Facade<Commands<any>> {
 
             private foo = 1;
 
@@ -788,7 +787,7 @@ describe("Facade - sanity tests", function () {
     beforeEach(() => enableTyduxDevelopmentMode());
 
     it("can not modify the state directly", function () {
-        class TestFacade extends Facade<any> {
+        class TestFacade extends Facade<Commands<any>> {
             action() {
                 (this.state as any).count = 1;
             }
