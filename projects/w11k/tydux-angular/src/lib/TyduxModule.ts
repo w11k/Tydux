@@ -37,7 +37,7 @@ export class TyduxModule {
         injector.get(TyduxStore);
     }
 
-    static forRootWithConfig(config: TyduxConfiguration | (() => TyduxConfiguration)): ModuleWithProviders {
+    static forRootWithConfig(config: TyduxConfiguration | (() => TyduxConfiguration)): ModuleWithProviders<TyduxModule> {
         return {
             ngModule: TyduxModule,
             providers: [
@@ -50,7 +50,7 @@ export class TyduxModule {
         };
     }
 
-    static forRootWithoutConfig(): ModuleWithProviders {
+    static forRootWithoutConfig(): ModuleWithProviders<TyduxModule> {
         return {
             ngModule: TyduxModule,
             providers: [
