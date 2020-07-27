@@ -1,3 +1,7 @@
+# Version 14.4.1
+
+- Angular 10 support
+
 # Version 14.4.0
 
 - added groupById
