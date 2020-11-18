@@ -68,3 +68,26 @@ TestBed.configureTestingModule({
   ]
 })
 ```
+
+If you want to test the Tydux facade itself you can use the following pattern
+```typescript
+describe('tydux facade', () => {
+    beforeEach(() => TestBed.configureTestingModule({
+      declarations: [
+        TyduxModule.forRootWithoutConfig()
+      ],
+      providers: [
+        MyService,
+      ],
+    }));
+
+    afterEach(() => {
+      removeGlobalStore();
+    });
+    
+    it('compiles the service', () => {
+        const service: MyService = TestBed.inject(MyService);
+        expect(service).toBeDefined();
+    });
+});
+```
