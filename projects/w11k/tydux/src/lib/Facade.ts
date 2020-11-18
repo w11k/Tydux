@@ -77,14 +77,15 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
     }
 
     /**
-     * @deprecated since 14.0.0
+     * @deprecated since 14.0.0 Use (mountPointName: string, commands: C, initialState: InitialStateValue<S> | undefined) instead
      */
     constructor(mountPointName: string,
                 initialState: InitialStateValue<S> | undefined,
                 commands: C);
 
     /**
-     * @deprecated since 14.0.0
+     // tslint:disable-next-line: max-line-length
+     * @deprecated since 14.0.0 Use (mountPointName: NamedMountPoint<S>, commands: C, initialState: InitialStateValue<S> | undefined) instead
      */
     constructor(mountPoint: NamedMountPoint<S>,
                 initialState: InitialStateValue<S> | undefined,
