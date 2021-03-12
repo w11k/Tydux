@@ -1,3 +1,8 @@
+# Version 15.0.0
+
+- removed deprecated methods
+- restructured files
+
 # Version 14.4.1
 
 - Angular 10 support
