@@ -1,3 +1,8 @@
+# Version 16.0.0
+
+- internal: changed directory structure
+- Support HMR: do not throw an error if a global store is already registered
+
 # Version 15.0.0
 
 - removed deprecated methods

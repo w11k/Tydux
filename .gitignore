@@ -1,5 +1,7 @@
+modules/**/node_modules
+
 # compiled output
-/dist
+modules/**/dist
 /tmp
 /out-tsc
 
@@ -29,6 +31,7 @@ speed-measure-plugin.json
 .history/*
 
 # misc
+/.run
 /.sass-cache
 /connect.lock
 /coverage
