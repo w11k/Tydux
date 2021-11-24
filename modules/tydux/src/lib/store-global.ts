@@ -4,7 +4,7 @@ let globalStore: TyduxStore | undefined;
 
 export function setGlobalStore(store: TyduxStore) {
     if (globalStore !== undefined && store !== undefined) {
-        console.warn("A global store is already defined! Call 'removeGlobalStore()' to remove the currently registered store.");
+        console.warn("A global store is already defined. Call 'removeGlobalStore()' to remove the currently registered store. You can ignore this error if it is triggered by HMR.");
     }
     globalStore = store;
 }
