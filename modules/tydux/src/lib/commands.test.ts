@@ -104,10 +104,10 @@ describe("Commands", () => {
         expect(facade.state).toEqual({n1: 99});
     });
 
-    it("can not change the state deeply", () => {
+    it("can change the state deeply", () => {
         class TestCommands extends Commands<{ n1: number[] }> {
             mut1() {
-                expect(() => this.state.n1.push(3)).toThrow();
+                this.state.n1.push(3);
             }
         }
 
@@ -119,6 +119,7 @@ describe("Commands", () => {
 
         const facade = new TestFacade(createTestMount({n1: [1, 2]}), new TestCommands(), undefined);
         facade.action();
+        expect(facade.state).toEqual({n1: [1, 2, 3]});
     });
 
     it("nested methods are merged", async () => {
@@ -378,6 +379,59 @@ describe("Commands - sanity tests", function () {
 
         const facade = new TestFacade(createTestMount({}), new TestCommands(), undefined);
         facade.action();
+    });
+
+    it("commands can change state more than once", () => {
+        class TestCommands extends Commands<{ numbers: number[], foo: Record<string, number> }> {
+            addNumberInNumbers(n: number) {
+                this.state.numbers.push(n);
+            }
+
+            addNumbersToFoo(numbers: number[]) {
+                numbers.forEach(n => {
+                    this.state.foo[`${n}`] = n;
+                });
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            action() {
+                this.commands.addNumbersToFoo([1, 2, 3]);
+                this.commands.addNumberInNumbers(1);
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({numbers: [], foo: {}} as any), new TestCommands(), undefined);
+        facade.action();
+        expect(facade.state).toEqual({
+            foo: {
+                "1": 1,
+                "2": 2,
+                "3": 3
+            },
+            numbers: [1]
+        });
+    });
+
+    it("todo example", () => {
+        class TestCommands extends Commands<{ todos: { name: string, isDone: boolean }[] }> {
+            toggleTodo(name: string) {
+                const todo = this.state.todos.find(it => it.name === name);
+                todo!.isDone = !todo!.isDone;
+            }
+        }
+
+        class TestFacade extends Facade<TestCommands> {
+            toggleFoo() {
+                this.commands.toggleTodo("foo");
+            }
+        }
+
+        const facade = new TestFacade(createTestMount({todos: [{name: "foo", isDone: false}]} as any), new TestCommands(), undefined);
+        facade.toggleFoo();
+        expect(facade.state.todos[0].isDone).toBe(true);
+        facade.toggleFoo();
+        expect(facade.state.todos[0].isDone).toBe(false);
     });
 
 });

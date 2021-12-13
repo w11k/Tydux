@@ -1,3 +1,4 @@
+import produce from "immer";
 import {Action} from "redux";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {createFailingProxy, failIfInstanceMembersExistExceptStateOrMethods, failIfNotUndefined} from "./utils";
@@ -19,7 +20,7 @@ export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsIn
             return state;
         }
         const commandName = action.type.substr(typePrefix.length);
-        return commandsInvoker.invoke(state, commands => {
+        return produce({...state}, (draft) => (commandsInvoker.invoke(draft as any, commands => {
             const mutatorFn = (commands as any)[commandName];
             if (mutatorFn === undefined) {
                 return;
@@ -28,7 +29,7 @@ export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsIn
             const result = mutatorFn.apply(commands, action.payload);
             failIfNotUndefined(result);
             failIfInstanceMembersExistExceptStateOrMethods(commands);
-        });
+        }) as any));
     };
 }
 

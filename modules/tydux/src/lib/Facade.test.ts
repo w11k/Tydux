@@ -256,8 +256,8 @@ describe("Facade", () => {
 
         facade.selectNonNil(s => s.list)
             .subscribe(list => {
-                list.push("b"); // leave here for compiler check (filter out null case)
-                expect(list).toEqual(["a", "b"]);
+                expect(list).toEqual(["a"]);
+                expect(Object.isSealed(list)).toBe(true);
                 done();
             });
 

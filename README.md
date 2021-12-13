@@ -75,13 +75,15 @@ export class TodoCommands extends Commands<TodoState> {
     }
     
     toggleTodo(name: string) {
-        this.state.todos = this.state.todos.map(
-            it => it.name === name ? {...it, isDone: !it.isDone} : it
-        )
+        const todo = this.state.todos.find(it => it.name === name)
+        todo.isDone = !todo.isDone
     }
     
 }
 ```
+
+Note that the state object can be directly modified deeply and does not need to be copied. To achieve this, the library [immer](https://immerjs.github.io/immer/) 
+is used. The state may consist of plain Javascript objects, maps, sets and arrays. Additionally, all objects are allowed if they are marked with the symbol immerable.
 
 **Create the facade:**
 
