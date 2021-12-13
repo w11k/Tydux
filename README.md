@@ -76,7 +76,7 @@ export class TodoCommands extends Commands<TodoState> {
     
     toggleTodo(name: string) {
         const todo = this.state.todos.find(it => it.name === name)
-        todo.isDone = !todo.isDone
+        todo!.isDone = !todo.isDone
     }
     
 }

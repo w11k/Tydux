@@ -65,16 +65,6 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
                 commands: C,
                 initialState: InitialStateValue<S> | undefined) {
 
-        // let commands: C;
-        // let initialState: InitialStateValue<S> | undefined;
-        // if (initialStateOrCommands1 instanceof Commands) {
-        //     commands = initialStateOrCommands1;
-        //     initialState = initialStateOrCommands2 as any;
-        // } else {
-        //     commands = initialStateOrCommands2 as any;
-        //     initialState = initialStateOrCommands1;
-        // }
-
         if (typeof mountPointOrName === "string") {
             this.facadeId = mountPointOrName;
             this.mountPoint = getGlobalStore().createDeepMountPoint(mountPointOrName);
