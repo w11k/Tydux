@@ -50,7 +50,10 @@ Well will need at least a **state**, the **commands** and the **facade**.
 You can implement the state with a class or a plain JavaScript object. Classes are a bit more convenient but remember that you must not use inheritance and that the class only contains fields. 
 
 ```
+import {immerable} from "immer";
+
 export class TodoState {
+  [immerable] = true
   todos: ToDo[] = [
     {isDone: false, name: 'learn TypeScript'},
     {isDone: true, name: 'buy milk'},
@@ -61,7 +64,7 @@ export class TodoState {
 
 **Create the commands:**
 
-Commands are grouped within a class and can alter the state via `this.state`. Only the direct field members of the state object can be changed, not the attributes of nested object. 
+Commands are grouped within a class and can alter the state via `this.state`. You can manipulate nested properties of the state.
 
 ```
 export class TodoCommands extends Commands<TodoState> {
