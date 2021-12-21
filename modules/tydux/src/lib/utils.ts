@@ -64,21 +64,6 @@ export function failIfInstanceMembersExistExceptStateOrMethods(obj: any) {
 //     });
 // }
 
-export function createProxy<T>(target: T): T {
-    if (target === undefined) {
-        return undefined as any;
-    }
-
-    const proxy: any = {};
-    // re-assign members. Otherwise these members would be marked as read only.
-    // Also flattens the new state object.
-    Object.assign(proxy, target);
-
-    // TODO remove 'as any' when compiler bug is fixed
-    Object.setPrototypeOf(proxy, (target as any));
-    return proxy;
-}
-
 export function createFailingProxy(): object {
     if (!hasProxySupport) {
         return {};

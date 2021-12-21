@@ -20,7 +20,7 @@ export function createReducerFromCommandsInvoker<S>(facadeId: string, commandsIn
             return state;
         }
         const commandName = action.type.substr(typePrefix.length);
-        return produce({...state}, (draft) => (commandsInvoker.invoke(draft as any, commands => {
+        return produce(state, (draft) => (commandsInvoker.invoke(draft as any, commands => {
             const mutatorFn = (commands as any)[commandName];
             if (mutatorFn === undefined) {
                 return;

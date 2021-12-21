@@ -1,17 +1,12 @@
+import {immerable} from "immer";
 import {createTestFacade, createTestMount} from "../testing";
 import {Commands} from "./commands";
-import {
-    arrayAppend,
-    arrayPrepend,
-    arrayRemoveFirst,
-    createAssignCommand,
-    createMutator,
-    objectPatch
-} from "./commands-mutators";
+import {arrayAppend, arrayPrepend, arrayRemoveFirst, createAssignCommand, createMutator, objectPatch} from "./commands-mutators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 
 class TestState {
+    [immerable] = true;
     numberField = 0;
     arrayField: number[] = [1, 2];
     obj = {
@@ -21,6 +16,7 @@ class TestState {
 }
 
 describe("commands mutators", () => {
+
 
     beforeEach(() => enableTyduxDevelopmentMode());
 

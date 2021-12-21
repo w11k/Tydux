@@ -16,7 +16,7 @@ import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
 import {MountPoint, NamedMountPoint} from "./store";
 import {getGlobalStore} from "./store-global";
-import {createProxy, functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
+import {functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
 
 /**
  * One of:
@@ -245,7 +245,7 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         const mutatorReducer = createReducerFromCommandsInvoker<S>(this.facadeId, commandsInvoker);
 
         return (state: any, action: FacadeAction) => {
-            const preLocalState = createProxy(this.mountPoint.extractState(state));
+            const preLocalState = this.mountPoint.extractState(state);
 
             if (this.destroyedState || !this.isActionForThisFacade(action)) {
                 return state;
