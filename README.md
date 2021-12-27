@@ -50,10 +50,7 @@ Well will need at least a **state**, the **commands** and the **facade**.
 You can implement the state with a class or a plain JavaScript object. Classes are a bit more convenient but remember that you must not use inheritance and that the class only contains fields. 
 
 ```
-import {immerable} from "immer";
-
 export class TodoState {
-  [immerable] = true
   todos: ToDo[] = [
     {isDone: false, name: 'learn TypeScript'},
     {isDone: true, name: 'buy milk'},
@@ -86,7 +83,7 @@ export class TodoCommands extends Commands<TodoState> {
 ```
 
 Note that the state object can be directly modified deeply and does not need to be copied. To achieve this, the library [immer](https://immerjs.github.io/immer/) 
-is used. The state may consist of plain Javascript objects, maps, sets and arrays. Additionally, all objects are allowed if they are marked with the symbol immerable.
+is used. The state may consist of plain Javascript objects, maps, sets and arrays. Additionally, we add the immerable symbol for you, if using classes.
 
 **Create the facade:**
 

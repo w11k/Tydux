@@ -1,5 +1,4 @@
 import {isNotNil} from "@w11k/rx-ninja";
-import {immerable} from "immer";
 import {filter} from "rxjs/operators";
 import {createAsyncPromise, createTestFacade, createTestMount} from "../testing";
 import {collect} from "../testing/test-utils-internal";
@@ -41,7 +40,6 @@ describe("Commands", () => {
 
     it("methods can assign state properties successively", async () => {
         class State {
-            [immerable] = true;
             list1?: number[];
             list2: number[] = [];
         }

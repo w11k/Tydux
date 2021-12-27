@@ -1,4 +1,5 @@
-import {skipNil} from "@w11k/rx-ninja";
+import {isNotNil, skipNil} from "@w11k/rx-ninja";
+import {immerable} from "immer";
 import {Action, Unsubscribe} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
 import {take} from "rxjs/operators";
@@ -204,6 +205,9 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
     }
 
     private setState(state: S) {
+        if (isNotNil(state) && ![Array, Map, Set, Object].includes((state as any).constructor)) {
+            (state as any).constructor[immerable] = true;
+        }
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) as any : state;
     }
 

@@ -194,7 +194,6 @@ describe("Facade", () => {
 
     it("select() gets called on every `.command...` method invocation", async () => {
         class TestState {
-            [immerable] = true;
             count = 0;
         }
 
@@ -270,7 +269,6 @@ describe("Facade", () => {
 
     it("keeps state between action invocations", async () => {
         class TestState {
-            [immerable] = true;
             // noinspection JSMismatchedCollectionQueryUpdate
             list: number[] = [];
             value?: number;
@@ -308,7 +306,6 @@ describe("Facade", () => {
 
     it("state changes are directly reflected in the facade state", done => {
         class TestState {
-            [immerable] = true;
             value = 0;
         }
 
@@ -455,7 +452,6 @@ describe("Facade", () => {
 
     it("exceptions in facade methods", () => {
         class TestState {
-            [immerable] = true;
             s1 = 0;
         }
 
@@ -484,7 +480,6 @@ describe("Facade", () => {
 
     it("keeps state between async invocations", async () => {
         class TestState {
-            [immerable] = true;
             list: number[] = [];
             value?: number;
         }
@@ -613,7 +608,6 @@ describe("nesting Facade", () => {
 
     it("a facade can contain a nested facade", () => {
         class ChildFacadeState {
-            [immerable] = true;
             foo = 1;
         }
 
@@ -621,7 +615,6 @@ describe("nesting Facade", () => {
         }
 
         class RootFacadeState {
-            [immerable] = true;
             childFacadeState!: ChildFacadeState;
         }
 
@@ -666,7 +659,6 @@ describe("nesting Facade", () => {
 
     it("a nested facade can change the state", () => {
         class ChildFacadeState {
-            [immerable] = true;
             foo = 1;
         }
 
@@ -683,7 +675,6 @@ describe("nesting Facade", () => {
         }
 
         class RootFacadeState {
-            [immerable] = true;
             childFacadeState!: ChildFacadeState;
         }
 
@@ -706,7 +697,6 @@ describe("nesting Facade", () => {
 
     it("state changes of a nested facade can be subscribed", async () => {
         class ChildFacadeState {
-            [immerable] = true;
             foo = 1;
         }
 
@@ -723,7 +713,6 @@ describe("nesting Facade", () => {
         }
 
         class RootFacadeState {
-            [immerable] = true;
             childFacadeState!: ChildFacadeState;
         }
 
@@ -751,7 +740,6 @@ describe("nesting Facade", () => {
 
     it("state changes of a nested facade are propagated to subscribers of the parent facade", async () => {
         class ChildFacadeState {
-            [immerable] = true;
             foo = 1;
         }
 
@@ -768,7 +756,6 @@ describe("nesting Facade", () => {
         }
 
         class RootFacadeState {
-            [immerable] = true;
             childFacadeState!: ChildFacadeState;
         }
 
@@ -825,7 +812,6 @@ describe("Facade - sanity tests", function () {
 
     it("member method can use async/await", async function (done) {
         class MyState {
-            [immerable] = true;
             count = 0;
         }
 
