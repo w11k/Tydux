@@ -32,6 +32,7 @@ describe("Repository", () => {
         const t1 = new Todo("1", "foo", false);
         const t2 = new Todo("2", "bar", false);
         const t3 = new Todo("3", "baz", true);
+        const t3Partial: Partial<Todo> = {state: false};
 
         class Person {
             constructor(public id: string, public name: string) {
@@ -49,6 +50,11 @@ describe("Repository", () => {
         };
 
         type RepositoryType<R /*extends RepositoryState<unknown>*/> = R extends RepositoryState<infer T> ? T : never;
+
+        type Update<T> = {
+            id: string;
+            changes: any // todo typings;
+        };
 
         function createRepositoryState<T>(idField: keyof FieldsOfType<T, string | number>): RepositoryState<T> {
             const s = idField.toString();
@@ -73,6 +79,7 @@ describe("Repository", () => {
                 return (this.state as any)[field];
             }
 
+            // add one
             addEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
                 repositoryField: F, entry: RepositoryType<S[F]>
             ) {
@@ -83,12 +90,68 @@ describe("Repository", () => {
 
             }
 
-            saveList<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-                repositoryField: F, list: RepositoryType<S[F]>[]
+            // add or replace one
+            setEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, entry: RepositoryType<S[F]>
             ) {
-                const repo = this.getRepositoryState(repositoryField);
+                // tbd
             }
 
+            // add multiple
+            addEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, entries: RepositoryType<S[F]>[] | Record<string, RepositoryType<S[F]>>
+            ) {
+                // tbd
+            }
+
+            // add or replace multiple
+            setEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, entries: RepositoryType<S[F]>[] | Record<string, RepositoryType<S[F]>>
+            ) {
+                // tbd
+            }
+
+            // replaces all existing
+            setAllEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, list: RepositoryType<S[F]>[] | Record<string, RepositoryType<S[F]>>
+            ) {
+                // tbd
+            }
+
+            // add or update one. Supports partial updates
+            upsertEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, update: Update<RepositoryType<S[F]>>
+            ) {
+                // tbd
+            }
+
+            // add or update multiple. Supports partial updates
+            upsertEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, updates: Update<RepositoryType<S[F]>>[]
+            ) {
+                // tbd
+            }
+
+            // remove one
+            removeEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, id: string
+            ) {
+                // tbd
+            }
+
+            // remove multiple
+            removeEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F, ids: string[]
+            ) {
+                // tbd
+            }
+
+            // clear all
+            removeAllEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+                repositoryField: F
+            ) {
+                // tbd
+            }
         }
 
         class TestCommands extends RepositoryCommands<TestState> {
@@ -99,18 +162,45 @@ describe("Repository", () => {
                 const todoList: Todo[] = []; // fetch....
                 const personList: Person[] = []; // fetch....
 
-                this.commands.saveList("todos", todoList);
-                this.commands.saveList("todos", 123);
-                this.commands.saveList("todos", []);
-                this.commands.saveList("persons", []);
-                this.commands.saveList("persons", personList);
-                this.commands.saveList("persons", todoList);
+                this.commands.setAllEntries("todos", todoList);
+                this.commands.setAllEntries("todos", 123);
+                this.commands.setAllEntries("todos", []);
+                this.commands.setAllEntries("persons", []);
+                this.commands.setAllEntries("persons", personList);
+                this.commands.setAllEntries("persons", todoList);
+                this.commands.setAllEntries("lastOpenedTodo", todoList);
+                this.commands.setAllEntries("foo", todoList);
+
                 this.commands.addEntry("persons", p1);
                 this.commands.addEntry("persons", t1);
 
-                this.commands.saveList("lastOpenedTodo", todoList);
-                this.commands.saveList("foo", todoList);
+                this.commands.addEntries("persons", {1: p1, 2: p2});
+                this.commands.addEntries("persons", {1: t1, 2: t2});
+                this.commands.addEntries("persons", personList);
+                this.commands.addEntries("persons", todoList);
 
+
+                this.commands.setEntry("persons", p1);
+                this.commands.setEntry("persons", t1);
+
+                this.commands.setEntries("persons", {1: p1, 2: p2});
+                this.commands.setEntries("persons", {1: t1, 2: t2});
+                this.commands.setEntries("persons", personList);
+                this.commands.setEntries("persons", todoList);
+
+                this.commands.upsertEntry("todos", { id: "1", changes: t1 }); // --> should work
+                this.commands.upsertEntry("todos", { id: "3", changes: t3Partial }); // --> should work
+                this.commands.upsertEntry("todos", { id: "1", changes: p1 }); // --> should not work
+                this.commands.upsertEntry("todos", { id: "3", changes: 123 });
+
+                this.commands.upsertEntries("todos", [{ id: "1", changes: t1 }, { id: "2", changes: t2 }]); // --> should work
+                this.commands.upsertEntries("todos", [{ id: "3", changes: t3Partial }]); // --> should work
+                this.commands.upsertEntries("todos", [{ id: "1", changes: p1 }, { id: "2", changes: p2 }]); // --> should not work
+                this.commands.upsertEntries("todos", [{ id: "3", changes: 123 }]); // --> should not work
+
+                this.commands.removeEntry("todos", "1");
+                this.commands.removeEntries("todos", ["1", "2"]);
+                this.commands.removeAllEntries("todos");
             }
         }
 
