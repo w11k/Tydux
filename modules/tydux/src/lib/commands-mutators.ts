@@ -74,6 +74,13 @@ export function objectPatch<E>(source: E): (patch: Partial<E>) => E {
         };
     };
 }
+
+export function swapPositions<E>(source: E[], a: number, b: number) {
+    const sourceCopy = [...source];
+    [sourceCopy[a], sourceCopy[b]] = [sourceCopy[b], sourceCopy[a]];
+    return sourceCopy;
+}
+
 //
 // type FilterFlags<Base, Condition> = {
 //     [Key in keyof Base]:
