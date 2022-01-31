@@ -25,6 +25,7 @@ describe("Repository", () => {
     const t1 = new Todo("1", "foo", false);
     const t2 = new Todo("2", "bar", false);
     const t3 = new Todo("3", "baz", true);
+    const t4 = new Todo("4", "buz", true);
 
     const t1Updated = new Todo("1", "foo", true);
     const t2Updated = new Todo("2", "bar", true);
@@ -114,14 +115,15 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1, t2], byId: {1: t1, 2: t2}, idField: "id"}};
+            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField: "id"}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.updateMultiple();
 
-            expect(facade.state.todos.byList).toEqual([t1Updated, t2Updated]);
+            expect(facade.state.todos.byList).toEqual([t1Updated, t2Updated, t3]);
             expect(facade.state.todos.byId[1]).toEqual(t1Updated);
             expect(facade.state.todos.byId[2]).toEqual(t2Updated);
+            expect(facade.state.todos.byId[3]).toEqual(t3);
         });
     });
 
@@ -167,7 +169,7 @@ describe("Repository", () => {
         it("should set position of entry to a specific index", () => {
 
             class TestFacade extends Facade<TestCommands> {
-                setPositionToEnd() {
+                setPositionToIndex() {
                     this.commands.setPositionOfEntry("todos", t1, 0);
                 }
             }
@@ -175,7 +177,7 @@ describe("Repository", () => {
             const initialState = {todos: {byList: [t2, t1, t3], byId: {1: t1, 3: t3, 2: t2}, idField: "id"}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
-            facade.setPositionToEnd();
+            facade.setPositionToIndex();
 
             expect(facade.state.todos.byList).toEqual([t1, t2, t3]);
             expect(facade.state.todos.byId[1]).toEqual(t1);
@@ -197,6 +199,81 @@ describe("Repository", () => {
                 facade.setPositionToStart();
             } catch ({message}) {
                 expect(message).toEqual('Entry does not exist');
+            }
+        });
+    });
+
+    describe("setPositionOfEntries", () => {
+        it("should set position of entries to the START of the list", () => {
+            class TestFacade extends Facade<TestCommands> {
+                setPositionsToStart() {
+                    this.commands.setPositionOfEntries("todos", [t1, t2], "start");
+                }
+            }
+
+            const initialState = {todos: {byList: [t3, t1, t2], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.setPositionsToStart();
+
+            expect(facade.state.todos.byList).toEqual([t1, t2, t3]);
+            expect(facade.state.todos.byId[1]).toBe(t1);
+            expect(facade.state.todos.byId[2]).toEqual(t2);
+            expect(facade.state.todos.byId[3]).toEqual(t3);
+        });
+
+        it("should set position of entries to the END of the list", () => {
+
+            class TestFacade extends Facade<TestCommands> {
+                setPositionsToEnd() {
+                    this.commands.setPositionOfEntries("todos", [t3, t4], "end");
+                }
+            }
+
+            const initialState = {todos: {byList: [t3, t4, t1, t2], byId: {1: t1, 3: t3, 2: t2, 4: t4}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.setPositionsToEnd();
+
+            expect(facade.state.todos.byList).toEqual([t1, t2, t3, t4]);
+            expect(facade.state.todos.byId[1]).toEqual(t1);
+            expect(facade.state.todos.byId[2]).toEqual(t2);
+            expect(facade.state.todos.byId[3]).toEqual(t3);
+        });
+
+        it("should set position of entry to a specific index", () => {
+
+            class TestFacade extends Facade<TestCommands> {
+                setPositionsIndex() {
+                    this.commands.setPositionOfEntries("todos", [t1, t2], 0);
+                }
+            }
+
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {1: t1, 3: t3, 2: t2}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.setPositionsIndex();
+
+            expect(facade.state.todos.byList).toEqual([t1, t2, t3]);
+            expect(facade.state.todos.byId[1]).toEqual(t1);
+            expect(facade.state.todos.byId[2]).toEqual(t2);
+            expect(facade.state.todos.byId[3]).toEqual(t3);
+        });
+
+        it("should throw error when trying to set position when entry does not exist", () => {
+
+            class TestFacade extends Facade<TestCommands> {
+                setPositionToStart() {
+                    this.commands.setPositionOfEntries("todos", [t1], "start");
+                }
+            }
+
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), undefined);
+
+            try {
+                facade.setPositionToStart();
+            } catch ({message}) {
+                expect(message).toEqual('Some of the entries do not exist');
             }
         });
     });

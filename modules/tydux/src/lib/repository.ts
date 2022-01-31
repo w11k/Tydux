@@ -1,5 +1,5 @@
-import {Commands} from "./commands";
-import {arrayAppend, swapPositions} from "./commands-mutators";
+import {Commands} from './commands';
+import {arrayAppend, arrayInsertAtIndex, arrayPrepend, swapPositions} from './commands-mutators';
 
 type FilterFlags<Base, Condition> = {
     [Key in keyof Base]:
@@ -27,7 +27,7 @@ export type Update<T> = {
     changes: RequireAtLeastOne<any> // todo typings;
 };
 
-export type Position = "start" | "end" | number;
+export type Position = 'start' | 'end' | number;
 
 export function createRepositoryState<T>(idField: keyof FieldsOfType<T, string | number>): RepositoryState<T> {
     const s = idField.toString();
@@ -66,6 +66,10 @@ export class RepositoryCommands<S> extends Commands<S> {
 
         entryExists ? repo.byList[entryIndex] = entry : repo.byList = arrayAppend(repo.byList)([entry]);
         repo.byId[entryId] = entry;
+
+        if (position) {
+            this.setPositionOfEntry(repositoryField, entry, position);
+        }
     }
 
     setPositionOfEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
@@ -78,12 +82,12 @@ export class RepositoryCommands<S> extends Commands<S> {
         const entryExists = !!repo.byList.find((e) => (e as any)[repo.idField] === (entry as any)[repo.idField]);
 
         if (!entryExists) {
-            throw new Error("Entry does not exist");
+            throw new Error('Entry does not exist');
         }
 
         const entryId = (entry as any)[repo.idField];
         const entryIndex = this.getEntryIndex(repositoryField, entryId);
-        const updatedIndex = position === "start" ? 0 : position === "end" ? repo.byList.length - 1 : position;
+        const updatedIndex = position === 'start' ? 0 : position === 'end' ? repo.byList.length - 1 : position;
 
         if (updatedIndex != null) {
             repo.byList = swapPositions(repo.byList, updatedIndex, entryIndex);
@@ -95,9 +99,40 @@ export class RepositoryCommands<S> extends Commands<S> {
         entries: RepositoryType<S[F]>[] | Record<string, RepositoryType<S[F]>>,
         position?: Position
     ) {
-        (Array.isArray(entries) ? entries : Object.values(entries)).forEach((entry) => {
+        const entryArr = Array.isArray(entries) ? entries : Object.values(entries);
+        const repo = this.getRepositoryState(repositoryField);
+
+        entryArr.forEach((entry) => {
+            repo.byId[(entry as any)[repo.idField]] = entry;
             this.updateOrPushEntry(repositoryField, entry, position);
         });
+        if (position) {
+            this.setPositionOfEntries(repositoryField, entryArr, position);
+        }
+    }
+
+    setPositionOfEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+        repositoryField: F,
+        entries: RepositoryType<S[F]>[],
+        position?: Position
+    ) {
+
+        const repo = this.getRepositoryState(repositoryField);
+        const allEntriesExist = entries.every((e) => repo.byList.includes((e as any)));
+
+        if (!allEntriesExist) {
+            throw new Error('Some of the entries do not exist');
+        }
+
+        const itemsNotInEntries: RepositoryType<S[F]>[] = repo.byList.filter((e) => !entries.includes((e as any))) as any;
+
+        if (position === 'start') {
+            repo.byList = arrayPrepend(itemsNotInEntries)(entries);
+        } else if (position === 'end') {
+            repo.byList = arrayAppend(itemsNotInEntries)(entries);
+        } else if (typeof position === 'number') {
+            repo.byList = arrayInsertAtIndex(itemsNotInEntries, position)(entries);
+        }
     }
 
     // add or update multiple. Supports partial updates

@@ -59,6 +59,16 @@ export function arrayPrepend<E>(source: E[]) {
     };
 }
 
+export function arrayInsertAtIndex<E>(source: E[], index: number) {
+    return (newItems: E[]) => {
+        return [
+            ...source.slice(0, index),
+            ...newItems,
+            ...source.slice(index)
+        ];
+    };
+}
+
 export function arrayRemoveFirst<E>(source: E[]) {
     return () => {
         const [, ...rest] = source;
