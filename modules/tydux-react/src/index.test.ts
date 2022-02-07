@@ -30,7 +30,9 @@ describe("useFacadeState", () => {
             store.createMountPoint("test"), new TestCommands(),
             {counter: 0}
         );
-        const {result, waitForNextUpdate} = renderHook(() => useFacadeState(facade, state => state.counter));
+        // use same reference for selector function or result.all becomes strange
+        const selectorFn = (state: {counter: number}) => state.counter
+        const {result, waitForNextUpdate} = renderHook(() => useFacadeState(facade, selectorFn ));
         expect(result.current).toBe(0);
         act(() => {
             facade.increment();
@@ -43,7 +45,6 @@ describe("useFacadeState", () => {
         await waitForNextUpdate();
         expect(result.current).toBe(0);
 
-        // TODO check if something is off here or the test lib is acting funny
         expect(result.all).toEqual([0, 1, 0]);
     });
 
