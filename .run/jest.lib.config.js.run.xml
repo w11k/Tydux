@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Tydux Tests" type="JavaScriptTestRunnerJest">
     <config-file value="$PROJECT_DIR$/modules/tydux/jest.config.js" />
-    <node-interpreter value="$USER_HOME$/.npm-global/bin/node" />
+    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v16.13.1/bin/node" />
     <node-options value="" />
     <jest-package value="$PROJECT_DIR$/modules/tydux/node_modules/jest" />
     <working-dir value="$PROJECT_DIR$/modules/tydux" />

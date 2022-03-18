@@ -54,14 +54,6 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         return this._state;
     }
 
-    constructor(mountPointName: string,
-                commands: C,
-                initialState: InitialStateValue<S> | undefined);
-
-    constructor(mountPoint: NamedMountPoint<S>,
-                commands: C,
-                initialState: InitialStateValue<S> | undefined);
-
     constructor(mountPointOrName: NamedMountPoint<S> | string,
                 commands: C,
                 initialState: InitialStateValue<S> | undefined) {
