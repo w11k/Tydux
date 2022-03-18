@@ -1,0 +1,65 @@
+{
+    "name": "tydux-react",
+    "version": "1.0.0",
+    "description": "use Tydux in react projects via custom hook",
+    "typings": "./bundle/index.d.ts",
+    "main": "./bundle/index.js",
+    "module": "./esm5/index.js",
+    "esm5": "./esm5/index.js",
+    "esm2015": "./esm2015/index.js",
+    "scripts": {
+        "test": "jest --config ./jest.config.js",
+        "build": "run-s compile build:copy_from_root",
+        "build:copy_from_root": "shx cp ../../CHANGELOG.md ../../README.md ../../LICENSE dist",
+        "compile": "run-p compile:*",
+        "compile:base": "tsc -p tsconfig.json",
+        "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
+        "compile:esm2015": "tsc -p tsconfig.dist.esm2015.json"
+    },
+    "homepage": "https://github.com/w11k/Tydux",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/w11k/Tydux.git"
+    },
+    "author": "W11K GmbH",
+    "contributors": [
+        "Roman Roelofson",
+        "Philipp Burgmer",
+        "Sascha Engmann"
+    ],
+    "license": "Apache-2.0",
+    "np": {
+        "contents": "dist"
+    },
+    "files": [
+        "bundle",
+        "esm5",
+        "esm2015",
+        "LICENSE",
+        "CHANGELOG.md",
+        "README.md"
+    ],
+    "peerDependencies": {
+        "@w11k/tydux": "14.x.x",
+        "react": ">= 16.8.0"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.13.10",
+        "@babel/preset-env": "^7.12.16",
+        "@babel/preset-typescript": "^7.13.0",
+        "@testing-library/react-hooks": "^7.0.2",
+        "@types/jest": "^27.0.3",
+        "@types/react": "^17.0.38",
+        "@w11k/rx-ninja": "^4.5.3",
+        "@w11k/tydux": "^14.4.1",
+        "jest": "^27.4.5",
+        "npm-run-all": "^4.1.5",
+        "react": "^17.0.2",
+        "react-test-renderer": "^17.0.2",
+        "redux": "^4.1.2",
+        "redux-devtools-extension": "^2.13.9",
+        "rxjs": "^7.4.0",
+        "shx": "^0.3.4",
+        "typescript": "^4.5.4"
+    }
+}

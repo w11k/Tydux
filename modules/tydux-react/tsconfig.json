@@ -1,0 +1,29 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "outDir": "dist/bundle",
+        "target": "es5",
+        "module": "umd",
+        "moduleResolution": "node",
+        "strict": true,
+        "declaration": true,
+        "sourceMap": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "importHelpers": true,
+        "lib": [
+            "dom",
+            "ES2015",
+            "ES2015.Promise"
+        ]
+        //        "types": [
+        //            "jasmine"
+        //        ]
+    },
+    "include": [
+        "src"
+    ],
+    "exclude": [
+    ]
+}
+
