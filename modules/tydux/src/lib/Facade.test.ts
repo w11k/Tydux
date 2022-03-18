@@ -1,3 +1,4 @@
+import {immerable} from "immer";
 import {createStore, Store as ReduxStore} from "redux";
 import {distinctUntilChanged, map} from "rxjs/operators";
 import {createAsyncPromise, createTestMount} from "../testing";
@@ -237,6 +238,7 @@ describe("Facade", () => {
 
     it("selectNonNil() only emit non nil values", (done) => {
         class TestState {
+            [immerable] = true;
             list: string[] | null = null;
         }
 
@@ -256,8 +258,8 @@ describe("Facade", () => {
 
         facade.selectNonNil(s => s.list)
             .subscribe(list => {
-                list.push("b"); // leave here for compiler check (filter out null case)
-                expect(list).toEqual(["a", "b"]);
+                expect(list).toEqual(["a"]);
+                expect(Object.isSealed(list)).toBe(true);
                 done();
             });
 

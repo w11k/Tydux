@@ -10,7 +10,8 @@ describe("global store", () => {
         removeGlobalStore();
     });
 
-    it("only one global store is allowed", () => {
+    xit("only one global store is allowed", () => {
+        // TODO reuse global store on HMR
         const s1 = createTyduxStore();
         setGlobalStore(s1);
         const s2 = createTyduxStore();

@@ -1,4 +1,5 @@
-import {skipNil} from "@w11k/rx-ninja";
+import {isNotNil, skipNil} from "@w11k/rx-ninja";
+import {immerable} from "immer";
 import {Action, Unsubscribe} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
 import {take} from "rxjs/operators";
@@ -16,7 +17,7 @@ import {isTyduxDevelopmentModeEnabled} from "./development";
 import {deregisterFacadeCommands, registerFacadeCommands} from "./global-facade-registry";
 import {MountPoint, NamedMountPoint} from "./store";
 import {getGlobalStore} from "./store-global";
-import {createProxy, functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
+import {functionNamesDeep, functionNamesShallow, selectToObservable} from "./utils";
 
 /**
  * One of:
@@ -53,27 +54,9 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         return this._state;
     }
 
-    constructor(mountPointName: string,
-                commands: C,
-                initialState: InitialStateValue<S> | undefined);
-
-    constructor(mountPoint: NamedMountPoint<S>,
-                commands: C,
-                initialState: InitialStateValue<S> | undefined);
-
     constructor(mountPointOrName: NamedMountPoint<S> | string,
                 commands: C,
                 initialState: InitialStateValue<S> | undefined) {
-
-        // let commands: C;
-        // let initialState: InitialStateValue<S> | undefined;
-        // if (initialStateOrCommands1 instanceof Commands) {
-        //     commands = initialStateOrCommands1;
-        //     initialState = initialStateOrCommands2 as any;
-        // } else {
-        //     commands = initialStateOrCommands2 as any;
-        //     initialState = initialStateOrCommands1;
-        // }
 
         if (typeof mountPointOrName === "string") {
             this.facadeId = mountPointOrName;
@@ -214,6 +197,9 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
     }
 
     private setState(state: S) {
+        if (isNotNil(state) && ![Array, Map, Set, Object].includes((state as any).constructor)) {
+            (state as any).constructor[immerable] = true;
+        }
         this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) as any : state;
     }
 
@@ -255,7 +241,7 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         const mutatorReducer = createReducerFromCommandsInvoker<S>(this.facadeId, commandsInvoker);
 
         return (state: any, action: FacadeAction) => {
-            const preLocalState = createProxy(this.mountPoint.extractState(state));
+            const preLocalState = this.mountPoint.extractState(state);
 
             if (this.destroyedState || !this.isActionForThisFacade(action)) {
                 return state;

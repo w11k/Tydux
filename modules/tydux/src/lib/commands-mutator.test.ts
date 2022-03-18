@@ -1,13 +1,6 @@
 import {createTestFacade, createTestMount} from "../testing";
 import {Commands} from "./commands";
-import {
-    arrayAppend,
-    arrayPrepend,
-    arrayRemoveFirst,
-    createAssignCommand,
-    createMutator,
-    objectPatch
-} from "./commands-mutators";
+import {arrayAppend, arrayPrepend, arrayRemoveFirst, createAssignCommand, createMutator, objectPatch} from "./commands-mutators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 
@@ -21,6 +14,7 @@ class TestState {
 }
 
 describe("commands mutators", () => {
+
 
     beforeEach(() => enableTyduxDevelopmentMode());
 

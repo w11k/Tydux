@@ -14,7 +14,7 @@
         "url": "https://github.com/w11k/Tydux.git"
     },
     "peerDependencies": {
-        "@w11k/tydux": "14.x.x",
+        "@w11k/tydux": "15.x.x",
         "@angular/core": ">= 6.0.0",
         "@angular/common": ">= 6.0.0"
     }
