@@ -1,6 +1,6 @@
 {
     "name": "@w11k/tydux",
-    "version": "14.999.0",
+    "version": "15.0.0",
     "author": "W11K GmbH",
     "contributors": [
         "Roman Roelofson",
@@ -22,6 +22,7 @@
         "README.md"
     ],
     "np": {
+        "yarn": false,
         "contents": "dist"
     },
     "typings": "./bundle/index.d.ts",
@@ -39,7 +40,11 @@
         "compile:esm2015": "tsc -p tsconfig.dist.esm2015.json",
         "build:copy_from_root": "shx cp ../../CHANGELOG.md ../../README.md ../../LICENSE dist",
         "build": "run-s clean test compile build:copy_from_root",
-        "prepublishOnly": "run-s build"
+        "prepublishOnly": "run-s build",
+        "release": "run-s build np"
+    },
+    "publishConfig": {
+        "access": "public"
     },
     "dependencies": {
         "@w11k/rx-ninja": "^4.0.0",
