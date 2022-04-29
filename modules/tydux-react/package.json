@@ -10,7 +10,7 @@
     "scripts": {
         "test": "jest --config ./jest.config.js",
         "build": "run-s compile build:copy_from_root",
-        "build:copy_from_root": "shx cp ../../CHANGELOG.md ../../README.md ../../LICENSE dist",
+        "build:copy_from_root": "shx cp ../tydux/CHANGELOG.md ../../README.md ../../LICENSE dist",
         "compile": "run-p compile:*",
         "compile:base": "tsc -p tsconfig.json",
         "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
