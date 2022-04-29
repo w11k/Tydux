@@ -1,9 +1,9 @@
 {
     "name": "@w11k/tydux",
-    "version": "14.999.0",
+    "version": "15.0.0",
     "author": "W11K GmbH",
     "contributors": [
-        "Roman Roelofson",
+        "Roman Roelofsen",
         "Philipp Burgmer",
         "Sascha Engmann"
     ],
