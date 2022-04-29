@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Tydux Tests" type="JavaScriptTestRunnerJest">
-    <config-file value="$PROJECT_DIR$/modules/tydux/jest.config.js" />
-    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v16.13.1/bin/node" />
+  <configuration default="false" name="Test tydux-react" type="JavaScriptTestRunnerJest">
+    <config-file value="$PROJECT_DIR$/modules/tydux-react/jest.config.js" />
+    <node-interpreter value="project" />
     <node-options value="" />
-    <jest-package value="$PROJECT_DIR$/modules/tydux/node_modules/jest" />
-    <working-dir value="$PROJECT_DIR$/modules/tydux" />
+    <jest-package value="$PROJECT_DIR$/modules/tydux-react/node_modules/jest" />
+    <working-dir value="$PROJECT_DIR$/modules/tydux-react" />
     <envs />
     <scope-kind value="ALL" />
     <method v="2" />
