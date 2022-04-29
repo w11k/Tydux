@@ -1,6 +1,6 @@
 {
     "name": "@w11k/tydux",
-    "version": "15.0.0",
+    "version": "14.999.0",
     "author": "W11K GmbH",
     "contributors": [
         "Roman Roelofson",
@@ -14,22 +14,16 @@
         "url": "https://github.com/w11k/Tydux.git"
     },
     "files": [
-        "bundle",
-        "esm5",
-        "esm2015",
-        "LICENSE",
-        "CHANGELOG.md",
-        "README.md"
+        "dist"
     ],
     "np": {
-        "yarn": false,
-        "contents": "dist"
+        "yarn": false
     },
-    "typings": "./bundle/index.d.ts",
-    "main": "./bundle/index.js",
-    "module": "./esm5/index.js",
-    "esm5": "./esm5/index.js",
-    "esm2015": "./esm2015/index.js",
+    "typings": "./dist/bundle/index.d.ts",
+    "main": "./dist/bundle/index.js",
+    "module": "./dist/esm5/index.js",
+    "esm5": "./dist/esm5/index.js",
+    "esm2015": "./dist/esm2015/index.js",
     "scripts": {
         "clean": "shx rm -rf dist",
         "test": "jest --config ./jest.config.js",
@@ -41,6 +35,7 @@
         "build:copy_from_root": "shx cp ../../CHANGELOG.md ../../README.md ../../LICENSE dist",
         "build": "run-s clean test compile build:copy_from_root",
         "prepublishOnly": "run-s build",
+        "np": "np",
         "release": "run-s build np"
     },
     "publishConfig": {
