@@ -1,20 +1,22 @@
 {
-    "name": "tydux-react",
-    "version": "1.0.0",
-    "description": "use Tydux in react projects via custom hook",
+    "name": "@w11k/tydux-react",
+    "version": "0.0.2",
+    "description": "Tydux hooks library for React projects",
     "typings": "./bundle/index.d.ts",
     "main": "./bundle/index.js",
     "module": "./esm5/index.js",
     "esm5": "./esm5/index.js",
     "esm2015": "./esm2015/index.js",
     "scripts": {
+        "clean": "shx rm -rf dist",
         "test": "jest --config ./jest.config.js",
-        "build": "run-s compile build:copy_from_root",
-        "build:copy_from_root": "shx cp ../tydux/CHANGELOG.md ../../README.md ../../LICENSE dist",
+        "build": "run-s clean test compile build:copy_from_root",
+        "build:copy_from_root": "# shx cp ../tydux/CHANGELOG.md ../../README.md ../../LICENSE dist",
         "compile": "run-p compile:*",
         "compile:base": "tsc -p tsconfig.json",
         "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
-        "compile:esm2015": "tsc -p tsconfig.dist.esm2015.json"
+        "compile:esm2015": "tsc -p tsconfig.dist.esm2015.json",
+        "np": "np"
     },
     "homepage": "https://github.com/w11k/Tydux",
     "repository": {
@@ -23,21 +25,18 @@
     },
     "author": "W11K GmbH",
     "contributors": [
-        "Roman Roelofson",
-        "Philipp Burgmer",
+        "Roman Roelofsen",
         "Sascha Engmann"
     ],
     "license": "Apache-2.0",
     "np": {
-        "contents": "dist"
+        "yarn": false
+    },
+    "publishConfig": {
+        "access": "public"
     },
     "files": [
-        "bundle",
-        "esm5",
-        "esm2015",
-        "LICENSE",
-        "CHANGELOG.md",
-        "README.md"
+        "dist"
     ],
     "peerDependencies": {
         "@w11k/tydux": "14.x.x",
@@ -53,6 +52,7 @@
         "@w11k/rx-ninja": "^4.5.3",
         "@w11k/tydux": "^14.4.1",
         "jest": "^27.4.5",
+        "np": "^7.6.1",
         "npm-run-all": "^4.1.5",
         "react": "^17.0.2",
         "react-test-renderer": "^17.0.2",
