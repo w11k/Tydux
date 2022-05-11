@@ -1,12 +1,12 @@
 {
     "name": "@w11k/tydux-react",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Tydux hooks library for React projects",
-    "typings": "./bundle/index.d.ts",
-    "main": "./bundle/index.js",
-    "module": "./esm5/index.js",
-    "esm5": "./esm5/index.js",
-    "esm2015": "./esm2015/index.js",
+    "typings": "./dist/bundle/index.d.ts",
+    "main": "./dist/bundle/index.js",
+    "module": "./dist/esm5/index.js",
+    "esm5": "./dist/esm5/index.js",
+    "esm2015": "./dist/esm2015/index.js",
     "scripts": {
         "clean": "shx rm -rf dist",
         "test": "jest --config ./jest.config.js",
