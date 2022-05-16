@@ -35,10 +35,6 @@ describe("Repository", () => {
     const t3Partial: Partial<Todo> = {text: "patched"};
     const t3Patched = new Todo("3", "patched", true);
 
-    const p1 = new Person("1", "Mario");
-    const p2 = new Person("2", "Kai");
-    const p3 = new Person("3", "Roman");
-
     class TestCommands extends RepositoryCommands<TestState> {
     }
 
@@ -51,6 +47,38 @@ describe("Repository", () => {
         const reduxStore = createStore(tyduxBridge.createTyduxReducer(), {});
         const tyduxStore = tyduxBridge.connectStore(reduxStore);
         setGlobalStore(tyduxStore);
+    });
+
+    describe("createRepositoryState", () => {
+        it("create an empty repository state", () => {
+            const idField = "id";
+            const state = createRepositoryState<Todo>(idField);
+            expect(state).toEqual({
+                idField,
+                byList: [],
+                byId: {}
+            })
+        });
+
+        it("create an repository state with an initial value (object)", () => {
+            const idField = "id";
+            const state = createRepositoryState<Todo>(idField, {1: t1, 2: t2});
+            expect(state).toEqual({
+                idField,
+                byList: [t1, t2],
+                byId: {1: t1, 2: t2}
+            })
+        });
+
+        it("create an repository state with an initial value (array)", () => {
+            const idField = "id";
+            const state = createRepositoryState<Todo>(idField, [t3, t4]);
+            expect(state).toEqual({
+                idField,
+                byList: [t3, t4],
+                byId: {3: t3, 4: t4}
+            })
+        });
     });
 
     describe("updateOrPushEntry", () => {

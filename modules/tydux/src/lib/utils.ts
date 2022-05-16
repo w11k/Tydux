@@ -1,7 +1,7 @@
 import {isNil} from "@w11k/rx-ninja";
 import {Observable} from "rxjs";
 import {distinctUntilChanged, filter, map, take} from "rxjs/operators";
-import {illegalAccessToThis, commandHasInstanceMembers, commandWrongReturnType} from "./error-messages";
+import {commandHasInstanceMembers, commandWrongReturnType, illegalAccessToThis} from "./error-messages";
 import {Facade} from "./Facade";
 import {isPlainObject} from "./lodash/lodash";
 
@@ -202,4 +202,11 @@ export function selectToObservable<S, R = Readonly<S>>(input$: Observable<S>,
                     return oldVal === newVal;
                 }
             }));
+}
+
+export function fromEntries<T>(entries: [keyof T, T[keyof T]][]): T {
+    return entries.reduce(
+        (acc, [key, value]) => ({ ...acc, [key]: value }),
+        {} as T
+    );
 }

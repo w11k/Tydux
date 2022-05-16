@@ -1,5 +1,6 @@
 import {Commands} from "./commands";
 import {arrayAppend, arrayInsertAtIndex, arrayPrepend, objectPatch, swapPositions} from "./commands-mutators";
+import {fromEntries} from "./utils";
 
 type FilterFlags<Base, Condition> = {
     [Key in keyof Base]:
@@ -15,7 +16,7 @@ export type FieldsOfType<Base, Condition> =
 export type RepositoryState<T> = {
     idField: string;
     byList: T[];
-    byId: { [id: string]: T };
+    byId: Record<string, T>;
 };
 
 export type RepositoryType<R /*extends RepositoryState<unknown>*/> = R extends RepositoryState<infer T> ? T : never;
@@ -27,12 +28,17 @@ export type Update<T> = {
 
 export type Position = 'start' | 'end' | number;
 
-export function createRepositoryState<T>(idField: keyof FieldsOfType<T, string | number>): RepositoryState<T> {
+export function createRepositoryState<T>(
+    idField: keyof FieldsOfType<T, string | number>,
+    defaultState?: T[] | Record<string, T>
+): RepositoryState<T> {
     const s = idField.toString();
     return {
         idField: s,
-        byList: [] as T[],
-        byId: {} as { [id: string]: T },
+        byList: (Array.isArray(defaultState) ? defaultState : Object.values(defaultState || {}) || []) as T[],
+        byId: (Array.isArray(defaultState)
+            ? fromEntries(defaultState.map((entry) => [(entry as any)[s], entry]))
+            : defaultState || {}) as Record<string, T>,
     };
 }
 
