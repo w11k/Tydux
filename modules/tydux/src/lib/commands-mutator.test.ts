@@ -1,6 +1,14 @@
 import {createTestFacade, createTestMount} from "../testing";
 import {Commands} from "./commands";
-import {arrayAppend, arrayPrepend, arrayRemoveFirst, createAssignCommand, createMutator, objectPatch} from "./commands-mutators";
+import {
+    arrayAppend,
+    arrayInsertAtIndex,
+    arrayPrepend,
+    arrayRemoveFirst,
+    createAssignCommand,
+    createMutator,
+    objectPatch, swapPositions
+} from "./commands-mutators";
 import {enableTyduxDevelopmentMode} from "./development";
 import {Facade} from "./Facade";
 
@@ -114,6 +122,10 @@ describe("operator functions for applyMutator", () => {
         expect(arrayRemoveFirst(["a", "b"])()).toEqual(["b"]);
     });
 
+    it("arrayInsertAtIndex", () => {
+        expect(arrayInsertAtIndex(["1", "4"], 1)(["2", "3"])).toEqual(["1", "2", "3", "4"]);
+    });
+
     it("objectPatch", () => {
         expect(objectPatch({a: 1, b: "b"})({b: "bb"})).toEqual({a: 1, b: "bb"});
 
@@ -132,4 +144,7 @@ describe("operator functions for applyMutator", () => {
         expect(tf.state.obj).toEqual({fieldA: 123, fieldB: "bbbb"});
     });
 
+    it("swapPositions", () => {
+        expect(swapPositions(["1", "2", "3"], 0, 2)).toEqual(["3", "2", "1"]);
+    });
 });

@@ -85,9 +85,9 @@ export function objectPatch<E>(source: E): (patch: Partial<E>) => E {
     };
 }
 
-export function swapPositions<E>(source: E[], a: number, b: number) {
+export function swapPositions<E>(source: E[], indexA: number, indexB: number) {
     const sourceCopy = [...source];
-    [sourceCopy[a], sourceCopy[b]] = [sourceCopy[b], sourceCopy[a]];
+    [sourceCopy[indexA], sourceCopy[indexB]] = [sourceCopy[indexB], sourceCopy[indexA]];
     return sourceCopy;
 }
 
