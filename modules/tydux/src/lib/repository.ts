@@ -20,11 +20,8 @@ export type RepositoryState<T> = {
 
 export type RepositoryType<R /*extends RepositoryState<unknown>*/> = R extends RepositoryState<infer T> ? T : never;
 
-export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
-
 export type Update<T> = {
     id: string;
-    // changes: RequireAtLeastOne<T>;
     changes: Partial<T>;
 };
 
@@ -50,8 +47,7 @@ export class RepositoryCommands<S> extends Commands<S> {
         return (this.state as any)[field];
     }
 
-    private getEntryIndex(field: keyof S, entryId: string): number {
-        const repo = this.getRepositoryState(field);
+    private getEntryIndex(repo: RepositoryState<unknown>, entryId: string): number {
         return repo.byList.findIndex((e) => (e as any)[repo.idField] === entryId);
     }
 
@@ -62,7 +58,7 @@ export class RepositoryCommands<S> extends Commands<S> {
     ) {
         const repo = this.getRepositoryState(repositoryField);
         const entryId = (entry as any)[repo.idField];
-        const entryIndex = this.getEntryIndex(repositoryField, entryId);
+        const entryIndex = this.getEntryIndex(repo, entryId);
         const entryExists = !!repo.byList.find((e) => (e as any)[repo.idField] === (entry as any)[repo.idField]);
 
         entryExists ? repo.byList[entryIndex] = entry : repo.byList = arrayAppend(repo.byList)([entry]);
@@ -83,12 +79,12 @@ export class RepositoryCommands<S> extends Commands<S> {
         const entryExists = !!repo.byList.find((e) => (e as any)[repo.idField] === (entry as any)[repo.idField]);
 
         if (!entryExists) {
-            throw new Error('Entry does not exist');
+            throw new Error("Entry does not exist");
         }
 
         const entryId = (entry as any)[repo.idField];
-        const entryIndex = this.getEntryIndex(repositoryField, entryId);
-        const updatedIndex = position === 'start' ? 0 : position === 'end' ? repo.byList.length - 1 : position;
+        const entryIndex = this.getEntryIndex(repo, entryId);
+        const updatedIndex = position === "start" ? 0 : position === "end" ? repo.byList.length - 1 : position;
 
         if (updatedIndex != null) {
             repo.byList = swapPositions(repo.byList, updatedIndex, entryIndex);
@@ -147,7 +143,7 @@ export class RepositoryCommands<S> extends Commands<S> {
         }
 
         const patchedResult = objectPatch(entryExists)(update.changes);
-        const entryIndex = this.getEntryIndex(repositoryField, update.id);
+        const entryIndex = this.getEntryIndex(repo, update.id);
 
         repo.byId[update.id] = patchedResult;
         repo.byList[entryIndex] = patchedResult;
