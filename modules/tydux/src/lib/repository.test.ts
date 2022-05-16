@@ -11,11 +11,6 @@ class Todo {
     }
 }
 
-class Person {
-    constructor(public id: string, public name: string) {
-    }
-}
-
 class TestState {
     todos = createRepositoryState<Todo>("id");
 }
