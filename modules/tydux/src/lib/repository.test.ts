@@ -30,7 +30,10 @@ describe("Repository", () => {
     const t1Updated = new Todo("1", "foo", true);
     const t2Updated = new Todo("2", "bar", true);
 
-    const t3Partial = {state: false};
+    const t1Partial: Partial<Todo> = {state: true};
+    const t1Patched = new Todo("1", "foo", true);
+    const t3Partial: Partial<Todo> = {text: "patched"};
+    const t3Patched = new Todo("3", "patched", true);
 
     const p1 = new Person("1", "Mario");
     const p2 = new Person("2", "Kai");
@@ -273,9 +276,44 @@ describe("Repository", () => {
             try {
                 facade.setPositionToStart();
             } catch ({message}) {
-                expect(message).toEqual('Some of the entries do not exist');
+                expect(message).toEqual("Some of the entries do not exist");
             }
         });
     });
 
+    describe("patchEntry", () => {
+        it("should patch one partial entry", () => {
+            class TestFacade extends Facade<TestCommands> {
+                patchOne() {
+                    this.commands.patchEntry("todos", {id: "1", changes: t1Partial});
+                }
+            }
+
+            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.patchOne();
+
+            expect(facade.state.todos.byId[1]).toEqual(t1Patched);
+            expect(facade.state.todos.byList).toEqual([t1Patched]);
+        });
+    });
+
+    describe("patchEntries", () => {
+        it("should patch multiple partial entries", () => {
+            class TestFacade extends Facade<TestCommands> {
+                patchMultiple() {
+                    this.commands.patchEntries("todos", [{id: "1", changes: t1Partial}, {id: "3", changes: t3Partial}]);
+                }
+            }
+
+            const initialState = {todos: {byList: [t1, t3], byId: {1: t1, 3: t3}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.patchMultiple();
+
+            expect(facade.state.todos.byId[1]).toEqual(t1Patched);
+            expect(facade.state.todos.byList).toEqual([t1Patched, t3Patched]);
+        });
+    });
 });

@@ -1,5 +1,5 @@
-import {Commands} from './commands';
-import {arrayAppend, arrayInsertAtIndex, arrayPrepend, swapPositions} from './commands-mutators';
+import {Commands} from "./commands";
+import {arrayAppend, arrayInsertAtIndex, arrayPrepend, objectPatch, swapPositions} from "./commands-mutators";
 
 type FilterFlags<Base, Condition> = {
     [Key in keyof Base]:
@@ -20,11 +20,12 @@ export type RepositoryState<T> = {
 
 export type RepositoryType<R /*extends RepositoryState<unknown>*/> = R extends RepositoryState<infer T> ? T : never;
 
-export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T]
+export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
 export type Update<T> = {
     id: string;
-    changes: RequireAtLeastOne<any> // todo typings;
+    // changes: RequireAtLeastOne<T>;
+    changes: Partial<T>;
 };
 
 export type Position = 'start' | 'end' | number;
@@ -100,12 +101,11 @@ export class RepositoryCommands<S> extends Commands<S> {
         position?: Position
     ) {
         const entryArr = Array.isArray(entries) ? entries : Object.values(entries);
-        const repo = this.getRepositoryState(repositoryField);
 
         entryArr.forEach((entry) => {
-            repo.byId[(entry as any)[repo.idField]] = entry;
-            this.updateOrPushEntry(repositoryField, entry, position);
+            this.updateOrPushEntry(repositoryField, entry);
         });
+
         if (position) {
             this.setPositionOfEntries(repositoryField, entryArr, position);
         }
@@ -118,7 +118,7 @@ export class RepositoryCommands<S> extends Commands<S> {
     ) {
 
         const repo = this.getRepositoryState(repositoryField);
-        const allEntriesExist = entries.every((e) => repo.byList.includes((e as any)));
+        const allEntriesExist = entries.every((e) => repo.byList.includes((e)));
 
         if (!allEntriesExist) {
             throw new Error('Some of the entries do not exist');
@@ -126,25 +126,55 @@ export class RepositoryCommands<S> extends Commands<S> {
 
         const itemsNotInEntries: RepositoryType<S[F]>[] = repo.byList.filter((e) => !entries.includes((e as any))) as any;
 
-        if (position === 'start') {
+        if (position === "start") {
             repo.byList = arrayPrepend(itemsNotInEntries)(entries);
-        } else if (position === 'end') {
+        } else if (position === "end") {
             repo.byList = arrayAppend(itemsNotInEntries)(entries);
-        } else if (typeof position === 'number') {
+        } else if (typeof position === "number") {
             repo.byList = arrayInsertAtIndex(itemsNotInEntries, position)(entries);
         }
     }
 
-    // add or update multiple. Supports partial updates
-    patchEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F, updates: Update<RepositoryType<S[F]>>[]
+    patchEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+        repositoryField: F,
+        update: Update<RepositoryType<S[F]>>
     ) {
-        // tbd
+        const repo = this.getRepositoryState(repositoryField);
+        const entryExists = repo.byList.find((e) => (e as any)[repo.idField] === update.id);
+
+        if (!entryExists) {
+            throw new Error("Entry does not exist");
+        }
+
+        const patchedResult = objectPatch(entryExists)(update.changes);
+        const entryIndex = this.getEntryIndex(repositoryField, update.id);
+
+        repo.byId[update.id] = patchedResult;
+        repo.byList[entryIndex] = patchedResult;
+    }
+
+    patchEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+        repositoryField: F,
+        updates: Update<RepositoryType<S[F]>>[]
+    ) {
+        const repo = this.getRepositoryState(repositoryField);
+        const allEntriesExist = updates
+            .map((update) => update.id)
+            .every((e) => repo.byList.map((entry) => (entry as any)[repo.idField]).includes((e)));
+
+        if (!allEntriesExist) {
+            throw new Error("Some of the entries do not exist");
+        }
+
+        updates.forEach((update) => {
+            this.patchEntry(repositoryField, update);
+        });
     }
 
     // remove one
     removeEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F, id: string
+        repositoryField: F,
+        id: string
     ) {
         // tbd
     }
