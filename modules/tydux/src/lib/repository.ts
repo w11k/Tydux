@@ -171,25 +171,30 @@ export class RepositoryCommands<S> extends Commands<S> {
         });
     }
 
-    // remove one
     removeEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
         repositoryField: F,
         id: string
     ) {
-        // tbd
+        const repo = this.getRepositoryState(repositoryField);
+
+        repo.byId[id] = undefined;
+        repo.byList = repo.byList.filter((e) => (e as any)[repo.idField] !== id);
     }
 
-    // remove multiple
     removeEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F, ids: string[]
+        repositoryField: F,
+        ids: string[]
     ) {
-        // tbd
+        ids.forEach((id) => {
+            this.removeEntry(repositoryField, id);
+        });
     }
 
-    // clear all
     removeAllEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
         repositoryField: F
     ) {
-        // tbd
+        const repo = this.getRepositoryState(repositoryField);
+        repo.byList = [];
+        repo.byId = {};
     }
 }

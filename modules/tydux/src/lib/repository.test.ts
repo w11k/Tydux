@@ -316,4 +316,61 @@ describe("Repository", () => {
             expect(facade.state.todos.byList).toEqual([t1Patched, t3Patched]);
         });
     });
+
+    describe("removeEntry", () => {
+        it("should remove one entry", () => {
+            class TestFacade extends Facade<TestCommands> {
+                removeOne() {
+                    this.commands.removeEntry("todos", "1");
+                }
+            }
+
+            const initialState = {todos: {byList: [t1, t2], byId: {1: t1, 2: t2}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.removeOne();
+
+            expect(facade.state.todos.byId[1]).toEqual(undefined);
+            expect(facade.state.todos.byId[2]).toEqual(t2);
+            expect(facade.state.todos.byList).toEqual([t2]);
+        });
+    });
+
+    describe("removeEntries", () => {
+        it("should remove multiple entry", () => {
+            class TestFacade extends Facade<TestCommands> {
+                removeMultiple() {
+                    this.commands.removeEntries("todos", ["1", "2"]);
+                }
+            }
+
+            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.removeMultiple();
+
+            expect(facade.state.todos.byId[1]).toEqual(undefined);
+            expect(facade.state.todos.byId[2]).toEqual(undefined);
+            expect(facade.state.todos.byId[3]).toEqual(t3);
+            expect(facade.state.todos.byList).toEqual([t3]);
+        });
+    });
+
+    describe("removeAllEntries", () => {
+        it("should remove all entries", () => {
+            class TestFacade extends Facade<TestCommands> {
+                clearAll() {
+                    this.commands.removeAllEntries("todos");
+                }
+            }
+
+            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            facade.clearAll();
+
+            expect(facade.state.todos.byId).toEqual({});
+            expect(facade.state.todos.byList).toEqual([]);
+        });
+    });
 });
