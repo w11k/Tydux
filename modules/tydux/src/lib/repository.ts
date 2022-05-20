@@ -13,25 +13,22 @@ type AllowedNames<Base, Condition> =
 export type FieldsOfType<Base, Condition> =
     Pick<Base, AllowedNames<Base, Condition>>;
 
-export type RepositoryState<T> = {
+export type RepositoryState<T, ID extends keyof FieldsOfType<T, string | number>> = {
     idField: string;
     byList: T[];
     byId: Record<string, T>;
 };
 
-export type RepositoryType<R /*extends RepositoryState<unknown>*/> = R extends RepositoryState<infer T> ? T : never;
+export type RepositoryType<R /*extends RepositoryState<any, any>*/> = R extends RepositoryState<infer T, any> ? T : never;
 
-export type Update<T> = {
-    id: string;
-    changes: Partial<T>;
-};
+export type Update<R> = R extends RepositoryState<infer T, infer ID> ? Required<Pick<T, ID>> & Partial<Exclude<T, ID>> : never;
 
-export type Position = 'start' | 'end' | number;
+export type Position = "start" | "end" | number;
 
-export function createRepositoryState<T>(
-    idField: keyof FieldsOfType<T, string | number>,
+export function createRepositoryState<T, ID extends keyof FieldsOfType<T, string | number>>(
+    idField: ID,
     defaultState?: T[] | Record<string, T>
-): RepositoryState<T> {
+): RepositoryState<T, ID> {
     const s = idField.toString();
     return {
         idField: s,
@@ -41,6 +38,26 @@ export function createRepositoryState<T>(
             : defaultState || {}) as Record<string, T>,
     };
 }
+
+
+
+type Todo = {
+    id: number;
+    title: string;
+}
+
+class FooState {
+    repo = createRepositoryState<Todo, "id">("id");
+}
+
+type FooRepo = FooState["repo"];
+
+type update = Update<FooRepo>;
+declare const u: update;
+console.log(u.id.toFixed());
+console.log(u.title.toString());
+
+
 
 export class RepositoryCommands<S> extends Commands<S> {
 
@@ -123,7 +140,7 @@ export class RepositoryCommands<S> extends Commands<S> {
         const allEntriesExist = entries.every((e) => repo.byList.includes((e)));
 
         if (!allEntriesExist) {
-            throw new Error('Some of the entries do not exist');
+            throw new Error("Some of the entries do not exist");
         }
 
         const itemsNotInEntries: RepositoryType<S[F]>[] = repo.byList.filter((e) => !entries.includes((e as any))) as any;
@@ -137,9 +154,9 @@ export class RepositoryCommands<S> extends Commands<S> {
         }
     }
 
-    patchEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F,
-        update: Update<RepositoryType<S[F]>>
+    patchEntry<R extends keyof FieldsOfType<S, RepositoryState<any, any> | undefined>>(
+        repositoryField: R,
+        update: Update<S[R]>
     ) {
         const repo = this.getRepositoryState(repositoryField);
         const entryExists = repo.byList.find((e) => (e as any)[repo.idField] === update.id);
