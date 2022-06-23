@@ -13,10 +13,12 @@ type AllowedNames<Base, Condition> =
 export type FieldsOfType<Base, Condition> =
     Pick<Base, AllowedNames<Base, Condition>>;
 
-export type RepositoryState<T, ID extends keyof FieldsOfType<T, string | number>> = {
-    idField: string;
+type IdField = string | number;
+
+export type RepositoryState<T, ID extends keyof FieldsOfType<T, IdField>> = {
+    idField: IdField;
     byList: T[];
-    byId: Record<string, T>;
+    byId: Record<IdField, T>;
 };
 
 export type RepositoryType<R /*extends RepositoryState<any, any>*/> = R extends RepositoryState<infer T, any> ? T : never;
@@ -25,9 +27,9 @@ export type Update<R> = R extends RepositoryState<infer T, infer ID> ? Required<
 
 export type Position = "start" | "end" | number;
 
-export function createRepositoryState<T, ID extends keyof FieldsOfType<T, string | number>>(
+export function createRepositoryState<T, ID extends keyof FieldsOfType<T, IdField>>(
     idField: ID,
-    defaultState?: T[] | Record<string, T>
+    defaultState?: T[] | Record<IdField, T>
 ): RepositoryState<T, ID> {
     const s = idField.toString();
     return {
@@ -35,29 +37,9 @@ export function createRepositoryState<T, ID extends keyof FieldsOfType<T, string
         byList: (Array.isArray(defaultState) ? defaultState : Object.values(defaultState || {}) || []) as T[],
         byId: (Array.isArray(defaultState)
             ? fromEntries(defaultState.map((entry) => [(entry as any)[s], entry]))
-            : defaultState || {}) as Record<string, T>,
+            : defaultState || {}) as Record<IdField, T>,
     };
 }
-
-
-
-type Todo = {
-    id: number;
-    title: string;
-}
-
-class FooState {
-    repo = createRepositoryState<Todo, "id">("id");
-}
-
-type FooRepo = FooState["repo"];
-
-type update = Update<FooRepo>;
-declare const u: update;
-console.log(u.id.toFixed());
-console.log(u.title.toString());
-
-
 
 export class RepositoryCommands<S> extends Commands<S> {
 
@@ -66,15 +48,15 @@ export class RepositoryCommands<S> extends Commands<S> {
         Object.setPrototypeOf(this, RepositoryCommands.prototype);
     }
 
-    private getRepositoryState(field: keyof S): RepositoryState<unknown> {
+    private getRepositoryState(field: keyof S): RepositoryState<unknown, never> {
         return (this.state as any)[field];
     }
 
-    private getEntryIndex(repo: RepositoryState<unknown>, entryId: string): number {
+    private getEntryIndex(repo: RepositoryState<unknown, never>, entryId: string): number {
         return repo.byList.findIndex((e) => (e as any)[repo.idField] === entryId);
     }
 
-    updateOrPushEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+    updateOrPushEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown, never> | undefined>>(
         repositoryField: F,
         entry: RepositoryType<S[F]>,
         position?: Position
@@ -92,7 +74,7 @@ export class RepositoryCommands<S> extends Commands<S> {
         }
     }
 
-    setPositionOfEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+    setPositionOfEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown, never> | undefined>>(
         repositoryField: F,
         entry: RepositoryType<S[F]>,
         position?: Position
@@ -114,7 +96,7 @@ export class RepositoryCommands<S> extends Commands<S> {
         }
     }
 
-    updateOrPushEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+    updateOrPushEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown, never> | undefined>>(
         repositoryField: F,
         entries: RepositoryType<S[F]>[] | Record<string, RepositoryType<S[F]>>,
         position?: Position
@@ -130,7 +112,7 @@ export class RepositoryCommands<S> extends Commands<S> {
         }
     }
 
-    setPositionOfEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
+    setPositionOfEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown, never> | undefined>>(
         repositoryField: F,
         entries: RepositoryType<S[F]>[],
         position?: Position
@@ -159,26 +141,27 @@ export class RepositoryCommands<S> extends Commands<S> {
         update: Update<S[R]>
     ) {
         const repo = this.getRepositoryState(repositoryField);
-        const entryExists = repo.byList.find((e) => (e as any)[repo.idField] === update.id);
+        const entryId = (update as any)[repo.idField];
+        const entryExists = repo.byList.find((e) => (e as any)[repo.idField] === entryId);
 
         if (!entryExists) {
             throw new Error("Entry does not exist");
         }
 
-        const patchedResult = objectPatch(entryExists)(update.changes);
-        const entryIndex = this.getEntryIndex(repo, update.id);
+        const patchedResult = objectPatch(entryExists)(update);
+        const entryIndex = this.getEntryIndex(repo, entryId);
 
-        repo.byId[update.id] = patchedResult;
+        repo.byId[entryId] = patchedResult;
         repo.byList[entryIndex] = patchedResult;
     }
 
-    patchEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F,
-        updates: Update<RepositoryType<S[F]>>[]
+    patchEntries<R extends keyof FieldsOfType<S, RepositoryState<any, any> | undefined>>(
+        repositoryField: R,
+        updates: Update<S[R]>[]
     ) {
         const repo = this.getRepositoryState(repositoryField);
         const allEntriesExist = updates
-            .map((update) => update.id)
+            .map((update) => (update as any)[repo.idField])
             .every((e) => repo.byList.map((entry) => (entry as any)[repo.idField]).includes((e)));
 
         if (!allEntriesExist) {
@@ -190,9 +173,9 @@ export class RepositoryCommands<S> extends Commands<S> {
         });
     }
 
-    removeEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F,
-        id: string
+    removeEntry<R extends keyof FieldsOfType<S, RepositoryState<any, any> | undefined>>(
+        repositoryField: R,
+        id: IdField
     ) {
         const repo = this.getRepositoryState(repositoryField);
 
@@ -200,17 +183,17 @@ export class RepositoryCommands<S> extends Commands<S> {
         repo.byList = repo.byList.filter((e) => (e as any)[repo.idField] !== id);
     }
 
-    removeEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F,
-        ids: string[]
+    removeEntries<R extends keyof FieldsOfType<S, RepositoryState<any, any> | undefined>>(
+        repositoryField: R,
+        ids: (IdField)[]
     ) {
         ids.forEach((id) => {
             this.removeEntry(repositoryField, id);
         });
     }
 
-    removeAllEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown> | undefined>>(
-        repositoryField: F
+    removeAllEntries<R extends keyof FieldsOfType<S, RepositoryState<any, any> | undefined>>(
+        repositoryField: R
     ) {
         const repo = this.getRepositoryState(repositoryField);
         repo.byList = [];

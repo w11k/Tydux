@@ -12,7 +12,7 @@ class Todo {
 }
 
 class TestState {
-    todos = createRepositoryState<Todo>("id");
+    todos = createRepositoryState<Todo, "id">("id");
 }
 
 describe("Repository", () => {
@@ -25,9 +25,10 @@ describe("Repository", () => {
     const t1Updated = new Todo("1", "foo", true);
     const t2Updated = new Todo("2", "bar", true);
 
-    const t1Partial: Partial<Todo> = {state: true};
-    const t1Patched = new Todo("1", "foo", true);
-    const t3Partial: Partial<Todo> = {text: "patched"};
+    const t1Patch = {id: "1", text: "patched"};
+    const t1Patched = new Todo("1", "patched", false);
+
+    const t3Update = {id: "3", text: "patched"};
     const t3Patched = new Todo("3", "patched", true);
 
     class TestCommands extends RepositoryCommands<TestState> {
@@ -47,7 +48,7 @@ describe("Repository", () => {
     describe("createRepositoryState", () => {
         it("create an empty repository state", () => {
             const idField = "id";
-            const state = createRepositoryState<Todo>(idField);
+            const state = createRepositoryState<Todo, "id">("id");
             expect(state).toEqual({
                 idField,
                 byList: [],
@@ -57,7 +58,7 @@ describe("Repository", () => {
 
         it("create an repository state with an initial value (object)", () => {
             const idField = "id";
-            const state = createRepositoryState<Todo>(idField, {1: t1, 2: t2});
+            const state = createRepositoryState<Todo, "id">(idField, {1: t1, 2: t2});
             expect(state).toEqual({
                 idField,
                 byList: [t1, t2],
@@ -67,7 +68,7 @@ describe("Repository", () => {
 
         it("create an repository state with an initial value (array)", () => {
             const idField = "id";
-            const state = createRepositoryState<Todo>(idField, [t3, t4]);
+            const state = createRepositoryState<Todo, "id">(idField, [t3, t4]);
             expect(state).toEqual({
                 idField,
                 byList: [t3, t4],
@@ -308,7 +309,7 @@ describe("Repository", () => {
         it("should patch one partial entry", () => {
             class TestFacade extends Facade<TestCommands> {
                 patchOne() {
-                    this.commands.patchEntry("todos", {id: "1", changes: t1Partial});
+                    this.commands.patchEntry("todos", t1Patch);
                 }
             }
 
@@ -326,7 +327,7 @@ describe("Repository", () => {
         it("should patch multiple partial entries", () => {
             class TestFacade extends Facade<TestCommands> {
                 patchMultiple() {
-                    this.commands.patchEntries("todos", [{id: "1", changes: t1Partial}, {id: "3", changes: t3Partial}]);
+                    this.commands.patchEntries("todos", [t1Patch, t3Update]);
                 }
             }
 
