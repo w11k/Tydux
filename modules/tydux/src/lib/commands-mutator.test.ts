@@ -124,6 +124,14 @@ describe("operator functions for applyMutator", () => {
 
     it("arrayInsertAtIndex", () => {
         expect(arrayInsertAtIndex(["1", "4"], 1)(["2", "3"])).toEqual(["1", "2", "3", "4"]);
+
+        expect(() => {
+            arrayInsertAtIndex(["1", "4"], -1)(["2", "3"]);
+        }).toThrow('Index must at least be in the scope from 0 to 1');
+
+        expect(() => {
+            arrayInsertAtIndex(["1", "4"], 2)(["2", "3"]);
+        }).toThrow('Index must at least be in the scope from 0 to 1');
     });
 
     it("objectPatch", () => {
@@ -146,5 +154,13 @@ describe("operator functions for applyMutator", () => {
 
     it("swapPositions", () => {
         expect(swapPositions(["1", "2", "3"], 0, 2)).toEqual(["3", "2", "1"]);
+
+        expect(() => {
+            swapPositions(["1", "2", "3"], -1, 2);
+        }).toThrow('Index must at least be in the scope from 0 to 2');
+
+        expect(() => {
+            swapPositions(["1", "2", "3"], 0, 3);
+        }).toThrow('Index must at least be in the scope from 0 to 2');
     });
 });

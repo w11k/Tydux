@@ -1,5 +1,6 @@
 import {Commands} from "./commands";
 import {arrayAppend, arrayInsertAtIndex, arrayPrepend, objectPatch, swapPositions} from "./commands-mutators";
+import {getIndexNotInArrayMessage} from "./error-messages";
 import {fromEntries} from "./utils";
 
 type FilterFlags<Base, Condition> = {
@@ -77,19 +78,22 @@ export class RepositoryCommands<S> extends Commands<S> {
     setPositionOfEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown, never> | undefined>>(
         repositoryField: F,
         entry: RepositoryType<S[F]>,
-        position?: Position
+        position: Position
     ) {
         const repo = this.getRepositoryState(repositoryField);
 
         const entryExists = !!repo.byList.find((e) => (e as any)[repo.idField] === (entry as any)[repo.idField]);
+        const arrLength = repo.byList.length;
 
         if (!entryExists) {
             throw new Error("Entry does not exist");
+        } else if (position < 0 || position > arrLength - 1) {
+            throw new Error(getIndexNotInArrayMessage(arrLength));
         }
 
         const entryId = (entry as any)[repo.idField];
         const entryIndex = this.getEntryIndex(repo, entryId);
-        const updatedIndex = position === "start" ? 0 : position === "end" ? repo.byList.length - 1 : position;
+        const updatedIndex = position === "start" ? 0 : position === "end" ? arrLength - 1 : position;
 
         if (updatedIndex != null) {
             repo.byList = swapPositions(repo.byList, updatedIndex, entryIndex);

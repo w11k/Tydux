@@ -155,6 +155,7 @@ describe("Repository", () => {
     });
 
     describe("setPositionOfEntry", () => {
+
         it("should set position of entry to the START of the list", () => {
 
             class TestFacade extends Facade<TestCommands> {
@@ -162,18 +163,17 @@ describe("Repository", () => {
                     this.commands.setPositionOfEntry("todos", t1, "start");
                 }
             }
-
             const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
-            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
             facade.setPositionToStart();
 
             expect(facade.state.todos.byList).toEqual([t1, t2, t3]);
+
             expect(facade.state.todos.byId[1]).toBe(t1);
             expect(facade.state.todos.byId[2]).toEqual(t2);
             expect(facade.state.todos.byId[3]).toEqual(t3);
         });
-
         it("should set position of entry to the END of the list", () => {
 
             class TestFacade extends Facade<TestCommands> {
@@ -212,7 +212,7 @@ describe("Repository", () => {
             expect(facade.state.todos.byId[3]).toEqual(t3);
         });
 
-        it("should throw error when trying to set position when entry does not exist", () => {
+        it("should throw an error when trying to set position when entry does not exist", () => {
 
             class TestFacade extends Facade<TestCommands> {
                 setPositionToStart() {
@@ -222,11 +222,35 @@ describe("Repository", () => {
 
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), undefined);
 
-            try {
-                facade.setPositionToStart();
-            } catch ({message}) {
-                expect(message).toEqual('Entry does not exist');
+            expect(facade.setPositionToStart).toThrow('Entry does not exist');
+        });
+
+        it("should NOT be possible to set position of entry before the START of the list", () => {
+
+            class TestFacade extends Facade<TestCommands> {
+                setPositionBeforeStart() {
+                    this.commands.setPositionOfEntry("todos", t1, -1);
+                }
             }
+
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            expect(facade.setPositionBeforeStart).toThrow('Index must at least be in the scope from 0 to 2');
+        });
+
+        it("should NOT be possible to set position of entry after the END of the list", () => {
+
+            class TestFacade extends Facade<TestCommands> {
+                setPositionAfterEnd() {
+                    this.commands.setPositionOfEntry("todos", t1, 3);
+                }
+            }
+
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
+            const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
+
+            expect(facade.setPositionAfterEnd).toThrow('Index must at least be in the scope from 0 to 2');
         });
     });
 

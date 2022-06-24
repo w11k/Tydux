@@ -1,4 +1,5 @@
 import {Commands, CommandsState} from "./commands";
+import {getIndexNotInArrayMessage} from "./error-messages";
 
 export function createAssignCommand<T extends Commands<any>, F extends keyof CommandsState<T>>(
     commands: T,
@@ -60,6 +61,10 @@ export function arrayPrepend<E>(source: E[]) {
 }
 
 export function arrayInsertAtIndex<E>(source: E[], index: number) {
+    const arrLength = source.length;
+    if (index < 0 || index > arrLength - 1) {
+        throw new Error(getIndexNotInArrayMessage(arrLength));
+    }
     return (newItems: E[]) => {
         return [
             ...source.slice(0, index),
@@ -86,7 +91,13 @@ export function objectPatch<E>(source: E): (patch: Partial<E>) => E {
 }
 
 export function swapPositions<E>(source: E[], indexA: number, indexB: number) {
+    const arrLength = source.length;
     const sourceCopy = [...source];
+
+    if (indexA < 0 || indexA > arrLength - 1 || indexB < 0 || indexB > arrLength - 1) {
+        throw new Error(getIndexNotInArrayMessage(arrLength));
+    }
+
     [sourceCopy[indexA], sourceCopy[indexB]] = [sourceCopy[indexB], sourceCopy[indexA]];
     return sourceCopy;
 }
