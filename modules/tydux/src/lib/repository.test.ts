@@ -10,9 +10,10 @@ class Todo {
     constructor(public id: string, public text: string, public state: boolean) {
     }
 }
+const idField = "id";
 
 class TestState {
-    todos = createRepositoryState<Todo, "id">("id");
+    todos = createRepositoryState<Todo, "id">(idField);
 }
 
 describe("Repository", () => {
@@ -47,7 +48,6 @@ describe("Repository", () => {
 
     describe("createRepositoryState", () => {
         it("create an empty repository state", () => {
-            const idField = "id";
             const state = createRepositoryState<Todo, "id">("id");
             expect(state).toEqual({
                 idField,
@@ -57,7 +57,6 @@ describe("Repository", () => {
         });
 
         it("create an repository state with an initial value (object)", () => {
-            const idField = "id";
             const state = createRepositoryState<Todo, "id">(idField, {1: t1, 2: t2});
             expect(state).toEqual({
                 idField,
@@ -67,7 +66,6 @@ describe("Repository", () => {
         });
 
         it("create an repository state with an initial value (array)", () => {
-            const idField = "id";
             const state = createRepositoryState<Todo, "id">(idField, [t3, t4]);
             expect(state).toEqual({
                 idField,
@@ -86,7 +84,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField: "id"}};
+            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.addOne();
@@ -104,7 +102,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField: "id"}};
+            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.updateOne();
@@ -123,7 +121,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField: "id"}};
+            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.addMultiple();
@@ -142,7 +140,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.updateMultiple();
@@ -163,7 +161,7 @@ describe("Repository", () => {
                     this.commands.setPositionOfEntry("todos", t1, "start");
                 }
             }
-            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField}};
 
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
             facade.setPositionToStart();
@@ -182,7 +180,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1, t3, t2], byId: {1: t1, 3: t3, 2: t2}, idField: "id"}};
+            const initialState = {todos: {byList: [t1, t3, t2], byId: {1: t1, 3: t3, 2: t2}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.setPositionToEnd();
@@ -201,7 +199,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t2, t1, t3], byId: {1: t1, 3: t3, 2: t2}, idField: "id"}};
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {1: t1, 3: t3, 2: t2}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.setPositionToIndex();
@@ -233,7 +231,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             expect(facade.setPositionBeforeStart).toThrow('Index must at least be in the scope from 0 to 2');
@@ -247,7 +245,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {2: t2, 1: t1, 3: t3}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             expect(facade.setPositionAfterEnd).toThrow('Index must at least be in the scope from 0 to 2');
@@ -262,7 +260,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t3, t1, t2], byId: {2: t2, 1: t1, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t3, t1, t2], byId: {2: t2, 1: t1, 3: t3}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.setPositionsToStart();
@@ -281,7 +279,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t3, t4, t1, t2], byId: {1: t1, 3: t3, 2: t2, 4: t4}, idField: "id"}};
+            const initialState = {todos: {byList: [t3, t4, t1, t2], byId: {1: t1, 3: t3, 2: t2, 4: t4}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.setPositionsToEnd();
@@ -300,7 +298,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t2, t1, t3], byId: {1: t1, 3: t3, 2: t2}, idField: "id"}};
+            const initialState = {todos: {byList: [t2, t1, t3], byId: {1: t1, 3: t3, 2: t2}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.setPositionsIndex();
@@ -337,7 +335,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField: "id"}};
+            const initialState = {todos: {byList: [t1], byId: {1: t1}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.patchOne();
@@ -355,7 +353,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1, t3], byId: {1: t1, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t1, t3], byId: {1: t1, 3: t3}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.patchMultiple();
@@ -373,7 +371,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1, t2], byId: {1: t1, 2: t2}, idField: "id"}};
+            const initialState = {todos: {byList: [t1, t2], byId: {1: t1, 2: t2}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.removeOne();
@@ -392,7 +390,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.removeMultiple();
@@ -412,7 +410,7 @@ describe("Repository", () => {
                 }
             }
 
-            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField: "id"}};
+            const initialState = {todos: {byList: [t1, t2, t3], byId: {1: t1, 2: t2, 3: t3}, idField}};
             const facade = new TestFacade(createTestMount(new TestState()), new TestCommands(), initialState);
 
             facade.clearAll();

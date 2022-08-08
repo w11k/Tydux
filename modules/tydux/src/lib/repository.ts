@@ -75,6 +75,13 @@ export class RepositoryCommands<S> extends Commands<S> {
         }
     }
 
+    /**
+     *  Moves an existing entry to a particular position in the list.
+     *  @param position
+     *      - If set to "start", the entry will be positioned at the index 0 of the array.
+     *      - If set to "end", the entry will be positioned at the last index of the array.
+     *      - If specified as a number, the entry will be positioned at the given index.
+     */
     setPositionOfEntry<F extends keyof FieldsOfType<S, RepositoryState<unknown, never> | undefined>>(
         repositoryField: F,
         entry: RepositoryType<S[F]>,
@@ -116,10 +123,17 @@ export class RepositoryCommands<S> extends Commands<S> {
         }
     }
 
+    /**
+     *  Moves multiple existing entries to a particular position in the list.
+     *  @param position
+     *      - If set to "start", the list of entries will be positioned at the index 0 of the array.
+     *      - If set to "end", the list of entries will be positioned at the last index of the array.
+     *      - If specified as a number, the the list of entries will be positioned at the given index.
+     */
     setPositionOfEntries<F extends keyof FieldsOfType<S, RepositoryState<unknown, never> | undefined>>(
         repositoryField: F,
         entries: RepositoryType<S[F]>[],
-        position?: Position
+        position: Position
     ) {
 
         const repo = this.getRepositoryState(repositoryField);
@@ -135,7 +149,7 @@ export class RepositoryCommands<S> extends Commands<S> {
             repo.byList = arrayPrepend(itemsNotInEntries)(entries);
         } else if (position === "end") {
             repo.byList = arrayAppend(itemsNotInEntries)(entries);
-        } else if (typeof position === "number") {
+        } else {
             repo.byList = arrayInsertAtIndex(itemsNotInEntries, position)(entries);
         }
     }
