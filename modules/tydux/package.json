@@ -1,11 +1,12 @@
 {
     "name": "@w11k/tydux",
-    "version": "16.0.2",
+    "version": "16.1.0",
     "author": "W11K GmbH",
     "contributors": [
         "Roman Roelofsen",
         "Philipp Burgmer",
-        "Sascha Engmann"
+        "Sascha Engmann",
+        "Mario Sallat"
     ],
     "license": "Apache-2.0",
     "homepage": "https://github.com/w11k/Tydux",
