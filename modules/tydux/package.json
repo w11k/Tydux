@@ -33,8 +33,7 @@
         "compile:base": "tsc -p tsconfig.json",
         "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
         "compile:esm2015": "tsc -p tsconfig.dist.esm2015.json",
-        "build:copy_from_root": "##### shx cp CHANGELOG.md ../../README.md ../../LICENSE dist",
-        "build": "run-s clean test compile build:copy_from_root",
+        "build": "run-s clean test compile",
         "prepublishOnly": "run-s build",
         "np": "np",
         "release": "run-s build np"
@@ -43,12 +42,10 @@
         "access": "public"
     },
     "dependencies": {
-        "@w11k/rx-ninja": "^4.0.0",
-        "redux": "^4.0.0"
+        "@w11k/rx-ninja": "^4.0.0"
     },
     "peerDependencies": {
         "immer": ">= 9.0.0",
-        "redux": "^4.0.0",
         "redux-devtools-extension": "^2.13.9",
         "rxjs": ">= 6.2.0",
         "typescript": "^3 || ^4"
