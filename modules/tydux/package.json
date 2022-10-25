@@ -26,17 +26,18 @@
     "esm5": "./dist/esm5/index.js",
     "esm2015": "./dist/esm2015/index.js",
     "scripts": {
+        "build": "run-s clean test compile build:copy_from_root",
+        "build:copy_from_root": "shx cp ../../README.md ../../LICENSE .",
         "clean": "shx rm -rf dist",
-        "test": "jest --config ./jest.config.js",
-        "test:watch": "jest --config ./jest.config.js --watchAll",
         "compile": "run-p compile:*",
         "compile:base": "tsc -p tsconfig.json",
-        "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
         "compile:esm2015": "tsc -p tsconfig.dist.esm2015.json",
-        "build": "run-s clean test compile",
-        "prepublishOnly": "run-s build",
+        "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
         "np": "np",
-        "release": "run-s build np"
+        "prepublishOnly": "run-s build",
+        "release": "run-s build np",
+        "test": "jest --config ./jest.config.js",
+        "test:watch": "jest --config ./jest.config.js --watchAll"
     },
     "publishConfig": {
         "access": "public"

@@ -44,3 +44,6 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+modules/tydux/README.md
+modules/tydux/LICENSE
