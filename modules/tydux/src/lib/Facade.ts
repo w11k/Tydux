@@ -93,8 +93,8 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
                 return state;
             });
 
-            // Determine the initial value. Seperate logic for promises and non-promises so that
-            // facades with an non-promise initial value are initialized synchronously.
+            // Determine the initial value. Separate logic for promises and non-promises so that
+            // facades with a non-promise initial value are initialized synchronously.
             if (initialState instanceof Promise) {
                 this.bufferedStateChanges++;
                 initialState
