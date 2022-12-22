@@ -18,3 +18,5 @@ Illegal access to 'this'. Make sure that 'this' is not accessed in positions lik
 
 Solution: Move the asynchronous code to the store class.
 `;
+
+export const getIndexNotInArrayMessage = (arrLength: number) => `Index must at least be in the scope from 0 to ${arrLength - 1}`;

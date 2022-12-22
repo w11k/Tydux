@@ -154,6 +154,7 @@ todoFacade.loadTodoListFromServer();
 # Documentation
 
 - [Installation](https://github.com/w11k/Tydux/tree/master/doc/installation.md)
+- [Tydux Repository](https://github.com/w11k/Tydux/tree/master/doc/repository.md)
 - [Redux comparison](https://github.com/w11k/Tydux/tree/master/doc/redux_comparison.md)
 - [Angular integration](https://github.com/w11k/Tydux/blob/master/projects/w11k/tydux-angular/README.md)
 - [Migration guide version 14](https://github.com/w11k/Tydux/tree/master/doc/migration_14.md)

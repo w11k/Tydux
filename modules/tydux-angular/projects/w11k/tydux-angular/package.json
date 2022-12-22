@@ -1,6 +1,6 @@
 {
     "name": "@w11k/tydux-angular",
-    "version": "16.0.0",
+    "version": "15.0.0",
     "author": "W11K GmbH",
     "contributors": [
         "Roman Roelofson",
@@ -14,7 +14,7 @@
         "url": "https://github.com/w11k/Tydux.git"
     },
     "peerDependencies": {
-        "@w11k/tydux": ">= 16",
+        "@w11k/tydux": ">= 14",
         "@angular/core": ">= 6.0.0",
         "@angular/common": ">= 6.0.0"
     }

@@ -1,11 +1,12 @@
 {
     "name": "@w11k/tydux",
-    "version": "16.0.2",
+    "version": "16.1.2",
     "author": "W11K GmbH",
     "contributors": [
         "Roman Roelofsen",
         "Philipp Burgmer",
-        "Sascha Engmann"
+        "Sascha Engmann",
+        "Mario Sallat"
     ],
     "license": "Apache-2.0",
     "homepage": "https://github.com/w11k/Tydux",
@@ -25,29 +26,27 @@
     "esm5": "./dist/esm5/index.js",
     "esm2015": "./dist/esm2015/index.js",
     "scripts": {
+        "build": "run-s clean test compile build:copy_from_root",
+        "build:copy_from_root": "shx cp ../../README.md ../../LICENSE .",
         "clean": "shx rm -rf dist",
-        "test": "jest --config ./jest.config.js",
-        "test:watch": "jest --config ./jest.config.js --watchAll",
         "compile": "run-p compile:*",
         "compile:base": "tsc -p tsconfig.json",
-        "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
         "compile:esm2015": "tsc -p tsconfig.dist.esm2015.json",
-        "build:copy_from_root": "##### shx cp CHANGELOG.md ../../README.md ../../LICENSE dist",
-        "build": "run-s clean test compile build:copy_from_root",
-        "prepublishOnly": "run-s build",
+        "compile:esm5": "tsc -p tsconfig.dist.esm5.json",
         "np": "np",
-        "release": "run-s build np"
+        "prepublishOnly": "run-s build",
+        "release": "run-s build np",
+        "test": "jest --config ./jest.config.js",
+        "test:watch": "jest --config ./jest.config.js --watchAll"
     },
     "publishConfig": {
         "access": "public"
     },
     "dependencies": {
-        "@w11k/rx-ninja": "^4.0.0",
-        "redux": "^4.0.0"
+        "@w11k/rx-ninja": "^4.0.0"
     },
     "peerDependencies": {
         "immer": ">= 9.0.0",
-        "redux": "^4.0.0",
         "redux-devtools-extension": "^2.13.9",
         "rxjs": ">= 6.2.0",
         "typescript": "^3 || ^4"
