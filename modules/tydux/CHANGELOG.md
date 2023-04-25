@@ -1,3 +1,7 @@
+# Version 16.1.3
+
+- add compatibility for immer version 10
+
 # Version 16.0.0
 
 - internal: changed directory structure
