@@ -1,5 +1,5 @@
 import {isNil} from "@w11k/rx-ninja";
-import {enableAllPlugins} from "immer";
+import {enableMapSet, enablePatches} from "immer";
 import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
 import {EnhancerOptions} from "redux-devtools-extension";
 import {Observable, ReplaySubject, Subject} from "rxjs";
@@ -153,7 +153,8 @@ export function createTyduxStore<S = any, A extends Action = AnyAction>(
         enhancer?: StoreEnhancer<any>,
     } = {}
 ): TyduxStore<S> {
-    enableAllPlugins();
+    enableMapSet()
+    enablePatches()
     const bridge = new TyduxReducerBridge();
 
     const rootReducer = isNil(config.reducer)

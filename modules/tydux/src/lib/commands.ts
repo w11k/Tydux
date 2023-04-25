@@ -1,4 +1,4 @@
-import produce from "immer";
+import {produce} from "immer";
 import {Action} from "redux";
 import {isTyduxDevelopmentModeEnabled} from "./development";
 import {createFailingProxy, failIfInstanceMembersExistExceptStateOrMethods, failIfNotUndefined} from "./utils";
