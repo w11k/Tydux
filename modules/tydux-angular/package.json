@@ -15,7 +15,7 @@
         "test:lib:watch": "jest --watchAll --config ./jest.lib.config.js",
         "test:app": "jest --config ./jest.app.config.js",
         "test:all": "tsc; npm run test:lib && npm run test:app",
-        "cp:license": "cpx LICENSE dist/w11k/tydux-angular",
+        "cp:license": "cpx ../../LICENSE dist/w11k/tydux-angular",
         "cp:readme": "cpx ../../README.md dist/w11k/tydux-angular",
         "lint": "ng lint",
         "e2e": "ng e2e",
