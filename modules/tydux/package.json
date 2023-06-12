@@ -42,6 +42,9 @@
     "publishConfig": {
         "access": "public"
     },
+    "engines": {
+        "node": ">=8"
+    },
     "dependencies": {
         "@w11k/rx-ninja": "^5.0.0"
     },
