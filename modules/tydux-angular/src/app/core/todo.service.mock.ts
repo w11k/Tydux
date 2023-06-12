@@ -1,4 +1,4 @@
-import {FacadeMock} from "@w11k/tydux";
+import {FacadeMock} from "@w11k/tydux/dist/esm2015/testing";
 import {ToDo} from "./todo.entity";
 import {TodoService, TodoState} from "./todo.service";
 

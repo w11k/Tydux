@@ -1,7 +1,7 @@
+import {EnhancerOptions} from "@redux-devtools/extension";
 import {isNil} from "@w11k/rx-ninja";
 import {enableMapSet, enablePatches} from "immer";
 import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
-import {EnhancerOptions} from "redux-devtools-extension";
 import {Observable, ReplaySubject, Subject} from "rxjs";
 import {CommandReducer} from "./commands";
 import {checkDevModeAndCreateDevToolsEnabledComposeFn, isTyduxDevelopmentModeEnabled} from "./development";
@@ -83,7 +83,7 @@ export class TyduxStore<S = any, A extends Action = Action<string>> {
                     s => s[sliceName],
                     (s, l) => {
                         const state = Object.assign({}, s);
-                        state[sliceName] = l;
+                        state[sliceName] = l as any;
                         return state;
                     },
                     () => this.knownSlicePaths[sliceName as string] = false,

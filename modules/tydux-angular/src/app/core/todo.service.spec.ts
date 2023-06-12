@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { TodoService } from './todo.service';
-import { TyduxModule } from '../../../projects/w11k/tydux-angular/src/public_api';
+import { TyduxModule } from '@w11k/tydux-angular';
 
 describe('TodoService', () => {
   beforeEach(() => {

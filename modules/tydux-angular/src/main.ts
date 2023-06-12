@@ -1,12 +1,16 @@
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import {importProvidersFrom, isDevMode} from "@angular/core";
+import {bootstrapApplication, BrowserModule} from "@angular/platform-browser";
+import {provideTydux} from "@w11k/tydux-angular";
+import {AppComponent} from "./app/app.component";
 
-import { AppModule } from './app/app.module';
-import { environment } from './environments/environment';
 
-if (environment.production) {
-  enableProdMode();
-}
-
-platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+bootstrapApplication(AppComponent, {
+    providers: [
+        importProvidersFrom(BrowserModule),
+        // importProvidersFrom(TyduxModule.forRootWithConfig({developmentMode: true})),
+        // importProvidersFrom(TyduxModule.forRootWithoutConfig()),
+        provideTydux({developmentMode: isDevMode()}),
+    ]
+    ,
+})
+    .catch(err => console.error(err));

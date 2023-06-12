@@ -39,7 +39,7 @@ Tydux shares the concept of state, actions, reducer and selectors but differs in
 
 Install Tydux and all required peer-dependencies: 
 
-`npm install @w11k/tydux @w11k/rx-ninja rxjs redux redux-devtools-extension`.
+`npm install @w11k/tydux rxjs redux @redux-devtools/extension`.
 
 # Quick Overview Demo
 
@@ -156,7 +156,7 @@ todoFacade.loadTodoListFromServer();
 - [Installation](https://github.com/w11k/Tydux/tree/master/doc/installation.md)
 - [Tydux Repository](https://github.com/w11k/Tydux/tree/master/doc/repository.md)
 - [Redux comparison](https://github.com/w11k/Tydux/tree/master/doc/redux_comparison.md)
-- [Angular integration](https://github.com/w11k/Tydux/blob/master/projects/w11k/tydux-angular/README.md)
+- [Angular integration](https://github.com/w11k/Tydux/tree/master/doc/angular-integration.md)
 - [Migration guide version 14](https://github.com/w11k/Tydux/tree/master/doc/migration_14.md)
 - [Migration guide version 8 -> 9](https://github.com/w11k/Tydux/tree/master/doc/migration_8_9.md)
 - [Testing](https://github.com/w11k/Tydux/tree/master/doc/testing.md)
