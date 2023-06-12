@@ -1,28 +1,44 @@
-import {Component, OnDestroy, OnInit} from "@angular/core";
-import {ToDo} from "../core/todo.entity";
-import {TodoService} from "../core/todo.service";
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TodoService } from '../core/todo.service';
+import { ToDo } from '../core/todo.entity';
+import { TodoListComponent } from '../todo-list/todo-list.component';
 
 @Component({
-    selector: "app-todo-list-context",
-    templateUrl: "./todo-list-context.component.html",
-    styleUrls: ["./todo-list-context.component.scss"]
+  selector: 'app-todo-list-context',
+  standalone: true,
+  imports: [CommonModule, TodoListComponent],
+  template: `
+    <h2>
+    Todos
+    <span *ngIf="loading$ | async" class="loading-message">Loading...</span>
+</h2>
+<app-todo-list *ngIf="todos$ | async as todos" [todos]="todos" (todoClicked)="updateTodo($event)"></app-todo-list>
+  `,
+  styles: [
+    `.loading-message {
+      font-size: 0.75em;
+      color: grey;
+  }
+  `
+  ]
 })
-export class TodoListContextComponent implements OnInit, OnDestroy {
+export class TodoListContextComponent {
+  todos$ = this.todoService.select(it => it.todos);
+  loading$ = this.todoService.select(it => it.loading);
 
-    todos$ = this.todoService.select(it => it.todos);
-    loading$ = this.todoService.select(it => it.loading);
+  constructor(private readonly todoService: TodoService) {
+  }
 
-    constructor(private readonly todoService: TodoService) {
-    }
+  ngOnInit() {
+    this.todoService.loadAllTodos(1);
+  }
 
-    ngOnInit() {
-        this.todoService.loadAllTodos(1);
-    }
+  ngOnDestroy(): void {
+  }
 
-    ngOnDestroy(): void {
-    }
+  updateTodo($event: ToDo) {
+    this.todoService.updateTodo($event);
+  }
 
-    updateTodo($event: ToDo) {
-        this.todoService.updateTodo($event);
-    }
 }
