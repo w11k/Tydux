@@ -162,14 +162,20 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         return this.bufferedStateChanges > 0;
     }
 
+    /**
+     * Returns an observable which fires an event when the state changes.
+     */
     select(): Observable<Readonly<S>>;
 
-    select<R>(selector?: (state: Readonly<S>) => R): Observable<R>;
-
     /**
+     * Returns an observable which fires an event when the selected (sub-)state changes.
      * - operates on the micro-task queue
      * - only emits values when they change (identity-based)
+     *
+     * @param selector projection function that maps a read-only copy of the new state to a subset of the new state
      */
+    select<R>(selector?: (state: Readonly<S>) => R): Observable<R>;
+
     select<R>(selector?: (state: Readonly<S>) => R): Observable<R> {
         return selectToObservable(this.reduxStoreStateSubject, selector);
     }
@@ -189,7 +195,7 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
     }
 
     createMountPoint<P extends keyof S>(slice: P): NamedMountPoint<S[P], S> {
-        const mountPoint = this.mountPoint.tyduxStore.createDeepMountPoint(this.facadeId + "." + slice);
+        const mountPoint = this.mountPoint.tyduxStore.createDeepMountPoint(this.facadeId + "." + String(slice));
         this.observeDestroyed()
             .pipe(take(1))
             .subscribe(() => mountPoint.destroySubject.next());
@@ -200,7 +206,7 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         if (isNotNil(state) && ![Array, Map, Set, Object].includes((state as any).constructor)) {
             (state as any).constructor[immerable] = true;
         }
-        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state) as any : state;
+        this._state = isTyduxDevelopmentModeEnabled() ? deepFreeze(state as any) as any : state;
     }
 
     private moveMethodsFromPrototypeToInstance() {

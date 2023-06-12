@@ -1,5 +1,5 @@
 import {compose} from "redux";
-import {EnhancerOptions} from "redux-devtools-extension";
+import {EnhancerOptions} from "@redux-devtools/extension";
 
 const DEV_TOOLS_COMPOSE = "__REDUX_DEVTOOLS_EXTENSION_COMPOSE__";
 

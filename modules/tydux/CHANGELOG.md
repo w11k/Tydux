@@ -1,3 +1,14 @@
+# Version 17.0.0
+
+- replaced dependency redux-devtools-extensions with @redux-devtools/extension
+- update dependencies
+- use ts-jest for testing
+
+## Breaking Changes
+
+- please replace redux-devtools-extensions with @redux-devtools/extension in your project
+- add `skipLibCheck: true` or `allowSyntheticDefaultImports: true` in your tsconfig
+
 # Version 16.1.3
 
 - add compatibility for immer version 10

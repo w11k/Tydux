@@ -810,7 +810,7 @@ describe("Facade - sanity tests", function () {
         expect(() => facade.action()).toThrow();
     });
 
-    it("member method can use async/await", async function (done) {
+    it("member method can use async/await", function (done) {
         class MyState {
             count = 0;
         }
