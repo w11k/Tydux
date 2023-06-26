@@ -43,7 +43,7 @@ bootstrapApplication(AppComponent, {
 
 **Create facades just like any Angular service**
 
-```
+```typescript
 @Injectable({providedIn: 'root'})
 export class MyFacade extends Facade<MyCommands> {
 
@@ -59,7 +59,7 @@ export class MyFacade extends Facade<MyCommands> {
 
 **use the facade in your components**
 
-```
+```typescript
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
