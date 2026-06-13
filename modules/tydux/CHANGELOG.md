@@ -1,3 +1,23 @@
+# Version 18.0.0
+
+- support Redux 5 (peer dependency now allows `^3 || ^4 || ^5`)
+- support Immer 11
+- replaced deprecated TSLint with ESLint / `@typescript-eslint` (flat config)
+- raised minimum Node.js engine to `>=20`
+- updated TypeScript dev dependency to 5.x and aligned `@types/jest` with Jest 29
+- updated `@w11k/rx-ninja` to `>=6.0.1`
+- removed the unnecessary TypeScript peer dependency; the published declarations are checked with TypeScript 6 and 7
+- replaced the legacy ES5 and UMD builds with CommonJS and ES2018-compatible ESM output
+
+## Breaking Changes
+
+- requires Node.js `>=20`
+- no longer publishes a separate ES5 bundle
+- replaced the removed Redux 5 `AnyAction` usage while keeping the public action defaults
+  compatible with Redux 4.2 and 5
+- dropped the inaccurate Redux 3 peer range; Tydux's public declarations require the
+  generic Redux types available since Redux 4
+
 # Version 17.0.0
 
 - replaced dependency redux-devtools-extensions with @redux-devtools/extension

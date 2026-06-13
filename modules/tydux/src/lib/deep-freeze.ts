@@ -10,7 +10,6 @@ function isObjectLike(val: any): boolean {
 
 function forKeys(obj: any, iter: any) {
     let idx;
-    let keys;
     if (Array.isArray(obj)) {
         idx = obj.length;
         while (idx-- > 0) {
@@ -18,7 +17,7 @@ function forKeys(obj: any, iter: any) {
         }
         return;
     }
-    keys = isNil(obj) ? [] : Object.keys(obj);
+    const keys = isNil(obj) ? [] : Object.keys(obj);
     idx = keys.length;
     while (idx-- > 0) {
         iter(keys[idx]);

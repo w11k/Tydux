@@ -1,19 +1,23 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import { TodoService } from '../core/todo.service';
 import { ToDo } from '../core/todo.entity';
 import { TodoListComponent } from '../todo-list/todo-list.component';
 
 @Component({
-  selector: 'app-todo-list-context',
+  selector: 'foo-todo-list-context',
   standalone: true,
-  imports: [CommonModule, TodoListComponent],
+  imports: [AsyncPipe, TodoListComponent],
   template: `
     <h2>
     Todos
-    <span *ngIf="loading$ | async" class="loading-message">Loading...</span>
+    @if (loading$ | async) {
+      <span class="loading-message">Loading...</span>
+    }
 </h2>
-<app-todo-list *ngIf="todos$ | async as todos" [todos]="todos" (todoClicked)="updateTodo($event)"></app-todo-list>
+@if (todos$ | async; as todos) {
+  <foo-todo-list [todos]="todos" (todoClicked)="updateTodo($event)" />
+}
   `,
   styles: [
     `.loading-message {
@@ -23,18 +27,14 @@ import { TodoListComponent } from '../todo-list/todo-list.component';
   `
   ]
 })
-export class TodoListContextComponent {
+export class TodoListContextComponent implements OnInit {
+  private readonly todoService = inject(TodoService);
+
   todos$ = this.todoService.select(it => it.todos);
   loading$ = this.todoService.select(it => it.loading);
 
-  constructor(private readonly todoService: TodoService) {
-  }
-
   ngOnInit() {
     this.todoService.loadAllTodos(1);
-  }
-
-  ngOnDestroy(): void {
   }
 
   updateTodo($event: ToDo) {

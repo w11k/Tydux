@@ -1,4 +1,12 @@
-import {APP_INITIALIZER, inject, InjectionToken, ModuleWithProviders, NgModule, Provider} from '@angular/core';
+import {
+  EnvironmentProviders,
+  inject,
+  InjectionToken,
+  ModuleWithProviders,
+  NgModule,
+  provideAppInitializer,
+  Provider
+} from '@angular/core';
 import {Reducer, StoreEnhancer} from "redux"
 import {
   createTyduxStore,
@@ -13,7 +21,7 @@ export const tyduxModuleConfiguration = new InjectionToken<TyduxConfiguration | 
 export interface TyduxConfiguration {
   name?: string;
   reducer?: Reducer;
-  preloadedState?: any;
+  preloadedState?: object;
   enhancer?: StoreEnhancer;
   environment?: {
     production: boolean,
@@ -27,10 +35,6 @@ export interface TyduxConfiguration {
 
 @NgModule({})
 export class TyduxModule {
-
-  constructor() {
-  }
-
   static forRootWithConfig(config: TyduxConfiguration | (() => TyduxConfiguration)): ModuleWithProviders<TyduxModule> {
     return {
       ngModule: TyduxModule,
@@ -70,10 +74,13 @@ export function factoryTyduxStore(): TyduxStore {
   return tyduxStore;
 }
 
-export function provideTydux(config?: TyduxConfiguration | (() => TyduxConfiguration)): Provider[] {
+export function provideTydux(config?: TyduxConfiguration | (() => TyduxConfiguration)): (Provider | EnvironmentProviders)[] {
   return [
     {provide: TyduxStore, useFactory: factoryTyduxStore},
     {provide: tyduxModuleConfiguration, useValue: config ?? {} as TyduxConfiguration},
-    {provide: APP_INITIALIZER, useFactory: () => (store: TyduxStore) => store, multi: true, deps: [TyduxStore]}
+    provideAppInitializer(() => {
+      // eagerly instantiate the TyduxStore so that the global store is registered on app startup
+      inject(TyduxStore);
+    })
   ]
 }

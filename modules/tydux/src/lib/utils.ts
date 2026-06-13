@@ -7,10 +7,9 @@ import {isPlainObject} from "./lodash/lodash";
 
 let hasProxySupport = false;
 try {
-    // tslint:disable-next-line
     new Proxy({}, {});
     hasProxySupport = true;
-} catch (e) {
+} catch {
     // ignore
 }
 

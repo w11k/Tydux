@@ -1,6 +1,6 @@
 {
   "name": "@w11k/tydux-angular",
-  "version": "16.0.0",
+  "version": "17.0.0",
   "author": "W11K GmbH",
   "contributors": [
     "Roman Roelofson",
@@ -14,9 +14,9 @@
     "url": "https://github.com/w11k/Tydux.git"
   },
   "peerDependencies": {
-    "@angular/common": "^12 || >=14",
-    "@angular/core": "^12 || >=14",
-    "@w11k/tydux": "^17.0.0"
+    "@angular/common": ">=21",
+    "@angular/core": ">=21",
+    "@w11k/tydux": "^18.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"

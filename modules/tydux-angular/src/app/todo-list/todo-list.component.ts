@@ -1,19 +1,19 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, output } from '@angular/core';
 import { ToDo } from '../core/todo.entity';
 
 @Component({
-  selector: 'app-todo-list',
+  selector: 'foo-todo-list',
   standalone: true,
-  imports: [CommonModule],
   template: `
 <ul>
-  <li *ngFor="let t of todos" [class.done]="t.completed">
-    <label>
-      <input type="checkbox" [checked]="t.completed" (input)="onTodoClicked(t)">
-      {{t.title}}
-    </label>
-  </li>
+  @for (t of todos(); track t.id) {
+    <li [class.done]="t.completed">
+      <label>
+        <input type="checkbox" [checked]="t.completed" (input)="onTodoClicked(t)">
+        {{t.title}}
+      </label>
+    </li>
+  }
 </ul>
   `,
   styles: [
@@ -23,10 +23,8 @@ import { ToDo } from '../core/todo.entity';
   ]
 })
 export class TodoListComponent {
-  @Input() todos: ToDo[] = [];
-  @Output() todoClicked = new EventEmitter<ToDo>();
-
-  constructor() { }
+  readonly todos = input<readonly ToDo[]>([]);
+  readonly todoClicked = output<ToDo>();
 
   onTodoClicked(t: ToDo) {
     this.todoClicked.emit(t);

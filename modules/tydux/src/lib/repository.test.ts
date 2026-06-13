@@ -321,8 +321,8 @@ describe("Repository", () => {
 
             try {
                 facade.setPositionToStart();
-            } catch ({message}) {
-                expect(message).toEqual("Some of the entries do not exist");
+            } catch (error) {
+                expect((error as Error).message).toEqual("Some of the entries do not exist");
             }
         });
     });

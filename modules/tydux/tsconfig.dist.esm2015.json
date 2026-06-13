@@ -1,8 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es2018",
     "module": "es2015",
+    "moduleResolution": "bundler",
     "outDir": "dist/esm2015"
   }
 }

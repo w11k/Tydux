@@ -54,7 +54,7 @@ function baseGetTag(value: any) {
     try {
         value[symToStringTag] = undefined;
         unmasked = true;
-    } catch (e) {
+    } catch {
     }
 
     const result = Object.prototype.toString.call(value);

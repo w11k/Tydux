@@ -1,7 +1,7 @@
-import {EnhancerOptions} from "@redux-devtools/extension";
+import type {EnhancerOptions} from "@redux-devtools/extension" with {"resolution-mode": "import"};
 import {isNil} from "@w11k/rx-ninja";
 import {enableMapSet, enablePatches} from "immer";
-import {Action, AnyAction, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
+import {Action, createStore, Dispatch, Reducer, Store, StoreEnhancer, Unsubscribe} from "redux";
 import {Observable, ReplaySubject, Subject} from "rxjs";
 import {CommandReducer} from "./commands";
 import {checkDevModeAndCreateDevToolsEnabledComposeFn, isTyduxDevelopmentModeEnabled} from "./development";
@@ -116,7 +116,7 @@ export class TyduxReducerBridge {
 
     private readonly facadeReducers: CommandReducer<any>[] = [];
 
-    createTyduxReducer<S = any, A extends Action = AnyAction>(initialState?: S): Reducer<S, A> {
+    createTyduxReducer<S = any, A extends Action = Action>(initialState?: S): Reducer<S, A> {
         let firstCall = true;
         return (state: S | undefined, action: A) => {
             if (firstCall) {
@@ -131,7 +131,7 @@ export class TyduxReducerBridge {
         };
     }
 
-    wrapReducer<S, A extends Action = AnyAction>(wrappedReducer: Reducer<S, A>): Reducer<S, A> {
+    wrapReducer<S, A extends Action = Action>(wrappedReducer: Reducer<S, A>): Reducer<S, A> {
         const tyduxReducer = this.createTyduxReducer<S, A>(undefined);
         return (state, action) => {
             const stateAfterWrappedReducer: S = wrappedReducer(state, action);
@@ -145,7 +145,7 @@ export class TyduxReducerBridge {
 
 }
 
-export function createTyduxStore<S = any, A extends Action = AnyAction>(
+export function createTyduxStore<S = any, A extends Action = Action>(
     initialState: S = {} as any,
     config: {
         name?: EnhancerOptions["name"],

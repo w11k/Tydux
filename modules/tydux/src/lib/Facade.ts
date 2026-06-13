@@ -220,8 +220,8 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
         const self = this;
         for (const fnMemberName of methodNamesUntilStoreParent) {
             const method = (this as any)[fnMemberName];
-            (this as any)[fnMemberName] = function () {
-                return method.apply(self, arguments);
+            (this as any)[fnMemberName] = function (...args: any[]) {
+                return method.apply(self, args);
             };
         }
     }
@@ -232,9 +232,8 @@ export abstract class Facade<C extends Commands<S>, S = CommandsState<C>> {
 
         for (const mutatorMethodName of functionNamesDeep(commandsInvoker.commands)) {
             const self = this;
-            proxyObj[mutatorMethodName] = function () {
+            proxyObj[mutatorMethodName] = function (...args: any[]) {
                 const actionType = self.createActionName(mutatorMethodName);
-                const args = Array.prototype.slice.call(arguments);
                 const mutatorAction: FacadeAction = {type: actionType, payload: args};
                 return self.mountPoint.dispatch(mutatorAction);
             };

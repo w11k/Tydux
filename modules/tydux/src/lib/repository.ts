@@ -16,7 +16,7 @@ export type FieldsOfType<Base, Condition> =
 
 type IdField = string | number;
 
-export type RepositoryState<T, ID extends keyof FieldsOfType<T, IdField>> = {
+export type RepositoryState<T, _ID extends keyof FieldsOfType<T, IdField>> = {
     idField: IdField;
     byList: T[];
     byId: Record<IdField, T>;
@@ -67,7 +67,11 @@ export class RepositoryCommands<S> extends Commands<S> {
         const entryIndex = this.getEntryIndex(repo, entryId);
         const entryExists = !!repo.byList.find((e) => (e as any)[repo.idField] === (entry as any)[repo.idField]);
 
-        entryExists ? repo.byList[entryIndex] = entry : repo.byList = arrayAppend(repo.byList)([entry]);
+        if (entryExists) {
+            repo.byList[entryIndex] = entry;
+        } else {
+            repo.byList = arrayAppend(repo.byList)([entry]);
+        }
         repo.byId[entryId] = entry;
 
         if (position) {
@@ -94,7 +98,7 @@ export class RepositoryCommands<S> extends Commands<S> {
 
         if (!entryExists) {
             throw new Error("Entry does not exist");
-        } else if (position < 0 || position > arrLength - 1) {
+        } else if (typeof position === "number" && (position < 0 || position > arrLength - 1)) {
             throw new Error(getIndexNotInArrayMessage(arrLength));
         }
 
