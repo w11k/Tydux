@@ -1,4 +1,5 @@
-import {APP_INITIALIZER, inject, InjectionToken, ModuleWithProviders, NgModule, Provider} from '@angular/core';
+import {APP_INITIALIZER, inject, InjectionToken, ModuleWithProviders, NgModule, PLATFORM_ID, Provider} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
 import {Reducer, StoreEnhancer} from "redux"
 import {
   createTyduxStore,
@@ -50,11 +51,15 @@ export function factoryTyduxStore(): TyduxStore {
   const configFactory = inject(tyduxModuleConfiguration) ?? {} as TyduxConfiguration;
   const config = typeof configFactory === "function" ? configFactory() : configFactory;
   const initialState = Object.assign({}, config.preloadedState);
+  const isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  if (config.developmentMode === undefined && config.environment !== undefined && !config.environment.production) {
-    enableTyduxDevelopmentMode(config);
-  } else if (config.developmentMode === true) {
-    enableTyduxDevelopmentMode(config);
+  // Devtools/development mode must only be enabled in the browser, never during SSR.
+  if (isBrowser) {
+    if (config.developmentMode === undefined && config.environment !== undefined && !config.environment.production) {
+      enableTyduxDevelopmentMode(config);
+    } else if (config.developmentMode === true) {
+      enableTyduxDevelopmentMode(config);
+    }
   }
 
   const tyduxStore = createTyduxStore(initialState, {
