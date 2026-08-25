@@ -10,10 +10,12 @@ export class TodoServiceMock extends FacadeMock<TodoState> implements Partial<To
         super(new TodoState());
     }
 
-    async loadAllTodos() {
+    loadAllTodos(): Promise<void> {
+        return Promise.resolve();
     }
 
-    async updateTodo(todo: ToDo) {
+    updateTodo(todo: ToDo): Promise<void> {
         this.lastUpdatedTodo = todo;
+        return Promise.resolve();
     }
 }

@@ -1,10 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { AppComponent } from './app.component';
+import { TodoService } from './core/todo.service';
 
 describe('AppComponent', () => {
   beforeEach(() => TestBed.configureTestingModule({
-    imports: [AppComponent]
-}));
+    imports: [AppComponent],
+    providers: [{
+      provide: TodoService,
+      useValue: {
+        select: jest.fn(() => of([])),
+        loadAllTodos: jest.fn(),
+        updateTodo: jest.fn(),
+      },
+    }],
+  }));
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
@@ -22,6 +32,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('tydux-demo app is running!');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Tydux Demo');
   });
 });

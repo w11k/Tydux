@@ -1,5 +1,5 @@
 import {compose} from "redux";
-import {EnhancerOptions} from "@redux-devtools/extension";
+import type {EnhancerOptions} from "@redux-devtools/extension" with {"resolution-mode": "import"};
 
 const DEV_TOOLS_COMPOSE = "__REDUX_DEVTOOLS_EXTENSION_COMPOSE__";
 
@@ -15,7 +15,7 @@ const defaultTyduxDevModeConfig: TyduxDevModeConfig = {
 };
 
 export function enableTyduxDevelopmentMode(enableOrConfig: boolean | TyduxDevModeConfig = true) {
-    if (devModeConfig === undefined && enableOrConfig && (typeof Window === "function")) {
+    if (devModeConfig === undefined && enableOrConfig && typeof window !== "undefined") {
         console.log("enableTyduxDevelopmentMode() called. Tydux is running in the development mode.");
     }
 
@@ -36,9 +36,10 @@ export function isTyduxDevelopmentModeEnabled() {
 }
 
 export function checkDevModeAndCreateDevToolsEnabledComposeFn(options: Partial<EnhancerOptions> = {}) {
-    if (isTyduxDevelopmentModeEnabled()
+    if (typeof window !== "undefined"
+        && isTyduxDevelopmentModeEnabled()
         && devModeConfig!.autoUseDevToolsInDevelopmentMode
-        && window.hasOwnProperty(DEV_TOOLS_COMPOSE)) {
+        && Object.prototype.hasOwnProperty.call(window, DEV_TOOLS_COMPOSE)) {
 
         const defaultOptions =
             devModeConfig !== undefined

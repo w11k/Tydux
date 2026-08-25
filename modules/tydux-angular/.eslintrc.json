@@ -27,6 +27,12 @@
       }
     },
     {
+      "files": ["src/**/*.ts"],
+      "rules": {
+        "@nx/enforce-module-boundaries": "off"
+      }
+    },
+    {
       "files": ["*.html"],
       "extends": ["plugin:@nx/angular-template"],
       "rules": {}
